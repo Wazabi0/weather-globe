@@ -6,9 +6,15 @@
 // and publishes news.json to the `news-data` branch. The page reads it from
 // raw.githubusercontent.com, which does allow cross-origin requests.
 //
+// It also runs a few dozen Google News searches per run for capitals, big cities and
+// states or provinces (data/local-queries.json, made by scripts/build-places.mjs), in
+// turns, so each place is refreshed every few hours; those go to local/<country>.json.
+//
 // No dependencies. Node 18 or newer. Usage: node scripts/build-news.mjs out/news.json
-import { writeFile, mkdir } from 'node:fs/promises';
-import { dirname } from 'node:path';
+// Env: LOCAL_QUERIES (default data/local-queries.json), LOCAL_PREV (the previous run's
+// local/ folder, default prev/local), LOCAL_PER_RUN (searches per run, default 40).
+import { writeFile, mkdir, readFile, readdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 
 const OUT = process.argv[2] || 'out/news.json';
 const MAX_AGE_H = 72, PER_FEED = 40, MAX_ITEMS = 1400, TIMEOUT_MS = 15000, CONCURRENCY = 8, MIN_OK = 6;
@@ -131,13 +137,27 @@ function linkOf(block) {
 }
 // Yonhap marks updated stories "(LEAD)", "(2nd LD)", "(URGENT)"; without the tag they also dedupe
 const TITLE_TAG = /^\((?:LEAD|URGENT|\d+(?:st|nd|rd|th) LD|News Focus|Yonhap Interview|Yonhap Feature)\)\s*/i;
+function imageOf(block) { // a story's picture: media:thumbnail, media:content, an image enclosure, or the first <img> in its text
+  const attr = (t, a) => t.match(new RegExp(`\\b${a}=["']([^"']+)["']`, 'i'))?.[1];
+  let best = '', bw = 0;
+  for (const m of block.matchAll(/<(media:thumbnail|media:content|enclosure)\b([^>]*)>/gi)) {
+    const u = attr(m[2], 'url'), type = attr(m[2], 'type') || '', medium = attr(m[2], 'medium') || '';
+    if (!u || (m[1] !== 'media:thumbnail' && !/^image\//i.test(type) && medium !== 'image' && !/\.(jpe?g|png|webp)(\?|$)/i.test(u))) continue;
+    const w = +(attr(m[2], 'width') || 0) || 480;
+    if (!best || (w > bw && w <= 1200)) { best = u; bw = w; }
+  }
+  if (!best) best = decode(block).match(/<img\b[^>]*\bsrc=["']([^"']+)["']/i)?.[1] || '';
+  best = decode(best).trim();
+  return /^https:\/\/[^\s"'<>]+$/i.test(best) && best.length <= 400 ? best : '';
+}
 function parseFeed(xml) {
   const blocks = xml.match(/<item\b[\s\S]*?<\/item>/gi) || xml.match(/<entry\b[\s\S]*?<\/entry>/gi) || [];
   const out = [];
   for (const b of blocks) {
     const title = text(tag(b, ['title'])).replace(TITLE_TAG, ''), link = linkOf(b);
     if (!title || !link) continue;
-    out.push({ title, link, t: parseDate(text(tag(b, ['pubDate', 'dc:date', 'published', 'updated', 'a10:updated']))), desc: text(tag(b, ['description', 'summary', 'content:encoded', 'content'])) });
+    out.push({ title, link, t: parseDate(text(tag(b, ['pubDate', 'dc:date', 'published', 'updated', 'a10:updated']))), desc: text(tag(b, ['description', 'summary', 'content:encoded', 'content'])),
+      img: imageOf(b), src: text(tag(b, ['source'])) });
   }
   return out;
 }
@@ -182,8 +202,9 @@ results.forEach((r, si) => {
     if (t == null && kept >= 10) continue;
     const u = cleanUrl(it.link), k2 = titleKey(it.title), dup = byKey.get(u) || byKey.get(k2);
     if (dup) { if (!dup.s.includes(si)) dup.s.push(si); continue; }
-    const rec = { t: clip(it.title, 220), u, s: [si], p: t == null ? null : Math.round(t / 1000), d: clip(it.desc, 160) };
+    const rec = { t: clip(it.title, 220), u, s: [si], p: t == null ? null : Math.round(t / 1000), d: clip(it.desc, 160), i: it.img };
     if (!rec.d || titleKey(rec.d).startsWith(k2.slice(0, 40))) delete rec.d;
+    if (!rec.i) delete rec.i;
     byKey.set(u, rec); byKey.set(k2, rec); items.push(rec); kept++;
   }
 });
@@ -199,3 +220,53 @@ if (ok < MIN_OK) { console.error(`Only ${ok} sources answered, so the previous n
 await mkdir(dirname(OUT), { recursive: true });
 await writeFile(OUT, JSON.stringify({ v: 1, generated: new Date(now).toISOString(), sources, items }));
 console.log(`wrote ${OUT}`);
+
+/* ---------- local news: Google News searches for cities and regions, in turns ---------- */
+// Each place keeps its last search for up to a week, so a run only refreshes the places that are due:
+// capitals every 4 hours, other big cities and regions every 8.
+const LOCAL_QUERIES = process.env.LOCAL_QUERIES || 'data/local-queries.json', LOCAL_PREV = process.env.LOCAL_PREV || 'prev/local';
+const LOCAL_OUT = join(dirname(OUT), 'local'), LOCAL_KEEP = 12, LOCAL_MAX_AGE_D = 7;
+const NOT_NEWS = /^(?:Flightradar24|Robinhood|Coinbase|Kalshi|Polymarket|Facebook|Instagram|TikTok|LinkedIn|X|IMDb|Britannica|Wikipedia|Tripadvisor|Booking\.com|Expedia|Yelp|Zillow|Realtor\.com|Indeed|Glassdoor|Flashscore.*|LiveScore|SofaScore|FotMob|YouTube|Amazon|eBay|Etsy|Artsy|PR Newswire|GlobeNewswire|Business Wire|EIN Presswire|openPR.*|Newsfile|Morningstar|MarketScreener|Investing\.com|TradingView|Simply Wall St)$/i;
+const NOT_A_STORY = /\b(?:Prediction Market|Moneyline|Betting Odds|Odds and Predictions|Live Score|Arrivals|Departures|Horoscope|Obituar(?:y|ies))\b/i;
+async function localNews() {
+  let Q;
+  try { Q = JSON.parse(await readFile(LOCAL_QUERIES, 'utf8')).queries; } catch (e) { console.log(`no local searches (${e.message})`); return; }
+  const prev = new Map(); // place key -> [fetched (s), items]
+  try { for (const f of await readdir(LOCAL_PREV)) if (f.endsWith('.json')) for (const [k, v] of Object.entries(JSON.parse(await readFile(join(LOCAL_PREV, f), 'utf8')).places || {})) prev.set(k, v); }
+  catch { /* first run */ }
+  const nowS = Math.round(now / 1000), minP = nowS - LOCAL_MAX_AGE_D * 86400;
+  const due = Q.map(q => ({ q, score: (nowS - (prev.get(q[0])?.[0] || 0)) / ((q[4] === 1 ? 4 : 8) * 3600) })).filter(x => x.score >= 1).sort((a, b) => b.score - a.score);
+  const fresh = Q.filter(q => !prev.has(q[0])).length;
+  const perRun = +process.env.LOCAL_PER_RUN || (fresh > Q.length / 2 ? 100 : 40); // fill faster after a reset
+  let okN = 0, failN = 0, streak = 0, kept = 0;
+  for (const { q: [key, query, ed] } of due.slice(0, perRun)) {
+    const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-${ed}&gl=${ed}&ceid=${ed}:en`;
+    try {
+      const list = [], seen = new Set();
+      for (const it of parseFeed(await get(url))) {
+        const p = it.t == null ? null : Math.round(Math.min(it.t, now) / 1000);
+        if (p == null || p < minP) continue;
+        const src = it.src || '', title = clip(src && it.title.endsWith(' - ' + src) ? it.title.slice(0, -src.length - 3) : it.title, 220);
+        if (NOT_NEWS.test(src) || NOT_A_STORY.test(title)) continue;
+        const k2 = titleKey(title); if (seen.has(k2)) continue; seen.add(k2);
+        list.push([title, it.link, src, p]);
+      }
+      list.sort((a, b) => b[3] - a[3]); list.length = Math.min(list.length, LOCAL_KEEP);
+      prev.set(key, [nowS, list]); okN++; streak = 0; kept += list.length;
+    } catch (e) {
+      failN++; streak++; console.log(`local FAIL ${key} ${query}: ${e.message}`);
+      if (/HTTP (429|503)/.test(e.message) || streak >= 3) { console.log('Google News is refusing searches; the rest wait for the next run'); break; }
+    }
+    await new Promise(r => setTimeout(r, 1200));
+  }
+  const byCountry = new Map(), cc = new Map(Q.map(q => [q[0], q[3]]));
+  for (const [k, [t, list]] of prev) {
+    const c = cc.get(k); if (!c) continue; // a place no longer searched
+    const l = list.filter(x => x[3] >= minP); if (!l.length && nowS - t > LOCAL_MAX_AGE_D * 86400) continue;
+    if (!byCountry.has(c)) byCountry.set(c, {}); byCountry.get(c)[k] = [t, l];
+  }
+  await mkdir(LOCAL_OUT, { recursive: true });
+  for (const [c, places] of byCountry) await writeFile(join(LOCAL_OUT, `${c}.json`), JSON.stringify({ v: 1, generated: new Date(now).toISOString(), places }));
+  console.log(`local: ${okN} searches ok, ${failN} failed, ${kept} headlines; ${due.length} places were due; ${prev.size} of ${Q.length} places have results; ${byCountry.size} country files`);
+}
+await localNews();

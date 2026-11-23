@@ -75,10 +75,10 @@ const byRegion = new Map();
 for (const c of all) { if (!admin1.has(c.a1)) continue; (byRegion.get(c.a1) || byRegion.set(c.a1, []).get(c.a1)).push(c); }
 
 // ---------- which countries have a useful first level (states, provinces, counties) ----------
-// Some countries' first level is hundreds of small municipalities (Slovenia, Latvia, Malta); those get cities only.
+// Small countries, and those whose first level is hundreds of municipalities (Slovenia, Latvia), get cities only.
 const regionLevel = new Set();
 { const n = new Map(); for (const code of byRegion.keys()) { const cc = code.slice(0, 2); n.set(cc, (n.get(cc) || 0) + 1); }
-  for (const [cc, k] of n) { const C = countries.get(cc); if (C?.ne && k >= 2 && (k <= 50 || (k <= 90 && C.area > 250000))) regionLevel.add(cc); } }
+  for (const [cc, k] of n) { const C = countries.get(cc); if (C?.ne && k >= 2 && C.area >= 30000 && (k <= 50 || (k <= 90 && C.area > 250000))) regionLevel.add(cc); } }
 console.log('countries with regions', regionLevel.size);
 
 // ---------- which cities get names on the map ----------
@@ -160,15 +160,15 @@ for (const c of [...named.values()].sort((a, b) => b.pop - a.pop)) {
   const isSeat = c.fc === 'PPLA';
   const big = c.pop >= 1e6, capQ = cap && (countries.get(c.cc).pop >= 200000 || c.pop >= 50000);
   let flags = (cap === 1 ? 1 : 0) | (cap === 2 ? 2 : 0) | (isSeat ? 4 : 0);
-  if (big || capQ) { const q = query(display, c.cc, String(c.gid)); if (q) { flags |= 8; queries.push([String(c.gid), q[0] + ' when:3d', q[1]]); } }
-  cities.push([c.gid, display, c.cc, ri, r2(c.lat), r2(c.lon), Math.round(c.pop / 1000), flags, aliases.join('|')]);
+  if (big || capQ) { const q = query(display, c.cc, String(c.gid)); if (q) { flags |= 8; queries.push([String(c.gid), q[0] + ' when:3d', q[1], c.cc, cap ? 1 : 2]); } }
+  cities.push([flags & 8 ? c.gid : 0, display, c.cc, ri, r2(c.lat), r2(c.lon), Math.round(c.pop / 1000), flags, aliases.join('|')]); // the GeoNames id keys the local news files
   (cityNamesByCountry.get(c.cc) || cityNamesByCountry.set(c.cc, new Set()).get(c.cc)).add(fold(display));
 }
 for (const r of regions) {
   if (!REGION_QUERY.has(r.cc) || r.pop < 300000) continue;
   if (cityNamesByCountry.get(r.cc)?.has(fold(r.display))) continue; // a city of the same name already has its own search
   const q = query(r.display, r.cc, r.code); if (!q) continue;
-  r.query = true; queries.push([r.code, q[0] + ' when:3d', q[1]]);
+  r.query = true; queries.push([r.code, q[0] + ' when:3d', q[1], r.cc, 2]);
 }
 console.log('queries', queries.length, 'cities flagged', cities.filter(c => c[7] & 8).length, 'regions flagged', regions.filter(r => r.query).length);
 
@@ -189,7 +189,7 @@ const out = {
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(out));
 const QOUT = path.join(path.dirname(OUT), 'local-queries.json');
-fs.writeFileSync(QOUT, JSON.stringify({ v: 1, generated: out.generated, note: 'Google News searches the news collector runs in turns, [place key, query, edition]', queries }));
+fs.writeFileSync(QOUT, JSON.stringify({ v: 1, generated: out.generated, note: 'Google News searches the news collector runs in turns: [place key (GeoNames id or region code), query, edition, country, 1 capital / 2 other]', queries }));
 const size = fs.statSync(OUT).size;
 console.log('wrote', OUT, (size / 1024).toFixed(0), 'KB (regions', (JSON.stringify(out.regions).length / 1024).toFixed(0), 'KB, cities', (JSON.stringify(out.cities).length / 1024).toFixed(0), 'KB, grid', (out.grid.length / 1024).toFixed(0), 'KB) and', QOUT, (fs.statSync(QOUT).size / 1024).toFixed(0), 'KB;', 'grid points', gridPts.length, 'capitals', cities.filter(c => c[7] & 3).length);
 console.log('sample capitals', cities.filter(c => c[7] & 3).slice(0, 25).map(c => `${c[1]}/${c[2]}`).join(', '));
