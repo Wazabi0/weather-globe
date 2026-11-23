@@ -1,0 +1,18 @@
+# Temporary: checks which sources answer from GitHub's runners. Removed before merge.
+name: Probe sources
+on:
+  workflow_dispatch:
+  push:
+    branches: [local-news-capitals]
+    paths: ['scripts/probe.mjs', '.github/workflows/probe.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+      - run: node scripts/probe.mjs
