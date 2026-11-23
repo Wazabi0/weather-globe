@@ -1,0 +1,1871 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Live Weather Globe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#03050b; --panel:rgba(12,18,32,.78); --panel-solid:#0c1220; --line:rgba(150,180,255,.14);
+  --text:#e8eefc; --muted:#8e9bb8; --accent:#5cc8ff; --accent2:#ffd25c; --ok:#3ddc97; --warn:#ffb347; --err:#ff5c7a;
+  --radius:14px; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-size:13px}
+button,input,select{font:inherit;color:inherit}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#c:active{cursor:grabbing}
+#labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;left:0;top:0;will-change:transform;white-space:nowrap;transition:opacity .2s}
+.glass{background:var(--panel);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 10px 40px rgba(0,0,0,.45)}
+/* top bar */
+#top{position:fixed;top:12px;left:12px;right:12px;display:flex;gap:10px;align-items:center;pointer-events:none;z-index:5}
+#top>*{pointer-events:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 10px}
+.brand b{font-size:14px;letter-spacing:.2px}
+.brand small{display:block;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.livedot{width:9px;height:9px;border-radius:50%;background:var(--err);box-shadow:0 0 0 0 rgba(255,92,122,.6);animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,92,122,.6)}70%{box-shadow:0 0 0 9px rgba(255,92,122,0)}100%{box-shadow:0 0 0 0 rgba(255,92,122,0)}}
+.search{position:relative;flex:0 1 320px;margin-left:auto}
+.search input{width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(14px);outline:none}
+.search input:focus{border-color:var(--accent)}
+#qres{position:absolute;top:44px;left:0;right:0;overflow:hidden;display:none}
+#qres button{display:block;width:100%;text-align:left;padding:9px 14px;background:none;border:0;border-bottom:1px solid var(--line);cursor:pointer}
+#qres button:hover{background:rgba(92,200,255,.12)}
+#qres small{color:var(--muted)}
+.ibtn{height:40px;min-width:40px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(14px);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.ibtn:hover{border-color:var(--accent)}
+.ibtn.on{background:rgba(92,200,255,.18);border-color:var(--accent)}
+/* panel */
+#panel{position:fixed;top:66px;left:12px;bottom:76px;width:318px;display:flex;flex-direction:column;z-index:4;transition:transform .3s,opacity .3s}
+#panel.hidden{transform:translateX(-340px);opacity:0;pointer-events:none}
+#panelBody{overflow-y:auto;padding:6px 14px 14px;scrollbar-width:thin;scrollbar-color:rgba(150,180,255,.25) transparent}
+.tabs{display:flex;gap:4px;padding:10px 12px 6px;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;padding:7px 4px;border-radius:9px;border:0;background:none;color:var(--muted);cursor:pointer;font-weight:500}
+.tabs button.on{background:rgba(92,200,255,.16);color:var(--text)}
+h4{margin:14px 0 6px;font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.item{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(150,180,255,.07)}
+.item .nm{font-weight:500}
+.item .sb{grid-column:1;color:var(--muted);font-size:11px;display:flex;align-items:center;gap:6px}
+.ctl{display:flex;align-items:center;gap:8px;margin-top:6px}
+.item .ctl{grid-column:1/-1;margin-top:4px}
+.sdot{width:7px;height:7px;border-radius:50%;background:#55607a;flex:none}
+.sdot.ok{background:var(--ok)}.sdot.loading{background:var(--warn);animation:blink 1s infinite}.sdot.error{background:var(--err)}
+@keyframes blink{50%{opacity:.3}}
+.sw{position:relative;width:36px;height:20px;flex:none;grid-row:1/3;grid-column:2}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;border-radius:20px;background:#2a3348;cursor:pointer;transition:.2s}
+.sw span:before{content:"";position:absolute;width:14px;height:14px;left:3px;top:3px;border-radius:50%;background:#cfd8ee;transition:.2s}
+.sw input:checked+span{background:var(--accent)}
+.sw input:checked+span:before{transform:translateX(16px);background:#fff}
+.sw input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:#2a3348;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid #fff}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid #fff}
+.ctl label{color:var(--muted);font-size:11px;min-width:58px}
+.ctl output{font-size:11px;color:var(--muted);min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;font-size:12px}
+.seg button.on{background:rgba(92,200,255,.2);border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);cursor:pointer;font-size:11.5px;user-select:none;background:rgba(255,255,255,.03)}
+.chip i{width:8px;height:8px;border-radius:50%}
+.chip.off{opacity:.4}
+.mini{padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer;font-size:11.5px}
+.mini:hover{border-color:var(--accent)}
+.list button{display:flex;width:100%;justify-content:space-between;gap:8px;text-align:left;padding:8px 10px;margin:4px 0;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer}
+.list button:hover{border-color:var(--accent)}
+.list small{color:var(--muted)}
+.src{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;padding:7px 0;border-bottom:1px solid rgba(150,180,255,.07)}
+.src .sdot{margin-top:5px}
+.src small{grid-column:2;color:var(--muted);font-size:11px;word-break:break-word}
+.note{color:var(--muted);font-size:11.5px;line-height:1.5}
+.note a{color:var(--accent)}
+select{background:#141c2e;border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+/* legend */
+#legend{position:fixed;right:12px;bottom:76px;width:250px;display:flex;flex-direction:column;gap:8px;z-index:3;pointer-events:none}
+#legend .lg{padding:10px 12px;pointer-events:auto}
+.lg b{font-size:11.5px;font-weight:600}
+.lg .bar{height:8px;border-radius:5px;margin:6px 0 3px}
+.lg .ticks{display:flex;justify-content:space-between;color:var(--muted);font-size:10.5px;font-variant-numeric:tabular-nums}
+.lg .keys{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:5px;font-size:11px;color:var(--muted)}
+.lg .keys i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+/* readout and time bar */
+#readout{position:fixed;left:50%;transform:translateX(-50%);top:66px;padding:7px 12px;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;z-index:3;pointer-events:none;white-space:nowrap;opacity:0;transition:opacity .2s}
+#readout b{color:var(--text);font-weight:500}
+#timebar{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(640px,calc(100% - 24px));display:flex;align-items:center;gap:10px;padding:8px 12px;z-index:5}
+#timebar input{flex:1}
+#tlabel{min-width:150px;font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);text-align:center}
+#tlabel b{color:var(--text);font-weight:600}
+/* popup */
+#popup{position:fixed;top:66px;right:12px;width:340px;max-height:calc(100% - 160px);overflow-y:auto;padding:14px 16px;z-index:6}
+#popup[hidden]{display:none}
+.pp-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.pp-h h3{margin:0;font-size:16px}
+.pp-h small{color:var(--muted)}
+.x{border:0;background:rgba(255,255,255,.07);border-radius:8px;width:28px;height:28px;cursor:pointer;flex:none}
+.pp-now{display:flex;align-items:center;gap:14px;margin:12px 0}
+.pp-now .big{font-size:40px;font-weight:600;letter-spacing:-1px;line-height:1}
+.pp-now .cond{color:var(--muted);line-height:1.5}
+.pp-now .cond b{color:var(--text);font-weight:600}
+.pp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pp-grid div{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.pp-grid small{display:block;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px}
+.pp-grid span{font-weight:600}
+.pp-sec{margin-top:12px}
+.pp-sec h5{margin:0 0 6px;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.alert{border-left:3px solid var(--err);padding:6px 10px;background:rgba(255,92,122,.08);border-radius:6px;margin:6px 0;font-size:12px}
+/* markers */
+.storm{display:flex;align-items:center;gap:6px;pointer-events:auto;cursor:pointer;font-size:11px;font-weight:600;text-shadow:0 1px 3px #000}
+.storm svg{animation:spin 3s linear infinite;filter:drop-shadow(0 0 6px currentColor)}
+@keyframes spin{to{transform:rotate(-360deg)}}
+.storm span{background:rgba(0,0,0,.55);padding:2px 6px;border-radius:6px;color:#fff}
+.hl{font-weight:700;font-size:15px;text-shadow:0 0 4px #000,0 0 8px #000;text-align:center;line-height:1}
+.hl small{display:block;font-size:9.5px;font-weight:600;opacity:.9}
+.hl.L{color:#ff6b6b}.hl.H{color:#6bb8ff}
+.cell{color:#d6a6ff;filter:drop-shadow(0 0 4px #b46bff)}
+.subsolar{width:16px;height:16px;border-radius:50%;background:radial-gradient(#fff6c8,#ffcf4a 45%,rgba(255,180,40,0) 70%)}
+.pin{width:18px;height:18px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 3px rgba(92,200,255,.6),0 0 14px rgba(92,200,255,.9)}
+#loader{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg);z-index:20;transition:opacity .8s}
+#loader.done{opacity:0;pointer-events:none}
+.spin{width:44px;height:44px;border-radius:50%;border:3px solid rgba(92,200,255,.2);border-top-color:var(--accent);animation:spin2 1s linear infinite}
+@keyframes spin2{to{transform:rotate(360deg)}}
+#loadmsg{color:var(--muted)}
+#toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);padding:9px 14px;opacity:0;transition:opacity .3s;z-index:8;pointer-events:none}
+#toast.show{opacity:1}
+kbd{font:inherit;font-size:10.5px;padding:1px 5px;border:1px solid var(--line);border-radius:4px;color:var(--muted)}
+@media (max-width:760px){
+  #top{top:8px;left:8px;right:8px;flex-wrap:wrap}
+  .brand small{display:none}
+  .search{flex:1 1 100%;order:3}
+  #panel{top:auto;left:8px;right:8px;bottom:66px;width:auto;height:55%}
+  #panel.hidden{transform:translateY(110%)}
+  #legend{display:none}
+  #popup{left:8px;right:8px;width:auto;top:auto;bottom:66px;max-height:60%}
+  #readout{top:auto;bottom:66px}
+  #tlabel{min-width:100px;font-size:11px}
+}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="loader"><div class="spin"></div><div id="loadmsg">Loading Earth…</div></div>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+<header id="top">
+  <div class="brand glass"><div class="livedot" title="Live"></div><div><b>Live Weather Globe</b><small id="clock">—</small></div></div>
+  <div class="search"><input id="q" placeholder="Search a city or place…" autocomplete="off"><div id="qres" class="glass"></div></div>
+  <button class="ibtn" id="btnRotate" title="Auto-rotate (R)">⟲</button>
+  <button class="ibtn" id="btnRefresh" title="Refresh all live data">↻</button>
+  <button class="ibtn on" id="btnPanel" title="Show/hide layers (L)">☰ Layers</button>
+</header>
+<aside id="panel" class="glass">
+  <div class="tabs"><button data-tab="layers" class="on">Layers</button><button data-tab="filters">Filters</button><button data-tab="events">Events</button><button data-tab="sources">Sources</button></div>
+  <div id="panelBody"></div>
+</aside>
+<section id="legend"></section>
+<div id="readout" class="glass"></div>
+<div id="timebar" class="glass">
+  <button class="ibtn" id="btnPlay" title="Animate day/night cycle" style="height:32px;min-width:32px">▶</button>
+  <input type="range" id="tslider" min="-24" max="24" step="0.25" value="0" aria-label="Sun time offset">
+  <div id="tlabel"><b>Live</b></div>
+  <button class="ibtn" id="btnNow" style="height:32px">Now</button>
+</div>
+<div id="popup" class="glass" hidden></div>
+<div id="toast" class="glass"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* =====================================================================
+   Config
+   ===================================================================== */
+const CDN = 'https://cdn.jsdelivr.net/npm/';
+const TEX = CDN + 'three-globe@2.31.0/example/img/';
+const BORDERS_URL = CDN + 'world-atlas@2.0.2/countries-50m.json';
+const GIBS = 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/';
+const DEG = Math.PI / 180;
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+
+const R = { // shell radii (Earth = 1)
+  sst: 1.0010, field: 1.0018, imerg: 1.0026, radar: 1.0032, alertFill: 1.0036, borders: 1.0009, graticule: 1.0012,
+  isobars: 1.0045, alerts: 1.0048, clouds: 1.0085, tracks: 1.0095, wind: 1.0105, lightning: 1.012, points: 1.011, aurora: 1.018,
+};
+
+const DEFAULTS = {
+  units: 'metric',
+  layers: {
+    clouds: true, radar: true, imerg: false, wind: true, isobars: false, lightning: true, stormcells: true,
+    storms: true, alerts: true, aurora: true, sst: false, quakes: false, fires: false, volcanoes: false,
+    terminator: true, nightLights: true, borders: true, graticule: false, atmosphere: true, stars: true, satbase: false,
+  },
+  field: 'none',
+  opacity: { clouds: 0.95, radar: 0.85, imerg: 0.85, field: 0.55, sst: 0.75 },
+  filters: {
+    cloudSource: 'auto', cloudThreshold: 0.5, windMin: 0, windCount: 7000, windSpeed: 1, windTrail: 10,
+    lightningWindow: 30, quakeMin: 4.5, quakePeriod: 'day', stormMin: 0,
+    alertTypes: { tornado: true, tstorm: true, flood: true, tropical: true, winter: true, heat: true, fire: true, other: false },
+  },
+  autorotate: false,
+};
+
+/* =====================================================================
+   Settings persistence
+   ===================================================================== */
+function deepMerge(a, b) {
+  for (const k in b) {
+    if (!(k in a)) continue;
+    if (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && a[k] && typeof a[k] === 'object') deepMerge(a[k], b[k]);
+    else if (typeof b[k] === typeof a[k]) a[k] = b[k];
+  }
+  return a;
+}
+const S = (() => { let s = null; try { s = JSON.parse(localStorage.getItem('wg-settings') || 'null'); } catch {} return deepMerge(structuredClone(DEFAULTS), s || {}); })();
+let saveT; function saveSettings() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem('wg-settings', JSON.stringify(S)); } catch {} }, 300); }
+
+/* =====================================================================
+   Helpers
+   ===================================================================== */
+function ll2v(lat, lon, r = 1, out = new THREE.Vector3()) {
+  const la = lat * DEG, lo = lon * DEG, c = Math.cos(la);
+  return out.set(r * c * Math.cos(lo), r * Math.sin(la), -r * c * Math.sin(lo));
+}
+function v2ll(v) { const r = v.length(); return { lat: Math.asin(clamp(v.y / r, -1, 1)) / DEG, lon: Math.atan2(-v.z, v.x) / DEG }; }
+function wrapLon(l) { return ((l + 540) % 360) - 180; }
+function gcDist(a1, o1, a2, o2) { // km
+  const p1 = a1 * DEG, p2 = a2 * DEG, dp = p2 - p1, dl = (o2 - o1) * DEG;
+  const h = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(Math.min(1, h)));
+}
+async function fetchJSON(url, opts = {}, ms = 25000) {
+  const c = new AbortController(); const t = setTimeout(() => c.abort(), ms);
+  try {
+    const r = await fetch(url, { ...opts, signal: c.signal });
+    if (!r.ok) throw new Error(r.status === 429 ? 'rate limited (HTTP 429)' : 'HTTP ' + r.status);
+    return await r.json();
+  } catch (e) { if (e.name === 'AbortError') throw new Error('timed out'); if (e instanceof TypeError) throw new Error('network/CORS blocked'); throw e; }
+  finally { clearTimeout(t); }
+}
+function loadImage(url, ms = 30000) {
+  return new Promise((res, rej) => {
+    const im = new Image(); im.crossOrigin = 'anonymous'; im.decoding = 'async';
+    const t = setTimeout(() => { im.src = ''; rej(new Error('timed out')); }, ms);
+    im.onload = () => { clearTimeout(t); res(im); };
+    im.onerror = () => { clearTimeout(t); rej(new Error('image failed')); };
+    im.src = url;
+  });
+}
+function mkCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function hex(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
+function ramp(stops) {
+  const s = stops.map(([v, h]) => [v, ...hex(h)]);
+  return v => {
+    if (!(v > s[0][0])) return [s[0][1], s[0][2], s[0][3]];
+    for (let i = 1; i < s.length; i++) if (v <= s[i][0]) {
+      const a = s[i - 1], b = s[i], t = (v - a[0]) / (b[0] - a[0]);
+      return [a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t, a[3] + (b[3] - a[3]) * t];
+    }
+    const l = s[s.length - 1]; return [l[1], l[2], l[3]];
+  };
+}
+function cssGradient(stops) { const lo = stops[0][0], hi = stops.at(-1)[0]; return 'linear-gradient(90deg,' + stops.map(([v, h]) => `${h} ${((v - lo) / (hi - lo) * 100).toFixed(1)}%`).join(',') + ')'; }
+const fmtTime = d => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function ago(d) { const s = (Date.now() - d) / 1000; if (s < 90) return 'just now'; if (s < 5400) return Math.round(s / 60) + ' min ago'; if (s < 172800) return Math.round(s / 3600) + ' h ago'; return Math.round(s / 86400) + ' d ago'; }
+function toast(msg, ms = 2600) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), ms); }
+
+/* units */
+const U = {
+  temp: c => S.units === 'metric' ? `${Math.round(c)}°C` : `${Math.round(c * 9 / 5 + 32)}°F`,
+  tempN: c => S.units === 'metric' ? Math.round(c) + '°' : Math.round(c * 9 / 5 + 32) + '°',
+  wind: ms => S.units === 'metric' ? `${Math.round(ms * 3.6)} km/h` : `${Math.round(ms * 2.237)} mph`,
+  pres: h => S.units === 'metric' ? `${Math.round(h)} hPa` : `${(h * 0.02953).toFixed(2)} inHg`,
+  mm: v => S.units === 'metric' ? `${v.toFixed(1)} mm` : `${(v / 25.4).toFixed(2)} in`,
+};
+const COMPASS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+const compass = d => COMPASS[Math.round(((d % 360) + 360) % 360 / 22.5) % 16];
+const WMO = { 0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 48: 'Rime fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle', 56: 'Freezing drizzle', 57: 'Freezing drizzle', 61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 66: 'Freezing rain', 67: 'Freezing rain', 71: 'Light snow', 73: 'Snow', 75: 'Heavy snow', 77: 'Snow grains', 80: 'Rain showers', 81: 'Rain showers', 82: 'Violent showers', 85: 'Snow showers', 86: 'Heavy snow showers', 95: 'Thunderstorm', 96: 'Thunderstorm, hail', 99: 'Severe thunderstorm, hail' };
+
+/* =====================================================================
+   Source status
+   ===================================================================== */
+const SOURCES = {
+  textures: ['Earth imagery', 'NASA Blue Marble & Black Marble'],
+  clouds: ['Clouds', 'NOAA GMGSI global IR mosaic, NASA GIBS GOES/Himawari'],
+  radar: ['Radar', 'RainViewer global radar composite'],
+  imerg: ['Global precipitation', 'NASA GPM IMERG via GIBS'],
+  grid: ['Weather model grid', 'Open-Meteo (wind, temperature, pressure, humidity, CAPE)'],
+  lightning: ['Lightning', 'Blitzortung.org live network'],
+  storms: ['Tropical cyclones', 'NASA EONET, GDACS fallback'],
+  alerts: ['Severe weather alerts', 'US National Weather Service'],
+  aurora: ['Aurora', 'NOAA SWPC OVATION'],
+  sst: ['Sea surface temperature', 'NASA GHRSST MUR via GIBS'],
+  quakes: ['Earthquakes', 'USGS real-time feed'],
+  eonet: ['Wildfires & volcanoes', 'NASA EONET'],
+  borders: ['Borders', 'Natural Earth via world-atlas'],
+  satbase: ['Satellite base map', 'NASA VIIRS true color, yesterday'],
+};
+const status = {};
+function setStatus(k, state, msg = '') { status[k] = { state, msg, t: new Date() }; renderStatus(); }
+function sdot(k) { return `<i class="sdot ${status[k]?.state || ''}" data-sdot="${k}"></i>`; }
+function renderStatus() {
+  document.querySelectorAll('[data-sdot]').forEach(el => { el.className = 'sdot ' + (status[el.dataset.sdot]?.state || ''); el.title = status[el.dataset.sdot]?.msg || ''; });
+  if (currentTab === 'sources') renderPanel();
+}
+
+/* =====================================================================
+   Renderer / scene
+   ===================================================================== */
+const canvas = $('#c');
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }); }
+catch (e) { $('#loadmsg').textContent = 'WebGL is not available in this browser.'; throw e; }
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+const maxAniso = renderer.capabilities.getMaxAnisotropy();
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(36, innerWidth / innerHeight, 0.005, 3000);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.dampingFactor = 0.07; controls.enablePan = false;
+controls.minDistance = 1.08; controls.maxDistance = 9; controls.zoomSpeed = 0.8; controls.autoRotateSpeed = 0.35;
+controls.autoRotate = S.autorotate;
+{ // start over the viewer's approximate longitude
+  const lon = clamp(-new Date().getTimezoneOffset() / 4, -180, 180);
+  ll2v(22, lon, innerWidth < innerHeight ? Math.min(6.5, 3.3 * innerHeight / innerWidth * 0.8) : 3.3, camera.position);
+}
+
+const geoEarth = new THREE.SphereGeometry(1, 384, 192);
+const geoShell = new THREE.SphereGeometry(1, 256, 128);
+const blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 0]), 1, 1); blank.needsUpdate = true;
+const black = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1); black.needsUpdate = true;
+
+const sunDir = new THREE.Vector3(1, 0, 0);
+const common = { sunDir: { value: sunDir } };
+
+const VERT = /* glsl */`
+varying vec2 vUv; varying vec3 vN; varying vec3 vW;
+void main(){ vUv = uv; vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
+
+/* ---------- Earth ---------- */
+const earthMat = new THREE.ShaderMaterial({
+  uniforms: {
+    ...common,
+    dayMap: { value: black }, nightMap: { value: black }, specMap: { value: black }, bumpMap: { value: black },
+    cloudMap: { value: blank }, texel: { value: new THREE.Vector2(1 / 2048, 1 / 1024) },
+    nightLights: { value: 1 }, cloudShadow: { value: 1 }, showTerm: { value: 1 },
+  },
+  vertexShader: VERT,
+  fragmentShader: /* glsl */`
+uniform sampler2D dayMap, nightMap, specMap, bumpMap, cloudMap;
+uniform vec3 sunDir; uniform vec2 texel; uniform float nightLights, cloudShadow, showTerm;
+varying vec2 vUv; varying vec3 vN; varying vec3 vW;
+void main(){
+  vec3 n = normalize(vN);
+  float cl = max(length(n.xz), 1e-4);
+  vec3 east = normalize(vec3(n.z, 0., -n.x) + vec3(1e-6));
+  vec3 north = cross(n, east);
+  float h  = texture2D(bumpMap, vUv).r;
+  float hx = texture2D(bumpMap, vUv + vec2(texel.x, 0.)).r - h;
+  float hy = texture2D(bumpMap, vUv + vec2(0., texel.y)).r - h;
+  vec3 nb = normalize(n - 3.5 * (hx * east + hy * north));
+  float ndl0 = dot(n, sunDir);
+  float ndl = dot(nb, sunDir);
+  float dayAmt = smoothstep(-0.08, 0.10, ndl0);
+  vec3 V = normalize(cameraPosition - vW);
+
+  vec3 day = texture2D(dayMap, vUv).rgb;
+  float water = texture2D(specMap, vUv).r;
+  day = mix(day, day * vec3(0.82, 0.92, 1.08), water * 0.5);
+
+  // cloud shadows: sample the cloud layer offset towards the sun
+  vec2 sh = vec2(dot(sunDir, east) / (6.2832 * cl), dot(sunDir, north) / 3.1416) * 0.0065 / max(ndl0, 0.25);
+  float cs = texture2D(cloudMap, vUv + sh).a * cloudShadow;
+  float cOver = texture2D(cloudMap, vUv).a * cloudShadow;
+
+  float diff = max(ndl, 0.);
+  vec3 sunCol = mix(vec3(1.0, 0.62, 0.38), vec3(1.0, 0.98, 0.95), smoothstep(0.0, 0.35, ndl0));
+  vec3 col = day * (diff * 1.25 * sunCol + 0.012) * (1. - 0.55 * cs);
+
+  // ocean glint
+  vec3 H = normalize(sunDir + V);
+  float spec = pow(max(dot(n, H), 0.), 90.) * 1.1 + pow(max(dot(n, H), 0.), 12.) * 0.08;
+  col += sunCol * spec * water * dayAmt * (1. - 0.8 * cOver);
+
+  // city lights
+  vec3 lights = texture2D(nightMap, vUv).rgb;
+  lights = pow(lights, vec3(1.25)) * vec3(1.0, 0.82, 0.55) * 2.2;
+  col += lights * (1. - smoothstep(-0.12, 0.06, ndl0)) * nightLights * (1. - 0.75 * cOver);
+
+  // atmospheric haze on the lit limb
+  float fres = pow(1. - max(dot(n, V), 0.), 3.0);
+  col += vec3(0.30, 0.55, 1.0) * fres * 0.55 * smoothstep(-0.25, 0.6, ndl0);
+  col = mix(col, col * vec3(0.75, 0.85, 1.1) + vec3(0.02, 0.04, 0.08) * dayAmt, 0.25 * fres);
+
+  // terminator + twilight bands (civil -6, nautical -12, astronomical -18 deg)
+  if (showTerm > 0.5) {
+    float w = fwidth(ndl0) * 1.2;
+    float line = 1. - smoothstep(0., w * 1.5, abs(ndl0));
+    col = mix(col, vec3(1.0, 0.78, 0.35), line * 0.85);
+    float b1 = 1. - smoothstep(0., w, abs(ndl0 + 0.1045));
+    float b2 = 1. - smoothstep(0., w, abs(ndl0 + 0.2079));
+    float b3 = 1. - smoothstep(0., w, abs(ndl0 + 0.3090));
+    col += vec3(0.35, 0.45, 0.9) * (b1 * 0.35 + b2 * 0.22 + b3 * 0.14);
+  }
+  gl_FragColor = vec4(col, 1.);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`,
+});
+earthMat.extensions = { derivatives: true };
+const earth = new THREE.Mesh(geoEarth, earthMat);
+scene.add(earth);
+
+/* ---------- Generic textured overlay shell ---------- */
+function makeShell(radius, order, { nightDim = 0.35, blending = THREE.NormalBlending } = {}) {
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { ...common, map: { value: blank }, opacity: { value: 1 }, nightDim: { value: nightDim } },
+    vertexShader: VERT,
+    fragmentShader: /* glsl */`
+uniform sampler2D map; uniform float opacity, nightDim; uniform vec3 sunDir;
+varying vec2 vUv; varying vec3 vN;
+void main(){
+  vec4 t = texture2D(map, vUv);
+  float d = smoothstep(-0.2, 0.15, dot(normalize(vN), sunDir));
+  gl_FragColor = vec4(t.rgb * mix(1. - nightDim, 1., d), t.a * opacity);
+  #include <colorspace_fragment>
+}`,
+    transparent: true, depthWrite: false, blending, toneMapped: false,
+  });
+  const m = new THREE.Mesh(geoShell, mat); m.scale.setScalar(radius); m.renderOrder = order; m.visible = false; scene.add(m);
+  m.setTexture = tex => { const old = mat.uniforms.map.value; mat.uniforms.map.value = tex; if (old && old !== blank && old !== tex && !old.keep) old.dispose(); };
+  return m;
+}
+function canvasTex(c, srgb = true) {
+  const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = maxAniso; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true; t.needsUpdate = true; return t;
+}
+
+const shells = {
+  sst: makeShell(R.sst, 1),
+  field: makeShell(R.field, 2, { nightDim: 0.25 }),
+  imerg: makeShell(R.imerg, 3, { nightDim: 0.15 }),
+  radar: makeShell(R.radar, 4, { nightDim: 0.1 }),
+  alertFill: makeShell(R.alertFill, 5, { nightDim: 0 }),
+};
+
+/* ---------- Clouds ---------- */
+const cloudMat = new THREE.ShaderMaterial({
+  uniforms: { ...common, map: { value: blank }, opacity: { value: 0.95 } },
+  vertexShader: VERT,
+  fragmentShader: /* glsl */`
+uniform sampler2D map; uniform float opacity; uniform vec3 sunDir;
+varying vec2 vUv; varying vec3 vN; varying vec3 vW;
+void main(){
+  vec4 t = texture2D(map, vUv);
+  vec3 n = normalize(vN);
+  float ndl = dot(n, sunDir);
+  float lit = smoothstep(-0.12, 0.25, ndl);
+  vec3 V = normalize(cameraPosition - vW);
+  float limb = 1. - max(dot(n, V), 0.);
+  vec3 sunset = mix(vec3(1.0, 0.55, 0.32), vec3(1.0), smoothstep(0.02, 0.35, ndl));
+  vec3 col = mix(vec3(0.035, 0.045, 0.07), vec3(1.0) * sunset, lit) * mix(0.82, 1.06, t.r);
+  col += vec3(0.25, 0.45, 0.9) * pow(limb, 3.) * 0.35 * lit;
+  float a = t.a * opacity * mix(0.55, 1.0, lit);
+  gl_FragColor = vec4(col, a);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`,
+  transparent: true, depthWrite: false,
+});
+const clouds = new THREE.Mesh(geoShell, cloudMat); clouds.scale.setScalar(R.clouds); clouds.renderOrder = 7; scene.add(clouds);
+function setCloudTexture(tex) {
+  const old = cloudMat.uniforms.map.value; cloudMat.uniforms.map.value = tex; earthMat.uniforms.cloudMap.value = tex;
+  if (old && old !== blank && old !== tex) old.dispose();
+}
+
+/* ---------- Aurora ---------- */
+const auroraMat = new THREE.ShaderMaterial({
+  uniforms: { ...common, map: { value: blank }, time: { value: 0 } },
+  vertexShader: VERT,
+  fragmentShader: /* glsl */`
+uniform sampler2D map; uniform vec3 sunDir; uniform float time;
+varying vec2 vUv; varying vec3 vN;
+void main(){
+  float v = texture2D(map, vUv).r;
+  float night = smoothstep(0.08, -0.18, dot(normalize(vN), sunDir));
+  vec3 col = mix(vec3(0.15, 1.0, 0.5), vec3(0.95, 0.25, 0.75), smoothstep(0.55, 1.0, v));
+  float flick = 0.82 + 0.18 * sin(time * 1.7 + vUv.x * 160.) * sin(time * 0.9 + vUv.x * 47.);
+  float a = smoothstep(0.04, 0.7, v) * (0.18 + 0.82 * night) * flick * 0.9;
+  gl_FragColor = vec4(col, a);
+  #include <colorspace_fragment>
+}`,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
+});
+const aurora = new THREE.Mesh(geoShell, auroraMat); aurora.scale.setScalar(R.aurora); aurora.renderOrder = 11; aurora.visible = false; scene.add(aurora);
+
+/* ---------- Atmosphere ---------- */
+const atmoMat = new THREE.ShaderMaterial({
+  uniforms: { ...common },
+  vertexShader: /* glsl */`
+varying vec3 vNV; varying vec3 vW;
+void main(){ vNV = normalize(normalMatrix * normal); vec4 w = modelMatrix * vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+  fragmentShader: /* glsl */`
+uniform vec3 sunDir; varying vec3 vNV; varying vec3 vW;
+void main(){
+  float i = pow(clamp(0.74 - dot(vNV, vec3(0.,0.,1.)), 0., 1.), 4.2);
+  float s = dot(normalize(vW), sunDir);
+  float day = smoothstep(-0.45, 0.35, s);
+  float twi = smoothstep(-0.35, 0.0, s) * (1. - smoothstep(0.0, 0.4, s));
+  vec3 col = mix(vec3(0.25, 0.5, 1.0), vec3(1.0, 0.55, 0.3), twi * 0.8);
+  gl_FragColor = vec4(col * i * (0.06 + 1.5 * day), 1.);
+  #include <colorspace_fragment>
+}`,
+  side: THREE.BackSide, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, toneMapped: false,
+});
+const atmo = new THREE.Mesh(new THREE.SphereGeometry(1.16, 128, 64), atmoMat); atmo.renderOrder = 12; scene.add(atmo);
+
+/* ---------- Stars & sun ---------- */
+const stars = (() => {
+  const g = new THREE.BufferGeometry(); const N = 7000; const p = new Float32Array(N * 3), c = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    const u = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, r = 1500, s = Math.sqrt(1 - u * u);
+    p.set([r * s * Math.cos(th), r * u, r * s * Math.sin(th)], i * 3);
+    const b = Math.pow(Math.random(), 3) * 0.9 + 0.1, tint = Math.random();
+    c.set(tint < 0.15 ? [b, b * 0.85, b * 0.7] : tint > 0.85 ? [b * 0.75, b * 0.85, b] : [b, b, b], i * 3);
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+  const m = new THREE.Points(g, new THREE.PointsMaterial({ size: 1.6, sizeAttenuation: false, vertexColors: true, depthWrite: false, toneMapped: false }));
+  m.renderOrder = -1; scene.add(m); return m;
+})();
+const sunSprite = (() => {
+  const c = mkCanvas(256, 256), x = c.getContext('2d'), g = x.createRadialGradient(128, 128, 0, 128, 128, 128);
+  g.addColorStop(0, 'rgba(255,255,250,1)'); g.addColorStop(0.08, 'rgba(255,248,220,.95)'); g.addColorStop(0.25, 'rgba(255,210,140,.25)'); g.addColorStop(1, 'rgba(255,180,100,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: canvasTex(c), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, toneMapped: false }));
+  s.scale.setScalar(90); scene.add(s); return s;
+})();
+
+/* =====================================================================
+   Sun position
+   ===================================================================== */
+function subsolar(date) {
+  const d = date.getTime() / 86400000 - 10957.5; // days since J2000.0
+  const g = (357.529 + 0.98560028 * d) * DEG;
+  const q = 280.459 + 0.98564736 * d;
+  const L = (q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * DEG;
+  const e = (23.439 - 0.00000036 * d) * DEG;
+  const ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L)) / DEG;
+  const dec = Math.asin(Math.sin(e) * Math.sin(L)) / DEG;
+  const gmst = ((18.697374558 + 24.06570982441908 * d) % 24 + 24) % 24;
+  return { lat: dec, lon: wrapLon(ra - gmst * 15) };
+}
+let sunOffsetH = 0, playing = false;
+const simDate = () => new Date(Date.now() + sunOffsetH * 3600e3);
+function sunElevation(lat, lon, date = simDate()) { const s = subsolar(date); return 90 - gcDist(lat, lon, s.lat, s.lon) / 6371 / DEG; }
+
+/* =====================================================================
+   Labels (HTML markers projected onto the globe)
+   ===================================================================== */
+const labels = new Set();
+function addLabel(el, lat, lon, group, r = 1.01) {
+  el.classList.add('lbl'); $('#labels').append(el);
+  const o = { el, pos: ll2v(lat, lon, r), group, lat, lon }; labels.add(o); return o;
+}
+function removeLabels(group) { for (const o of [...labels]) if (o.group === group) { o.el.remove(); labels.delete(o); } }
+const _v = new THREE.Vector3(), _c = new THREE.Vector3();
+function updateLabels() {
+  const camD = camera.position.length(); _c.copy(camera.position).normalize();
+  const horizon = 1 / camD, w = innerWidth, h = innerHeight;
+  for (const o of labels) {
+    const on = groupVisible(o.group);
+    const f = _v.copy(o.pos).normalize().dot(_c);
+    if (!on || f < horizon + 0.015) { if (o.el.style.display !== 'none') o.el.style.display = 'none'; continue; }
+    _v.copy(o.pos).project(camera);
+    if (o.el.style.display === 'none') o.el.style.display = '';
+    o.el.style.transform = `translate(${((_v.x + 1) / 2 * w).toFixed(1)}px,${((1 - _v.y) / 2 * h).toFixed(1)}px) translate(-50%,-50%)`;
+    o.el.style.opacity = clamp((f - horizon) * 12, 0, 1);
+  }
+}
+function groupVisible(g) {
+  if (g === 'pin') return true;
+  if (g === 'hl') return S.layers.isobars;
+  if (g === 'sun') return S.layers.terminator;
+  return !!S.layers[g];
+}
+
+/* =====================================================================
+   Line helpers
+   ===================================================================== */
+function lineMesh(positions, colors, { opacity = 1, order = 6, additive = false, color = 0xffffff } = {}) {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  if (colors) g.setAttribute('color', new THREE.Float32BufferAttribute(colors, colors.length / (positions.length / 3)));
+  const m = new THREE.LineBasicMaterial({ color, vertexColors: !!colors, transparent: true, opacity, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending, toneMapped: false });
+  const l = new THREE.LineSegments(g, m); l.renderOrder = order; scene.add(l); return l;
+}
+function pushArc(out, a1, o1, a2, o2, r, maxStep = 1.5) { // great-circle-ish subdivided segment
+  let dl = o2 - o1; if (dl > 180) dl -= 360; if (dl < -180) dl += 360;
+  const n = Math.max(1, Math.ceil(Math.max(Math.abs(a2 - a1), Math.abs(dl)) / maxStep));
+  let prev = ll2v(a1, o1, r);
+  for (let i = 1; i <= n; i++) {
+    const t = i / n, p = ll2v(a1 + (a2 - a1) * t, o1 + dl * t, r);
+    out.push(prev.x, prev.y, prev.z, p.x, p.y, p.z); prev = p;
+  }
+}
+function disposeObj(o) { if (!o) return; scene.remove(o); o.geometry?.dispose(); o.material?.dispose(); }
+
+/* =====================================================================
+   Earth textures
+   ===================================================================== */
+const texLoader = new THREE.TextureLoader(); texLoader.setCrossOrigin('anonymous');
+function loadTex(url, srgb = true) {
+  return new Promise((res, rej) => texLoader.load(url, t => { if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = maxAniso; res(t); }, undefined, () => rej(new Error('failed: ' + url.split('/').pop()))));
+}
+let blueMarble = null;
+async function loadEarth() {
+  setStatus('textures', 'loading');
+  $('#loadmsg').textContent = 'Loading Earth imagery…';
+  const [day, night, spec, bump] = await Promise.all([
+    loadTex(TEX + 'earth-blue-marble.jpg'), loadTex(TEX + 'earth-night.jpg'),
+    loadTex(TEX + 'earth-water.png', false), loadTex(TEX + 'earth-topology.png', false),
+  ]);
+  blueMarble = day; day.keep = true;
+  Object.assign(earthMat.uniforms, {}); earthMat.uniforms.dayMap.value = day; earthMat.uniforms.nightMap.value = night;
+  earthMat.uniforms.specMap.value = spec; earthMat.uniforms.bumpMap.value = bump;
+  earthMat.uniforms.texel.value.set(1 / bump.image.width, 1 / bump.image.height);
+  setStatus('textures', 'ok', '4K Blue Marble + Black Marble city lights');
+}
+
+/* =====================================================================
+   NASA GIBS (EPSG:4326 WMTS) global mosaic → equirectangular canvas
+   ===================================================================== */
+async function gibsGlobal(layer, { tms, level, ext = 'png', time = 'default', W = 4096, H = 2048 }) {
+  const span = 288 / 2 ** level, cols = Math.ceil(360 / span), rows = Math.ceil(180 / span);
+  const c = mkCanvas(W, H), x = c.getContext('2d'); x.imageSmoothingQuality = 'high';
+  const jobs = [];
+  for (let r = 0; r < rows; r++) for (let col = 0; col < cols; col++) {
+    const url = `${GIBS}${layer}/default/${time}/${tms}/${level}/${r}/${col}.${ext}`;
+    jobs.push(loadImage(url).then(im => x.drawImage(im, col * span / 360 * W, r * span / 180 * H, span / 360 * W, span / 180 * H)));
+  }
+  const res = await Promise.allSettled(jobs);
+  const ok = res.filter(r => r.status === 'fulfilled').length;
+  if (!ok) throw new Error('no tiles loaded');
+  return { canvas: c, ok, total: jobs.length };
+}
+const isoMin = d => d.toISOString().slice(0, 17) + '00Z';
+const isoDay = d => d.toISOString().slice(0, 10);
+
+/* =====================================================================
+   Clouds
+   ===================================================================== */
+let cloudSrc = null; // {data, w, h, label}
+let noiseField = null;
+function makeNoise(W = 1024, H = 512) { // tileable-in-longitude fBm value noise
+  const out = new Float32Array(W * H);
+  let amp = 1, tot = 0;
+  for (let o = 0; o < 6; o++) {
+    const gx = 8 * 2 ** o, gy = 4 * 2 ** o, lat = new Float32Array((gx) * (gy + 1));
+    for (let i = 0; i < lat.length; i++) lat[i] = Math.random();
+    for (let y = 0; y < H; y++) {
+      const fy = y / H * gy, y0 = Math.floor(fy), ty = fy - y0, sy = ty * ty * (3 - 2 * ty);
+      for (let x = 0; x < W; x++) {
+        const fx = x / W * gx, x0 = Math.floor(fx), tx = fx - x0, sx = tx * tx * (3 - 2 * tx), x1 = (x0 + 1) % gx;
+        const a = lat[y0 * gx + x0], b = lat[y0 * gx + x1], c = lat[(y0 + 1) * gx + x0], d = lat[(y0 + 1) * gx + x1];
+        out[y * W + x] += amp * ((a + (b - a) * sx) * (1 - sy) + (c + (d - c) * sx) * sy);
+      }
+    }
+    tot += amp; amp *= 0.55;
+  }
+  for (let i = 0; i < out.length; i++) out[i] /= tot;
+  // stretch contrast to ~[0,1]
+  let mn = 1, mx = 0; for (const v of out) { if (v < mn) mn = v; if (v > mx) mx = v; }
+  for (let i = 0; i < out.length; i++) out[i] = (out[i] - mn) / (mx - mn);
+  return { W, H, d: out };
+}
+function buildClouds() {
+  const W = cloudSrc?.w || 2048, H = cloudSrc?.h || 1024;
+  if (!cloudSrc && !grid) return false;
+  const out = new ImageData(W, H), o = out.data, src = cloudSrc?.data;
+  const th = S.filters.cloudThreshold, lo = th - 0.22, hi = th + 0.24;
+  if (!noiseField) noiseField = makeNoise();
+  const N = noiseField, cc = grid?.v.cloud_cover;
+  for (let y = 0; y < H; y++) {
+    const lat = 90 - (y + 0.5) / H * 180, ny = Math.min(N.H - 1, Math.floor(y / H * N.H));
+    for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4; let a = 0, br = 0.9;
+      if (src && src[i + 3] > 8) {
+        const r = src[i], g = src[i + 1], b = src[i + 2];
+        const l = (0.3 * r + 0.59 * g + 0.11 * b) / 255, sat = (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
+        const cold = sat > 0.22 ? Math.max(l, 0.9) : l; // colour-enhanced pixels = very cold tops
+        a = smooth(lo, hi, cold); br = 0.72 + 0.28 * cold;
+      } else if (cc) {
+        const lon = -180 + (x + 0.5) / W * 360;
+        const f = clamp(sampleGrid(cc, lat, lon) / 100, 0, 1);
+        const n = N.d[ny * N.W + Math.floor(x / W * N.W)];
+        a = smooth(1 - f, 1 - f + 0.28, n) * 0.92; br = 0.85 + 0.15 * n;
+      }
+      o[i] = o[i + 1] = o[i + 2] = br * 255; o[i + 3] = a * 255;
+    }
+  }
+  const c = mkCanvas(W, H); c.getContext('2d').putImageData(out, 0, 0);
+  setCloudTexture(canvasTex(c));
+  return true;
+}
+async function loadCloudsGMGSI() {
+  const url = 'https://nowcoast.noaa.gov/geoserver/satellite/wms?service=WMS&version=1.3.0&request=GetMap&layers=global_longwave_imagery_mosaic&styles=&format=image/png&transparent=true&crs=EPSG:4326&bbox=-90,-180,90,180&width=4096&height=2048';
+  const im = await loadImage(url, 45000);
+  const c = mkCanvas(4096, 2048), x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0, 4096, 2048);
+  const d = x.getImageData(0, 0, 4096, 2048).data;
+  let filled = 0; for (let i = 3; i < d.length; i += 4 * 97) if (d[i] > 8) filled++;
+  if (filled < (d.length / 4 / 97) * 0.5) throw new Error('mosaic mostly empty');
+  return { data: d, w: 4096, h: 2048, label: 'NOAA GMGSI global IR mosaic (hourly)' };
+}
+async function loadCloudsGeo() {
+  const sats = [
+    { layer: 'GOES-West_ABI_Band13_Clean_Infrared', lon: -137.2 },
+    { layer: 'GOES-East_ABI_Band13_Clean_Infrared', lon: -75.2 },
+    { layer: 'Himawari_AHI_Band13_Clean_Infrared', lon: 140.7 },
+  ];
+  const W = 4096, H = 2048;
+  const t = new Date(Date.now() - 40 * 60e3); t.setUTCMinutes(Math.floor(t.getUTCMinutes() / 10) * 10, 0, 0);
+  const got = await Promise.allSettled(sats.map(async s => {
+    let r; try { r = await gibsGlobal(s.layer, { tms: '2km', level: 3, time: isoMin(t), W, H }); }
+    catch { r = await gibsGlobal(s.layer, { tms: '2km', level: 3, time: 'default', W, H }); }
+    return { ...s, d: r.canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H).data };
+  }));
+  const ok = got.filter(g => g.status === 'fulfilled').map(g => g.value);
+  if (!ok.length) throw new Error('GIBS geostationary tiles unavailable');
+  const out = new Uint8ClampedArray(W * H * 4);
+  for (let x = 0; x < W; x++) {
+    const lon = -180 + (x + 0.5) / W * 360;
+    const order = ok.map(s => ({ s, d: Math.abs(wrapLon(lon - s.lon)) })).filter(o => o.d < 78).sort((a, b) => a.d - b.d);
+    for (let y = 0; y < H; y++) {
+      const i = (y * W + x) * 4;
+      for (const { s } of order) if (s.d[i + 3] > 8) { out[i] = s.d[i]; out[i + 1] = s.d[i + 1]; out[i + 2] = s.d[i + 2]; out[i + 3] = 255; break; }
+    }
+  }
+  return { data: out, w: W, h: H, label: `NASA GIBS ${ok.length} geostationary satellites + model fill`, t };
+}
+async function loadClouds() {
+  setStatus('clouds', 'loading');
+  const mode = S.filters.cloudSource;
+  const tries = mode === 'model' ? [] : mode === 'gibs' ? [loadCloudsGeo] : mode === 'gmgsi' ? [loadCloudsGMGSI] : [loadCloudsGMGSI, loadCloudsGeo];
+  const errs = [];
+  cloudSrc = null;
+  for (const f of tries) { try { cloudSrc = await f(); break; } catch (e) { errs.push(e.message); } }
+  if (!cloudSrc && !grid && mode !== 'model') { try { await gridPromise; } catch {} }
+  if (buildClouds()) setStatus('clouds', 'ok', cloudSrc ? cloudSrc.label : 'Model cloud cover (satellite unavailable' + (errs.length ? ': ' + errs.join('; ') : '') + ')');
+  else setStatus('clouds', 'error', errs.join('; ') || 'no data');
+}
+
+/* =====================================================================
+   Model grid (Open-Meteo multi-point) → wind, temperature, pressure…
+   ===================================================================== */
+const GRID_VARS = ['temperature_2m', 'relative_humidity_2m', 'pressure_msl', 'cloud_cover', 'precipitation', 'weather_code', 'wind_speed_10m', 'wind_direction_10m', 'wind_gusts_10m', 'cape'];
+let grid = null, gridPromise = null;
+function sampleGrid(arr, lat, lon) {
+  const G = grid; let fy = clamp((lat - G.lat0) / G.dlat, 0, G.ny - 1);
+  let fx = ((lon - G.lon0) / G.dlon) % G.nx; if (fx < 0) fx += G.nx;
+  const x0 = Math.floor(fx) % G.nx, y0 = Math.min(Math.floor(fy), G.ny - 2), tx = fx - Math.floor(fx), ty = fy - y0, x1 = (x0 + 1) % G.nx;
+  const a = arr[y0 * G.nx + x0], b = arr[y0 * G.nx + x1], c = arr[(y0 + 1) * G.nx + x0], d = arr[(y0 + 1) * G.nx + x1];
+  return (a * (1 - tx) + b * tx) * (1 - ty) + (c * (1 - tx) + d * tx) * ty;
+}
+function cubic(p0, p1, p2, p3, t) { return p1 + 0.5 * t * (p2 - p0 + t * (2 * p0 - 5 * p1 + 4 * p2 - p3 + t * (3 * (p1 - p2) + p3 - p0))); }
+function sampleCubic(arr, lat, lon) {
+  const G = grid; const fy = clamp((lat - G.lat0) / G.dlat, 0, G.ny - 1);
+  let fx = ((lon - G.lon0) / G.dlon) % G.nx; if (fx < 0) fx += G.nx;
+  const x1 = Math.floor(fx), tx = fx - x1, y1 = Math.min(Math.floor(fy), G.ny - 2), ty = fy - y1;
+  const row = j => { const yy = clamp(j, 0, G.ny - 1) * G.nx; const g = i => arr[yy + ((i % G.nx) + G.nx) % G.nx]; return cubic(g(x1 - 1), g(x1), g(x1 + 1), g(x1 + 2), tx); };
+  return cubic(row(y1 - 1), row(y1), row(y1 + 1), row(y1 + 2), ty);
+}
+async function loadGrid(force = false) {
+  setStatus('grid', 'loading');
+  const KEY = 'wg-grid-v2';
+  try {
+    const c = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (!force && c && Date.now() - c.t < 30 * 60e3) { setGrid(c.g, new Date(c.t)); return; }
+  } catch {}
+  const G = { lat0: -80, dlat: 10, ny: 17, lon0: -180, dlon: 12, nx: 30 };
+  const lats = [], lons = [];
+  for (let j = 0; j < G.ny; j++) for (let i = 0; i < G.nx; i++) { lats.push(G.lat0 + j * G.dlat); lons.push(G.lon0 + i * G.dlon); }
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats.join(',')}&longitude=${lons.join(',')}&current=${GRID_VARS.join(',')}&wind_speed_unit=ms&timezone=GMT`;
+  const js = await fetchJSON(url, {}, 40000);
+  const arr = Array.isArray(js) ? js : [js];
+  if (arr.length !== lats.length) throw new Error(`expected ${lats.length} points, got ${arr.length}`);
+  G.v = {};
+  for (const k of GRID_VARS) G.v[k] = arr.map(p => { const v = p.current?.[k]; return Number.isFinite(v) ? v : 0; });
+  G.time = arr[0].current?.time;
+  try { localStorage.setItem(KEY, JSON.stringify({ t: Date.now(), g: G })); } catch {}
+  setGrid(G, new Date());
+}
+function setGrid(G, when) {
+  for (const k in G.v) G.v[k] = Float32Array.from(G.v[k]);
+  const n = G.nx * G.ny, u = new Float32Array(n), v = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const s = G.v.wind_speed_10m[i], d = G.v.wind_direction_10m[i] * DEG; u[i] = -s * Math.sin(d); v[i] = -s * Math.cos(d); }
+  G.u = u; G.v_ = v; grid = G;
+  setStatus('grid', 'ok', `${n} grid points, model time ${G.time || '?'} UTC (fetched ${fmtTime(when)})`);
+  buildField(); buildIsobars(); buildStormCells(); resetWind();
+  if (!cloudSrc && S.layers.clouds) buildClouds();
+}
+
+/* ---------- Scalar fields (heatmap) ---------- */
+const FIELDS = {
+  temp: { label: 'Temperature', key: 'temperature_2m', unit: '°C', stops: [[-45, '#2b0a4a'], [-30, '#4a2a9e'], [-18, '#2f5fd8'], [-6, '#3fb0f0'], [0, '#c8f2ff'], [8, '#8de08a'], [16, '#e8e45a'], [24, '#f6a53a'], [32, '#e8502c'], [40, '#b0122e'], [48, '#5a0a24']] },
+  hum: { label: 'Relative humidity', key: 'relative_humidity_2m', unit: '%', stops: [[0, '#8a5523'], [25, '#d9a75b'], [50, '#e6e2b8'], [70, '#7fd0c8'], [85, '#2e8fd8'], [100, '#1f3fa0']] },
+  cloud: { label: 'Cloud cover', key: 'cloud_cover', unit: '%', stops: [[0, '#1d3557'], [50, '#7d8fa8'], [100, '#f1f5fb']] },
+  wind: { label: 'Wind speed', key: 'wind_speed_10m', unit: 'm/s', stops: [[0, '#3a4fc4'], [4, '#3fa0e0'], [8, '#46d1a5'], [12, '#d8e04a'], [17, '#f39a35'], [24, '#e2384a'], [33, '#b51ec0']] },
+  gust: { label: 'Wind gusts', key: 'wind_gusts_10m', unit: 'm/s', stops: [[0, '#3a4fc4'], [6, '#3fa0e0'], [12, '#46d1a5'], [18, '#d8e04a'], [25, '#f39a35'], [33, '#e2384a'], [45, '#b51ec0']] },
+  cape: { label: 'Storm energy (CAPE)', key: 'cape', unit: 'J/kg', stops: [[0, '#00000000'], [250, '#2f6fd8'], [800, '#3fd08a'], [1500, '#f0e04a'], [2500, '#f08a2a'], [3500, '#e0283c'], [5000, '#c01ec8']] },
+  pres: { label: 'Sea-level pressure', key: 'pressure_msl', unit: 'hPa', stops: [[960, '#7a1fa2'], [985, '#d23a5a'], [1000, '#f2a05a'], [1013, '#f2efd8'], [1025, '#6ab6e8'], [1040, '#2a4fb0']] },
+  precip: { label: 'Precipitation (model)', key: 'precipitation', unit: 'mm/h', stops: [[0, '#00000000'], [0.1, '#6fd3ff'], [1, '#2a8ff0'], [3, '#3fd06a'], [6, '#f0e04a'], [12, '#f0602a'], [25, '#c01ec8']] },
+};
+function buildField() {
+  const f = FIELDS[S.field];
+  shells.field.visible = !!(f && grid);
+  if (!f || !grid) return;
+  const W = 1024, H = 512, c = mkCanvas(W, H), x = c.getContext('2d'), img = x.createImageData(W, H), d = img.data;
+  const fn = ramp(f.stops.map(([v, h]) => [v, h.slice(0, 7)]));
+  const alphaFirst = f.stops[0][1].length > 7;
+  const arr = grid.v[f.key];
+  for (let y = 0; y < H; y++) {
+    const lat = 90 - (y + 0.5) / H * 180;
+    for (let xx = 0; xx < W; xx++) {
+      const lon = -180 + (xx + 0.5) / W * 360, v = sampleCubic(arr, lat, lon), [r, g, b] = fn(v), i = (y * W + xx) * 4;
+      d[i] = r; d[i + 1] = g; d[i + 2] = b;
+      d[i + 3] = alphaFirst ? 255 * smooth(f.stops[0][0], f.stops[1][0], v) : 255;
+    }
+  }
+  x.putImageData(img, 0, 0);
+  shells.field.setTexture(canvasTex(c));
+  shells.field.material.uniforms.opacity.value = S.opacity.field;
+}
+
+/* ---------- Pressure isobars + H/L ---------- */
+let isobarLines = null;
+function buildIsobars() {
+  disposeObj(isobarLines); isobarLines = null; removeLabels('hl');
+  if (!grid) return;
+  const P = grid.v.pressure_msl, step = 2, nx = 180, ny = 81; // 2° resampled grid, lat -80..80
+  const f = new Float32Array(nx * ny);
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) f[j * nx + i] = sampleCubic(P, -80 + j * step, -180 + i * step);
+  const pos = [], col = [];
+  const ll = (i, j) => [-80 + j * step, -180 + i * step];
+  for (let lev = 940; lev <= 1064; lev += 4) {
+    const strong = lev % 20 === 0;
+    for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx; i++) {
+      const i1 = (i + 1) % nx;
+      const a = f[j * nx + i], b = f[j * nx + i1], c = f[(j + 1) * nx + i1], d = f[(j + 1) * nx + i];
+      const pts = [];
+      const edge = (va, vb, pa, pb) => { if ((va < lev) !== (vb < lev)) { const t = (lev - va) / (vb - va); pts.push([pa[0] + (pb[0] - pa[0]) * t, pa[1] + (pb[1] - pa[1]) * t]); } };
+      const A = ll(i, j), B = ll(i + 1, j), C = ll(i + 1, j + 1), D = ll(i, j + 1);
+      edge(a, b, A, B); edge(b, c, B, C); edge(c, d, C, D); edge(d, a, D, A);
+      for (let k = 0; k + 1 < pts.length; k += 2) {
+        const p = ll2v(pts[k][0], pts[k][1], R.isobars), q = ll2v(pts[k + 1][0], pts[k + 1][1], R.isobars);
+        pos.push(p.x, p.y, p.z, q.x, q.y, q.z);
+        const w = strong ? 0.95 : 0.6; col.push(w, w, w, w, w, w);
+      }
+    }
+  }
+  isobarLines = lineMesh(pos, col, { opacity: 0.75, order: 6 });
+  isobarLines.visible = S.layers.isobars;
+  // highs & lows on the native grid
+  const G = grid;
+  for (let j = 1; j < G.ny - 1; j++) for (let i = 0; i < G.nx; i++) {
+    const v = P[j * G.nx + i]; let mx = true, mn = true, sum = 0, n = 0;
+    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+      if (!dj && !di) continue; const w = P[(j + dj) * G.nx + ((i + di + G.nx) % G.nx)];
+      if (w >= v) mx = false; if (w <= v) mn = false; sum += w; n++;
+    }
+    const lat = G.lat0 + j * G.dlat, lon = G.lon0 + i * G.dlon;
+    if (mn && v < 1008 && sum / n - v > 1.5) { const el = document.createElement('div'); el.className = 'hl L'; el.innerHTML = `L<small>${Math.round(v)}</small>`; addLabel(el, lat, lon, 'hl', R.isobars); }
+    if (mx && v > 1018 && v - sum / n > 1.5) { const el = document.createElement('div'); el.className = 'hl H'; el.innerHTML = `H<small>${Math.round(v)}</small>`; addLabel(el, lat, lon, 'hl', R.isobars); }
+  }
+}
+
+/* ---------- Model thunderstorm cells ---------- */
+const BOLT = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>`;
+function buildStormCells() {
+  removeLabels('stormcells'); if (!grid) return;
+  const G = grid, wc = G.v.weather_code, cape = G.v.cape;
+  let n = 0;
+  for (let k = 0; k < wc.length; k++) if (wc[k] >= 95) {
+    const lat = G.lat0 + Math.floor(k / G.nx) * G.dlat, lon = G.lon0 + (k % G.nx) * G.dlon;
+    const el = document.createElement('div'); el.className = 'cell'; el.innerHTML = BOLT;
+    el.title = `${WMO[wc[k]] || 'Thunderstorm'} (model), CAPE ${Math.round(cape[k])} J/kg`;
+    addLabel(el, lat, lon, 'stormcells', 1.012); n++;
+  }
+  grid.cells = n;
+}
+
+/* =====================================================================
+   Wind particles
+   ===================================================================== */
+const WIND_MAX = 20000;
+const windRamp = ramp([[0, '#9fd8ff'], [4, '#c8f0ff'], [8, '#f4ffd0'], [12, '#ffe27a'], [17, '#ffad4a'], [24, '#ff5a4a'], [33, '#ff3fd0']]);
+let wind = null;
+function resetWind() {
+  if (wind) { disposeObj(wind.mesh); wind = null; }
+  if (!grid) return;
+  const N = S.filters.windCount, T = S.filters.windTrail, segs = T - 1;
+  const g = new THREE.BufferGeometry();
+  const pos = new Float32Array(N * segs * 2 * 3), col = new Float32Array(N * segs * 2 * 4);
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 4).setUsage(THREE.DynamicDrawUsage));
+  const mat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, toneMapped: false, blending: THREE.NormalBlending });
+  const mesh = new THREE.LineSegments(g, mat); mesh.renderOrder = 9; mesh.frustumCulled = false; scene.add(mesh);
+  wind = { N, T, mesh, pos, col, lat: new Float32Array(N), lon: new Float32Array(N), age: new Float32Array(N), life: new Float32Array(N), spd: new Float32Array(N), hist: new Float32Array(N * T * 3), head: 0 };
+  for (let i = 0; i < N; i++) spawn(i, true);
+  mesh.visible = S.layers.wind;
+}
+function spawn(i, initial) {
+  const W = wind;
+  let lat, lon, s = 0;
+  for (let k = 0; k < 6; k++) {
+    lat = Math.asin(Math.random() * 2 - 1) / DEG; lon = Math.random() * 360 - 180;
+    if (lat > 84) lat = 84; if (lat < -84) lat = -84;
+    s = Math.hypot(sampleGrid(grid.u, lat, lon), sampleGrid(grid.v_, lat, lon));
+    if (s >= S.filters.windMin) break;
+  }
+  W.lat[i] = lat; W.lon[i] = lon; W.spd[i] = s;
+  W.life[i] = 70 + Math.random() * 110; W.age[i] = initial ? Math.random() * W.life[i] : 0;
+  const p = ll2v(lat, lon, R.wind);
+  for (let t = 0; t < W.T; t++) W.hist.set([p.x, p.y, p.z], (i * W.T + t) * 3);
+}
+function stepWind(dt) {
+  const W = wind; if (!W || !W.mesh.visible) return;
+  const k = 0.012 * S.filters.windSpeed * dt * 60 * 0.25, T = W.T;
+  W.head = (W.head + 1) % T;
+  const tmp = new THREE.Vector3();
+  for (let i = 0; i < W.N; i++) {
+    W.age[i] += dt * 60;
+    let lat = W.lat[i], lon = W.lon[i];
+    const u = sampleGrid(grid.u, lat, lon), v = sampleGrid(grid.v_, lat, lon), s = Math.hypot(u, v);
+    if (W.age[i] > W.life[i] || Math.abs(lat) > 85 || s < S.filters.windMin * 0.8) { spawn(i, false); continue; }
+    lat += v * k; lon += u * k / Math.max(Math.cos(lat * DEG), 0.15);
+    if (lon > 180) lon -= 360; if (lon < -180) lon += 360;
+    W.lat[i] = lat; W.lon[i] = lon; W.spd[i] = s;
+    ll2v(lat, lon, R.wind, tmp);
+    const o = (i * T + W.head) * 3; W.hist[o] = tmp.x; W.hist[o + 1] = tmp.y; W.hist[o + 2] = tmp.z;
+  }
+  // rebuild segments, newest → oldest
+  const pos = W.pos, col = W.col, segs = T - 1;
+  for (let i = 0; i < W.N; i++) {
+    const [r, g, b] = windRamp(W.spd[i]);
+    const fade = Math.min(1, W.age[i] / 12) * Math.min(1, (W.life[i] - W.age[i]) / 12);
+    for (let s = 0; s < segs; s++) {
+      const a = (W.head - s + T) % T, bI = (W.head - s - 1 + T) % T;
+      const pa = (i * T + a) * 3, pb = (i * T + bI) * 3, o = (i * segs + s) * 6, oc = (i * segs + s) * 8;
+      pos[o] = W.hist[pa]; pos[o + 1] = W.hist[pa + 1]; pos[o + 2] = W.hist[pa + 2];
+      pos[o + 3] = W.hist[pb]; pos[o + 4] = W.hist[pb + 1]; pos[o + 5] = W.hist[pb + 2];
+      const al = (1 - s / segs) * 0.9 * fade, bl = (1 - (s + 1) / segs) * 0.9 * fade;
+      col[oc] = r / 255; col[oc + 1] = g / 255; col[oc + 2] = b / 255; col[oc + 3] = al;
+      col[oc + 4] = r / 255; col[oc + 5] = g / 255; col[oc + 6] = b / 255; col[oc + 7] = bl;
+    }
+  }
+  W.mesh.geometry.attributes.position.needsUpdate = true;
+  W.mesh.geometry.attributes.color.needsUpdate = true;
+}
+
+/* =====================================================================
+   Lightning (Blitzortung live websocket)
+   ===================================================================== */
+const LMAX = 150000, T0 = Date.now();
+const L = {
+  pos: new Float32Array(LMAX * 3), birth: new Float32Array(LMAX).fill(-1e9), arrive: new Float32Array(LMAX).fill(-1e9),
+  lat: new Float32Array(LMAX), lon: new Float32Array(LMAX), head: 0, count: 0, ws: null, host: 0, connected: false, fails: 0, lastMsg: 0, recent: [],
+};
+const lGeo = new THREE.BufferGeometry();
+lGeo.setAttribute('position', new THREE.BufferAttribute(L.pos, 3).setUsage(THREE.DynamicDrawUsage));
+lGeo.setAttribute('birth', new THREE.BufferAttribute(L.birth, 1).setUsage(THREE.DynamicDrawUsage));
+lGeo.setAttribute('arrive', new THREE.BufferAttribute(L.arrive, 1).setUsage(THREE.DynamicDrawUsage));
+const lMat = new THREE.ShaderMaterial({
+  uniforms: { now: { value: 0 }, win: { value: 1800 }, px: { value: renderer.getPixelRatio() } },
+  vertexShader: /* glsl */`
+attribute float birth; attribute float arrive; uniform float now, win, px; varying float vAge; varying float vFlash;
+void main(){
+  float age = now - birth; vAge = clamp(age / win, 0., 1.); vFlash = exp(-max(now - arrive, 0.) * 1.6);
+  vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
+  float vis = step(0., age) * step(age, win);
+  float zoom = clamp(3.0 / -mv.z, 0.7, 1.5);
+  gl_PointSize = vis * px * (1.3 * zoom + 2.0 * (1. - vAge) * zoom + 22. * vFlash);
+}`,
+  fragmentShader: /* glsl */`
+varying float vAge; varying float vFlash;
+void main(){
+  float d = length(gl_PointCoord - 0.5) * 2.; if (d > 1.) discard;
+  vec3 c0 = vec3(1.0), c1 = vec3(1.0, 0.88, 0.3), c2 = vec3(0.95, 0.3, 0.15);
+  vec3 col = vAge < 0.25 ? mix(c0, c1, vAge / 0.25) : mix(c1, c2, (vAge - 0.25) / 0.75);
+  float core = 1. - smoothstep(0.35, 1., d);
+  float glow = exp(-d * d * 5.);
+  float a = mix(core * 0.8, glow, vFlash) * (1. - 0.7 * vAge);
+  gl_FragColor = vec4(col + vec3(0.5, 0.65, 1.0) * vFlash, a);
+  #include <colorspace_fragment>
+}`,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
+});
+const lightning = new THREE.Points(lGeo, lMat); lightning.renderOrder = 10; lightning.frustumCulled = false; scene.add(lightning);
+let lDirtyLo = Infinity, lDirtyHi = -1;
+function addStrike(lat, lon, tms) {
+  const i = L.head; L.head = (L.head + 1) % LMAX; L.count++;
+  const p = ll2v(lat, lon, R.lightning); L.pos[i * 3] = p.x; L.pos[i * 3 + 1] = p.y; L.pos[i * 3 + 2] = p.z;
+  L.lat[i] = lat; L.lon[i] = lon;
+  const nowS = (Date.now() - T0) / 1000;
+  L.birth[i] = Math.min(nowS, (tms - T0) / 1000); L.arrive[i] = nowS;
+  lDirtyLo = Math.min(lDirtyLo, i); lDirtyHi = Math.max(lDirtyHi, i);
+  L.recent.push(Date.now());
+}
+function flushStrikes() {
+  if (lDirtyHi < 0) return;
+  for (const k of ['position', 'birth', 'arrive']) {
+    const a = lGeo.attributes[k], s = a.itemSize; a.clearUpdateRanges?.(); a.addUpdateRange?.(lDirtyLo * s, (lDirtyHi - lDirtyLo + 1) * s); a.needsUpdate = true;
+  }
+  lDirtyLo = Infinity; lDirtyHi = -1;
+}
+function lzwDecode(b) {
+  const d = {}, f = b.split(''); let c = f[0], g = c; const a = [c]; let o = 256;
+  for (let i = 1; i < f.length; i++) {
+    const code = f[i].charCodeAt(0);
+    const e = code < 256 ? f[i] : (d[code] ? d[code] : g + c);
+    a.push(e); c = e.charAt(0); d[o++] = g + c; g = e;
+  }
+  return a.join('');
+}
+const BLITZ_HOSTS = ['wss://ws1.blitzortung.org/', 'wss://ws7.blitzortung.org/', 'wss://ws8.blitzortung.org/', 'wss://ws3.blitzortung.org/'];
+function connectLightning() {
+  if (!S.layers.lightning || L.ws) return;
+  setStatus('lightning', 'loading', 'connecting…');
+  let ws;
+  try { ws = new WebSocket(BLITZ_HOSTS[L.host % BLITZ_HOSTS.length]); } catch (e) { onLightningFail('cannot open socket'); return; }
+  L.ws = ws; let opened = false;
+  const to = setTimeout(() => { if (!opened) ws.close(); }, 10000);
+  ws.onopen = () => { opened = true; clearTimeout(to); ws.send('{"a":111}'); };
+  ws.onmessage = ev => {
+    try {
+      const s = typeof ev.data === 'string' ? ev.data : '';
+      const j = JSON.parse(s.charAt(0) === '{' ? s : lzwDecode(s));
+      if (Number.isFinite(j.lat) && Number.isFinite(j.lon)) {
+        addStrike(j.lat, j.lon, j.time ? j.time / 1e6 : Date.now());
+        L.lastMsg = Date.now();
+        if (!L.connected) { L.connected = true; L.fails = 0; setStatus('lightning', 'ok', 'live stream connected'); }
+      }
+    } catch {}
+  };
+  ws.onclose = ws.onerror = () => {
+    clearTimeout(to);
+    if (L.ws !== ws) return;
+    L.ws = null; L.connected = false;
+    if (!S.layers.lightning) { setStatus('lightning', '', 'off'); return; }
+    onLightningFail(opened ? 'connection closed' : 'could not connect');
+  };
+}
+function onLightningFail(why) {
+  L.fails++; L.host++;
+  if (L.fails >= BLITZ_HOSTS.length * 2) {
+    setStatus('lightning', 'error', `${why}. Live strikes unavailable here (the network may only allow its own website, or a firewall blocks WebSockets). Model thunderstorm cells are shown instead.`);
+    if (!S.layers.stormcells) { S.layers.stormcells = true; renderPanel(); }
+    setTimeout(() => { L.fails = 0; connectLightning(); }, 5 * 60e3);
+    return;
+  }
+  setStatus('lightning', 'loading', `${why}, retrying…`);
+  setTimeout(connectLightning, Math.min(15000, 1500 * L.fails));
+}
+function disconnectLightning() { if (L.ws) { const w = L.ws; L.ws = null; w.close(); } L.connected = false; }
+function strikesNear(lat, lon, km, minutes) {
+  const nowS = (Date.now() - T0) / 1000, lim = minutes * 60; let n = 0, nearest = Infinity;
+  for (let i = 0; i < Math.min(L.count, LMAX); i++) {
+    if (nowS - L.birth[i] > lim) continue;
+    if (Math.abs(L.lat[i] - lat) > km / 100) continue;
+    const d = gcDist(lat, lon, L.lat[i], L.lon[i]); if (d < km) { n++; nearest = Math.min(nearest, d); }
+  }
+  return { n, nearest };
+}
+
+/* =====================================================================
+   Radar (RainViewer) – Web Mercator tiles reprojected to equirectangular
+   ===================================================================== */
+const radar = { meta: null, frames: [], anim: false, idx: 0, timer: null, latestTex: null, time: null };
+async function radarCanvas(host, path, z) {
+  const n = 2 ** z, M = mkCanvas(n * 256, n * 256), mx = M.getContext('2d');
+  const jobs = [];
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++)
+    jobs.push(loadImage(`${host}${path}/256/${z}/${x}/${y}/2/1_1.png`).then(im => mx.drawImage(im, x * 256, y * 256)));
+  const r = await Promise.allSettled(jobs);
+  if (!r.some(q => q.status === 'fulfilled')) throw new Error('no radar tiles');
+  const E = mkCanvas(n * 256, n * 128), ex = E.getContext('2d'); ex.imageSmoothingEnabled = false;
+  for (let y = 0; y < E.height; y++) {
+    const lat = 90 - (y + 0.5) / E.height * 180; if (Math.abs(lat) > 85.05) continue;
+    const my = (1 - Math.log(Math.tan(Math.PI / 4 + lat * DEG / 2)) / Math.PI) / 2 * M.height;
+    ex.drawImage(M, 0, Math.floor(my), M.width, 1, 0, y, E.width, 1);
+  }
+  return E;
+}
+async function loadRadar() {
+  setStatus('radar', 'loading');
+  const meta = await fetchJSON('https://api.rainviewer.com/public/weather-maps.json');
+  const past = meta.radar?.past || []; if (!past.length) throw new Error('no radar frames');
+  radar.meta = meta; const last = past[past.length - 1];
+  const c = await radarCanvas(meta.host, last.path, 3);
+  radar.latestTex = canvasTex(c); radar.latestTex.keep = true; radar.time = new Date(last.time * 1000);
+  if (!radar.anim) shells.radar.setTexture(radar.latestTex);
+  setStatus('radar', 'ok', `latest frame ${fmtTime(radar.time)} (${ago(radar.time)})`);
+  updateLegend();
+}
+async function toggleRadarAnim() {
+  if (radar.anim) { stopRadarAnim(); return; }
+  if (!radar.meta) { toast('Radar data not loaded yet'); return; }
+  radar.anim = true; renderPanel(); toast('Loading radar loop (last 2 hours)…');
+  if (!radar.frames.length) {
+    const past = radar.meta.radar.past;
+    for (const f of past) {
+      if (!radar.anim) return;
+      try { const t = canvasTex(await radarCanvas(radar.meta.host, f.path, 2)); t.keep = true; radar.frames.push({ tex: t, time: new Date(f.time * 1000) }); } catch {}
+    }
+  }
+  if (!radar.anim || !radar.frames.length) { stopRadarAnim(); return; }
+  radar.idx = 0;
+  radar.timer = setInterval(() => {
+    radar.idx = (radar.idx + 1) % radar.frames.length;
+    const f = radar.frames[radar.idx]; shells.radar.material.uniforms.map.value = f.tex; radar.time = f.time; updateLegend();
+  }, 450);
+}
+function stopRadarAnim() {
+  radar.anim = false; clearInterval(radar.timer);
+  if (radar.latestTex) { shells.radar.material.uniforms.map.value = radar.latestTex; radar.time = new Date(radar.meta.radar.past.at(-1).time * 1000); }
+  renderPanel(); updateLegend();
+}
+
+/* =====================================================================
+   GIBS overlays: IMERG precipitation, SST, satellite base map
+   ===================================================================== */
+async function loadIMERG() {
+  setStatus('imerg', 'loading');
+  const t = new Date(Date.now() - 5 * 3600e3); t.setUTCMinutes(Math.floor(t.getUTCMinutes() / 30) * 30, 0, 0);
+  let r; try { r = await gibsGlobal('IMERG_Precipitation_Rate', { tms: '2km', level: 2, time: isoMin(t), W: 2560, H: 1280 }); }
+  catch { r = await gibsGlobal('IMERG_Precipitation_Rate', { tms: '2km', level: 2, W: 2560, H: 1280 }); }
+  shells.imerg.setTexture(canvasTex(r.canvas));
+  setStatus('imerg', 'ok', `NASA GPM IMERG ~${fmtTime(t)} (${r.ok}/${r.total} tiles)`);
+}
+async function loadSST() {
+  setStatus('sst', 'loading');
+  const d = new Date(Date.now() - 2 * 86400e3);
+  let r; try { r = await gibsGlobal('GHRSST_L4_MUR_Sea_Surface_Temperature', { tms: '1km', level: 2, time: isoDay(d), W: 2560, H: 1280 }); }
+  catch { r = await gibsGlobal('GHRSST_L4_MUR_Sea_Surface_Temperature', { tms: '1km', level: 2, W: 2560, H: 1280 }); }
+  shells.sst.setTexture(canvasTex(r.canvas));
+  setStatus('sst', 'ok', `GHRSST MUR ${isoDay(d)}`);
+}
+let satBaseTex = null;
+async function loadSatBase() {
+  setStatus('satbase', 'loading');
+  const d = new Date(Date.now() - 86400e3);
+  const r = await gibsGlobal('VIIRS_SNPP_CorrectedReflectance_TrueColor', { tms: '250m', level: 3, ext: 'jpg', time: isoDay(d), W: 4096, H: 2048 });
+  satBaseTex = canvasTex(r.canvas); satBaseTex.keep = true;
+  setStatus('satbase', 'ok', `VIIRS true colour ${isoDay(d)}`);
+}
+async function applyBase() {
+  if (S.layers.satbase) {
+    try { if (!satBaseTex) await loadSatBase(); earthMat.uniforms.dayMap.value = satBaseTex; }
+    catch (e) { setStatus('satbase', 'error', e.message); }
+  } else if (blueMarble) earthMat.uniforms.dayMap.value = blueMarble;
+}
+
+/* =====================================================================
+   Aurora (NOAA SWPC OVATION)
+   ===================================================================== */
+async function loadAurora() {
+  setStatus('aurora', 'loading');
+  const js = await fetchJSON('https://services.swpc.noaa.gov/json/ovation_aurora_latest.json');
+  const W = 360, H = 181, img = new ImageData(W, H);
+  let mx = 0;
+  for (const [lo, la, v] of js.coordinates || []) {
+    const lon = lo > 180 ? lo - 360 : lo, x = Math.round(lon + 180) % W, y = Math.round(90 - la);
+    if (y < 0 || y >= H) continue; const i = (y * W + x) * 4, s = clamp(v / 40, 0, 1) * 255;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = s; img.data[i + 3] = 255; mx = Math.max(mx, v);
+  }
+  const c = mkCanvas(W, H); c.getContext('2d').putImageData(img, 0, 0);
+  const big = mkCanvas(1440, 724), bx = big.getContext('2d'); bx.filter = 'blur(3px)'; bx.drawImage(c, 0, 0, 1440, 724);
+  const t = canvasTex(big, false); const old = auroraMat.uniforms.map.value; auroraMat.uniforms.map.value = t; if (old !== blank) old.dispose();
+  setStatus('aurora', 'ok', `forecast for ${js['Forecast Time'] || '?'}, peak ${mx}%`);
+}
+
+/* =====================================================================
+   Tropical cyclones (NASA EONET → GDACS fallback)
+   ===================================================================== */
+let storms = [], stormLines = null;
+const CAT = [[0, 'TD', '#5ec8ff'], [34, 'TS', '#3ddc97'], [64, 'Cat 1', '#ffe45c'], [83, 'Cat 2', '#ffb347'], [96, 'Cat 3', '#ff7a3d'], [113, 'Cat 4', '#ff3d5a'], [137, 'Cat 5', '#d63dff']];
+const catOf = kts => { let c = CAT[0]; for (const k of CAT) if ((kts || 0) >= k[0]) c = k; return c; };
+const SPIRAL = c => `<svg width="26" height="26" viewBox="0 0 24 24" style="color:${c}"><path fill="currentColor" d="M12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6Zm7.9 1.1C19.1 6 15.4 3 11 3c-2 0-3.9.6-5.4 1.7 1-.3 2-.4 3-.4 3.3 0 6.1 2 7.3 4.9-.4 0-.8-.1-1.2-.1-.5 0-1 .1-1.5.2a5 5 0 0 0-1.2-.2 5 5 0 0 0-5 5c0 .4 0 .7.1 1.1-.2.5-.2 1-.2 1.5 0 .4 0 .8.1 1.2-2.9-1.2-4.9-4-4.9-7.3 0-1 .1-2 .4-3C2.6 9.1 2 11 2 13c0 4.4 3 8.1 7.3 8.9.3.1.7.1 1.1.1 1.4 0 2.8-.3 4-1 .9-.5 1.6-1.1 2.3-1.8 1-1.1 1.8-2.4 2.2-3.9 1.1-.6 2-1.4 2.7-2.3.4-.8.4-1.8.3-2.7Z"/></svg>`;
+async function loadStorms() {
+  setStatus('storms', 'loading');
+  let list = [], src = '';
+  try {
+    const js = await fetchJSON('https://eonet.gsfc.nasa.gov/api/v3/events?category=severeStorms&status=open&days=21');
+    list = (js.events || []).map(e => {
+      const pts = (e.geometry || []).filter(g => g.type === 'Point').map(g => ({ lon: g.coordinates[0], lat: g.coordinates[1], kts: g.magnitudeValue, t: new Date(g.date) })).sort((a, b) => a.t - b.t);
+      if (!pts.length) return null; const last = pts.at(-1);
+      return { name: e.title.replace(/^(Tropical Storm|Hurricane|Typhoon|Super Typhoon|Cyclone|Tropical Cyclone|Tropical Depression)\s+/i, ''), title: e.title, ...last, track: pts, link: e.sources?.[0]?.url };
+    }).filter(Boolean);
+    src = 'NASA EONET';
+  } catch (e) { src = 'EONET failed (' + e.message + ')'; }
+  if (!list.length) {
+    try {
+      const js = await fetchJSON('https://www.gdacs.org/gdacsapi/api/events/geteventlist/MAP?eventlist=TC');
+      list = (js.features || []).filter(f => f.geometry?.type === 'Point' && f.properties?.iscurrent !== 'false').map(f => {
+        const p = f.properties; const kts = p.severitydata?.severity ? p.severitydata.severity / 1.852 : null;
+        return { name: p.eventname || p.name, title: p.name || p.eventname, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1], kts, t: new Date(p.todate || p.fromdate), track: [], link: p.url?.report };
+      });
+      src += (src ? ' → ' : '') + 'GDACS';
+    } catch (e) { if (!list.length && src.includes('failed')) { setStatus('storms', 'error', src + '; GDACS failed (' + e.message + ')'); return; } }
+  }
+  storms = list; drawStorms();
+  setStatus('storms', 'ok', `${list.length} active system${list.length === 1 ? '' : 's'} (${src})`);
+}
+function drawStorms() {
+  removeLabels('storms'); disposeObj(stormLines); stormLines = null;
+  const pos = [], col = [];
+  for (const s of storms) {
+    if ((s.kts || 0) < S.filters.stormMin) continue;
+    const c = catOf(s.kts), [r, g, b] = hex(c[2]);
+    for (let i = 1; i < s.track.length; i++) {
+      const a = s.track[i - 1], bb = s.track[i], n0 = pos.length;
+      pushArc(pos, a.lat, a.lon, bb.lat, bb.lon, R.tracks, 1);
+      const cc = hex(catOf(bb.kts)[2]); for (let k = n0; k < pos.length; k += 3) col.push(cc[0] / 255, cc[1] / 255, cc[2] / 255);
+    }
+    const el = document.createElement('div'); el.className = 'storm';
+    el.innerHTML = `${SPIRAL(c[2])}<span>${s.name} · ${c[1]}${s.kts ? ' ' + Math.round(s.kts) + ' kt' : ''}</span>`;
+    el.onclick = ev => { ev.stopPropagation(); flyTo(s.lat, s.lon, 2.0); showStorm(s); };
+    addLabel(el, s.lat, s.lon, 'storms', R.tracks);
+  }
+  if (pos.length) { stormLines = lineMesh(pos, col, { opacity: 0.9, order: 8 }); stormLines.visible = S.layers.storms; }
+  if (currentTab === 'events') renderPanel();
+}
+function showStorm(s) {
+  const c = catOf(s.kts);
+  openPopup(`<div class="pp-h"><div><h3>${s.title}</h3><small>${c[1]} · updated ${ago(s.t)}</small></div><button class="x" data-close>✕</button></div>
+  <div class="pp-grid" style="margin-top:12px"><div><small>Max wind</small><span>${s.kts ? Math.round(s.kts) + ' kt · ' + U.wind(s.kts * 0.5144) : 'n/a'}</span></div>
+  <div><small>Position</small><span>${s.lat.toFixed(1)}°, ${s.lon.toFixed(1)}°</span></div>
+  <div><small>Track points</small><span>${s.track.length || 1}</span></div><div><small>Category</small><span style="color:${c[2]}">${c[1]}</span></div></div>
+  ${s.link ? `<p class="note" style="margin-top:10px"><a href="${s.link}" target="_blank" rel="noopener">Official advisory ↗</a></p>` : ''}
+  <button class="mini" data-wx="${s.lat},${s.lon}" style="margin-top:8px">Weather at storm centre</button>`);
+}
+
+/* =====================================================================
+   NWS alerts (US)
+   ===================================================================== */
+const ALERT_CATS = {
+  tornado: ['Tornado', '#ff2d55'], tstorm: ['Thunderstorm', '#ff9f0a'], flood: ['Flood', '#30d158'], tropical: ['Tropical', '#bf5af2'],
+  winter: ['Winter', '#64d2ff'], heat: ['Heat', '#ff6b3d'], fire: ['Fire weather', '#ff453a'], other: ['Other', '#a0a8bd'],
+};
+function alertCat(ev) {
+  const e = ev.toLowerCase();
+  if (e.includes('tornado')) return 'tornado';
+  if (e.includes('thunderstorm')) return 'tstorm';
+  if (e.includes('flood')) return 'flood';
+  if (/hurricane|tropical|storm surge|typhoon/.test(e)) return 'tropical';
+  if (/winter|snow|blizzard|ice|freez|frost|wind chill|cold/.test(e)) return 'winter';
+  if (/heat/.test(e)) return 'heat';
+  if (/fire|red flag/.test(e)) return 'fire';
+  return 'other';
+}
+let alerts = [], alertLines = null;
+async function loadAlerts() {
+  setStatus('alerts', 'loading');
+  const js = await fetchJSON('https://api.weather.gov/alerts/active?status=actual&message_type=alert', { headers: { Accept: 'application/geo+json' } }, 40000);
+  alerts = (js.features || []).filter(f => f.geometry && /Polygon/.test(f.geometry.type)).map(f => {
+    const p = f.properties; const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+    return { event: p.event, cat: alertCat(p.event || ''), headline: p.headline, area: p.areaDesc, severity: p.severity, expires: p.expires ? new Date(p.expires) : null, polys };
+  });
+  drawAlerts();
+  setStatus('alerts', 'ok', `${alerts.length} active polygons (US)`);
+}
+function drawAlerts() {
+  disposeObj(alertLines); alertLines = null;
+  const pos = [], col = [];
+  const W = 8192, H = 4096, c = mkCanvas(W, H), x = c.getContext('2d');
+  const shown = alerts.filter(a => S.filters.alertTypes[a.cat]);
+  for (const a of shown) {
+    const [r, g, b] = hex(ALERT_CATS[a.cat][1]);
+    x.fillStyle = `rgba(${r},${g},${b},0.33)`;
+    for (const poly of a.polys) {
+      x.beginPath();
+      for (const ring of poly) {
+        ring.forEach(([lo, la], k) => { const px = (lo + 180) / 360 * W, py = (90 - la) / 180 * H; k ? x.lineTo(px, py) : x.moveTo(px, py); });
+        x.closePath();
+        for (let k = 1; k < ring.length; k++) {
+          const n0 = pos.length; pushArc(pos, ring[k - 1][1], ring[k - 1][0], ring[k][1], ring[k][0], R.alerts, 1);
+          for (let q = n0; q < pos.length; q += 3) col.push(r / 255, g / 255, b / 255);
+        }
+      }
+      x.fill('evenodd');
+    }
+  }
+  const t = canvasTex(c); shells.alertFill.setTexture(t);
+  if (pos.length) { alertLines = lineMesh(pos, col, { opacity: 0.95, order: 6 }); alertLines.visible = S.layers.alerts; }
+  shells.alertFill.visible = S.layers.alerts && shown.length > 0;
+  updateLegend(); if (currentTab === 'events') renderPanel();
+}
+function pointInRing(lat, lon, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+const alertsAt = (lat, lon) => alerts.filter(a => S.filters.alertTypes[a.cat] && a.polys.some(p => pointInRing(lat, lon, p[0]) && !p.slice(1).some(h => pointInRing(lat, lon, h))));
+
+/* =====================================================================
+   Point layers: earthquakes, wildfires, volcanoes
+   ===================================================================== */
+function makePoints(order) {
+  const g = new THREE.BufferGeometry();
+  const m = new THREE.ShaderMaterial({
+    uniforms: { time: { value: 0 }, px: { value: renderer.getPixelRatio() } },
+    vertexShader: /* glsl */`
+attribute vec3 color; attribute float size; attribute float pulse; uniform float time, px; varying vec3 vC; varying float vP;
+void main(){ vC = color; vP = pulse; vec4 mv = modelViewMatrix * vec4(position,1.); gl_Position = projectionMatrix * mv;
+  float zoom = clamp(3.0 / -mv.z, 0.8, 2.6); gl_PointSize = px * size * zoom * (1. + pulse * 0.9 * fract(time * 0.6)); }`,
+    fragmentShader: /* glsl */`
+varying vec3 vC; varying float vP; uniform float time;
+void main(){ float d = length(gl_PointCoord - .5) * 2.; if (d > 1.) discard;
+  float core = 1. - smoothstep(0.32, 0.45, d);
+  float ring = smoothstep(0.55, 0.75, d) * (1. - smoothstep(0.85, 1., d));
+  float a = vP > .5 ? max(core, ring * (1. - fract(time * 0.6))) : (1. - smoothstep(0.55, 1., d));
+  gl_FragColor = vec4(vC, a * 0.95);
+  #include <colorspace_fragment> }`,
+    transparent: true, depthWrite: false, toneMapped: false,
+  });
+  const p = new THREE.Points(g, m); p.renderOrder = order; p.frustumCulled = false; p.visible = false; scene.add(p);
+  p.setData = items => {
+    const pos = [], col = [], size = [], pulse = [];
+    for (const it of items) { const v = ll2v(it.lat, it.lon, R.points); pos.push(v.x, v.y, v.z); const c = hex(it.color); col.push(c[0] / 255, c[1] / 255, c[2] / 255); size.push(it.size); pulse.push(it.pulse ? 1 : 0); }
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    g.setAttribute('size', new THREE.Float32BufferAttribute(size, 1)); g.setAttribute('pulse', new THREE.Float32BufferAttribute(pulse, 1));
+    p.items = items;
+  };
+  p.items = []; return p;
+}
+const pts = { quakes: makePoints(10), fires: makePoints(10), volcanoes: makePoints(10) };
+let quakeData = [];
+async function loadQuakes() {
+  setStatus('quakes', 'loading');
+  const per = S.filters.quakePeriod === 'week' ? 'week' : 'day';
+  const js = await fetchJSON(`https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_${per}.geojson`);
+  quakeData = (js.features || []).map(f => ({ lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1], depth: f.geometry.coordinates[2], mag: f.properties.mag, place: f.properties.place, t: new Date(f.properties.time), url: f.properties.url, tsunami: f.properties.tsunami }));
+  drawQuakes();
+  setStatus('quakes', 'ok', `${quakeData.length} events M2.5+ in past ${per}`);
+}
+function drawQuakes() {
+  const items = quakeData.filter(q => q.mag >= S.filters.quakeMin).map(q => ({
+    ...q, kind: 'quake', size: 4 + Math.pow(Math.max(q.mag, 0), 1.6) * 1.6,
+    color: q.depth < 70 ? '#ffd23f' : q.depth < 300 ? '#ff8a3d' : '#e0445a', pulse: Date.now() - q.t < 6 * 3600e3,
+  }));
+  pts.quakes.setData(items);
+}
+let eonetData = { fires: [], volcanoes: [] };
+async function loadEonet() {
+  setStatus('eonet', 'loading');
+  const [f, v] = await Promise.allSettled([
+    fetchJSON('https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires&status=open&days=10'),
+    fetchJSON('https://eonet.gsfc.nasa.gov/api/v3/events?category=volcanoes&status=open&days=60'),
+  ]);
+  const map = (js, kind) => (js.events || []).map(e => { const g = (e.geometry || []).filter(g => g.type === 'Point').at(-1); return g && { lon: g.coordinates[0], lat: g.coordinates[1], title: e.title, t: new Date(g.date), kind, link: e.sources?.[0]?.url }; }).filter(Boolean);
+  if (f.status === 'fulfilled') eonetData.fires = map(f.value, 'fire');
+  if (v.status === 'fulfilled') eonetData.volcanoes = map(v.value, 'volcano');
+  pts.fires.setData(eonetData.fires.map(e => ({ ...e, size: 6, color: '#ff6a2a' })));
+  pts.volcanoes.setData(eonetData.volcanoes.map(e => ({ ...e, size: 9, color: '#ff2f6d', pulse: true })));
+  if (f.status === 'rejected' && v.status === 'rejected') throw new Error(f.reason.message);
+  setStatus('eonet', 'ok', `${eonetData.fires.length} wildfires, ${eonetData.volcanoes.length} volcanoes`);
+}
+
+/* =====================================================================
+   Borders & graticule
+   ===================================================================== */
+let borders = null, graticule = null;
+async function loadBorders() {
+  setStatus('borders', 'loading');
+  const topo = await fetchJSON(BORDERS_URL);
+  const { scale: [sx, sy], translate: [tx, ty] } = topo.transform;
+  const pos = [];
+  for (const arc of topo.arcs) {
+    let x = 0, y = 0, prev = null;
+    for (const [dx, dy] of arc) {
+      x += dx; y += dy; const lon = x * sx + tx, lat = y * sy + ty;
+      if (prev) { if (Math.abs(lon - prev[1]) < 180) pushArc(pos, prev[0], prev[1], lat, lon, R.borders, 2); }
+      prev = [lat, lon];
+    }
+  }
+  borders = lineMesh(pos, null, { opacity: 0.32, order: 6, color: 0xdfe8ff }); borders.visible = S.layers.borders;
+  setStatus('borders', 'ok', 'Natural Earth 1:50m');
+}
+function buildGraticule() {
+  const pos = [], strong = [];
+  for (let lon = -180; lon < 180; lon += 15) for (let lat = -88; lat < 88; lat += 2) pushArc(pos, lat, lon, lat + 2, lon, R.graticule, 2);
+  for (let lat = -75; lat <= 75; lat += 15) for (let lon = -180; lon < 180; lon += 2) pushArc(lat ? pos : strong, lat, lon, lat, lon + 2, R.graticule, 2);
+  for (const lat of [23.44, -23.44, 66.56, -66.56]) for (let lon = -180; lon < 180; lon += 2) pushArc(strong, lat, lon, lat, lon + 2, R.graticule, 2);
+  const g = new THREE.Group();
+  g.add(lineMesh(pos, null, { opacity: 0.12, order: 6 })); g.add(lineMesh(strong, null, { opacity: 0.3, order: 6, color: 0xffd25c }));
+  scene.add(g); return g;
+}
+graticule = buildGraticule();
+
+/* =====================================================================
+   Camera fly-to
+   ===================================================================== */
+let fly = null;
+function flyTo(lat, lon, dist = null, dur = 1600) {
+  const from = camera.position.clone().normalize(), to = ll2v(lat, lon, 1), d0 = camera.position.length();
+  fly = { t0: performance.now(), dur, q: new THREE.Quaternion().setFromUnitVectors(from, to), from, d0, d1: dist ?? Math.min(d0, 2.6), ang: from.angleTo(to) };
+}
+controls.addEventListener('start', () => { fly = null; });
+function stepFly(now) {
+  if (!fly) return;
+  const t = clamp((now - fly.t0) / fly.dur, 0, 1), e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const q = new THREE.Quaternion().slerp(fly.q, e);
+  const d = fly.d0 + (fly.d1 - fly.d0) * e + Math.sin(Math.PI * e) * fly.ang * 0.35;
+  camera.position.copy(fly.from).applyQuaternion(q).multiplyScalar(d);
+  camera.lookAt(0, 0, 0);
+  if (t >= 1) fly = null;
+}
+
+/* =====================================================================
+   Picking, hover readout, popups
+   ===================================================================== */
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function pickGlobe(cx, cy) {
+  ndc.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+  const o = ray.ray.origin, d = ray.ray.direction, b = o.dot(d), c = o.lengthSq() - 1, disc = b * b - c;
+  if (disc < 0) return null; const t = -b - Math.sqrt(disc); if (t < 0) return null;
+  return v2ll(o.clone().addScaledVector(d, t));
+}
+function pickPoint(cx, cy) {
+  let best = null, bd = 14 * 14; _c.copy(camera.position).normalize(); const horizon = 1 / camera.position.length();
+  for (const k of ['quakes', 'fires', 'volcanoes']) {
+    if (!S.layers[k]) continue;
+    for (const it of pts[k].items) {
+      const v = ll2v(it.lat, it.lon, R.points); if (v.clone().normalize().dot(_c) < horizon) continue;
+      v.project(camera); const dx = (v.x + 1) / 2 * innerWidth - cx, dy = (1 - v.y) / 2 * innerHeight - cy, dd = dx * dx + dy * dy;
+      if (dd < bd) { bd = dd; best = it; }
+    }
+  }
+  return best;
+}
+const readout = $('#readout'); let hoverRAF = 0, lastHover = null;
+canvas.addEventListener('pointermove', e => {
+  lastHover = [e.clientX, e.clientY];
+  if (hoverRAF) return;
+  hoverRAF = requestAnimationFrame(() => {
+    hoverRAF = 0; const p = pickGlobe(...lastHover);
+    if (!p) { readout.style.opacity = 0; return; }
+    let s = `<b>${Math.abs(p.lat).toFixed(2)}°${p.lat >= 0 ? 'N' : 'S'} ${Math.abs(p.lon).toFixed(2)}°${p.lon >= 0 ? 'E' : 'W'}</b>`;
+    if (grid) {
+      const t = sampleCubic(grid.v.temperature_2m, p.lat, p.lon), u = sampleGrid(grid.u, p.lat, p.lon), v = sampleGrid(grid.v_, p.lat, p.lon);
+      const sp = Math.hypot(u, v), dir = (Math.atan2(-u, -v) / DEG + 360) % 360;
+      s += ` · ${U.temp(t)} · wind ${U.wind(sp)} ${compass(dir)} · ${U.pres(sampleCubic(grid.v.pressure_msl, p.lat, p.lon))} · cloud ${Math.round(clamp(sampleGrid(grid.v.cloud_cover, p.lat, p.lon), 0, 100))}%`;
+    }
+    const el = sunElevation(p.lat, p.lon); s += ` · sun ${el.toFixed(0)}°`;
+    readout.innerHTML = s; readout.style.opacity = 1;
+  });
+});
+canvas.addEventListener('pointerleave', () => readout.style.opacity = 0);
+let down = null;
+canvas.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY, performance.now()]; });
+canvas.addEventListener('pointerup', e => {
+  if (!down) return; const moved = Math.hypot(e.clientX - down[0], e.clientY - down[1]), dt = performance.now() - down[2]; down = null;
+  if (moved > 6 || dt > 600) return;
+  const it = pickPoint(e.clientX, e.clientY);
+  if (it) { showFeature(it); return; }
+  const p = pickGlobe(e.clientX, e.clientY); if (p) openWeather(p.lat, p.lon);
+});
+canvas.addEventListener('dblclick', e => { const p = pickGlobe(e.clientX, e.clientY); if (p) flyTo(p.lat, p.lon, Math.max(1.25, camera.position.length() * 0.55), 900); });
+
+const popup = $('#popup');
+function openPopup(html) { popup.innerHTML = html; popup.hidden = false; }
+popup.addEventListener('click', e => {
+  if (e.target.closest('[data-close]')) { popup.hidden = true; removeLabels('pin'); }
+  const wx = e.target.closest('[data-wx]'); if (wx) { const [a, b] = wx.dataset.wx.split(',').map(Number); openWeather(a, b); }
+});
+function showFeature(it) {
+  setPin(it.lat, it.lon);
+  if (it.kind === 'quake') openPopup(`<div class="pp-h"><div><h3>M${it.mag.toFixed(1)} earthquake</h3><small>${it.place || ''}</small></div><button class="x" data-close>✕</button></div>
+    <div class="pp-grid" style="margin-top:12px"><div><small>Time</small><span>${ago(it.t)}</span></div><div><small>Depth</small><span>${it.depth.toFixed(0)} km</span></div>
+    <div><small>Magnitude</small><span>${it.mag.toFixed(1)}</span></div><div><small>Tsunami flag</small><span>${it.tsunami ? 'Yes' : 'No'}</span></div></div>
+    <p class="note" style="margin-top:10px"><a href="${it.url}" target="_blank" rel="noopener">USGS event page ↗</a></p>`);
+  else openPopup(`<div class="pp-h"><div><h3>${it.title}</h3><small>${it.kind === 'fire' ? 'Wildfire' : 'Volcano'} · updated ${ago(it.t)}</small></div><button class="x" data-close>✕</button></div>
+    ${it.link ? `<p class="note" style="margin-top:10px"><a href="${it.link}" target="_blank" rel="noopener">Source ↗</a></p>` : ''}
+    <button class="mini" data-wx="${it.lat},${it.lon}" style="margin-top:6px">Weather here</button>`);
+}
+function setPin(lat, lon) { removeLabels('pin'); const el = document.createElement('div'); el.className = 'pin'; addLabel(el, lat, lon, 'pin', 1.012); }
+let wxReq = 0;
+async function openWeather(lat, lon, name = null) {
+  setPin(lat, lon); const id = ++wxReq;
+  const coord = `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
+  openPopup(`<div class="pp-h"><div><h3>${name || 'Loading…'}</h3><small>${coord}</small></div><button class="x" data-close>✕</button></div><p class="note">Fetching current conditions…</p>`);
+  const fx = fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}&current=temperature_2m,apparent_temperature,relative_humidity_2m,pressure_msl,cloud_cover,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day,uv_index,visibility&hourly=temperature_2m,precipitation_probability,precipitation&forecast_hours=24&wind_speed_unit=ms&timezone=auto`);
+  const gx = name ? Promise.resolve(null) : fetchJSON(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`, {}, 8000).catch(() => null);
+  const [f, g] = await Promise.allSettled([fx, gx]);
+  if (id !== wxReq) return;
+  let place = name;
+  if (!place && g.value) { const v = g.value; place = [v.city || v.locality, v.principalSubdivision, v.countryName].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).slice(0, 2).join(', '); }
+  if (!place) place = Math.abs(lat) > 60 ? 'Polar region' : 'Open water / remote area';
+  const ln = strikesNear(lat, lon, 100, 30), al = alertsAt(lat, lon), sunEl = sunElevation(lat, lon);
+  let body;
+  if (f.status === 'fulfilled') {
+    const c = f.value.current, h = f.value.hourly;
+    const localT = new Date(Date.now() + (f.value.utc_offset_seconds || 0) * 1000).toISOString().slice(11, 16);
+    body = `<div class="pp-now"><div class="big">${U.tempN(c.temperature_2m)}</div><div class="cond"><b>${WMO[c.weather_code] || '—'}</b><br>Feels like ${U.tempN(c.apparent_temperature)} · local ${localT}</div></div>
+    <div class="pp-grid">
+      <div><small>Wind</small><span>${U.wind(c.wind_speed_10m)} ${compass(c.wind_direction_10m)}</span></div>
+      <div><small>Gusts</small><span>${U.wind(c.wind_gusts_10m)}</span></div>
+      <div><small>Pressure</small><span>${U.pres(c.pressure_msl)}</span></div>
+      <div><small>Humidity</small><span>${c.relative_humidity_2m}%</span></div>
+      <div><small>Cloud cover</small><span>${c.cloud_cover}%</span></div>
+      <div><small>Precipitation</small><span>${U.mm(c.precipitation || 0)}</span></div>
+      <div><small>Sun elevation</small><span>${sunEl.toFixed(0)}°</span></div>
+      <div><small>Visibility</small><span>${c.visibility != null ? (c.visibility / 1000).toFixed(0) + ' km' : '—'}</span></div>
+    </div>
+    <div class="pp-sec"><h5>Next 24 hours</h5>${spark(h)}</div>`;
+  } else body = `<p class="note">Point forecast unavailable (${f.reason.message}).</p>`;
+  const extra = `<div class="pp-sec"><h5>Lightning nearby</h5><div class="note">${L.connected || L.count ? (ln.n ? `<b style="color:var(--accent2)">${ln.n} strikes</b> within 100 km in the last 30 min, nearest ${ln.nearest.toFixed(0)} km` : 'No strikes within 100 km in the last 30 min') : 'Live lightning feed not connected'}</div></div>
+  ${al.length ? `<div class="pp-sec"><h5>Active alerts</h5>${al.slice(0, 6).map(a => `<div class="alert" style="border-color:${ALERT_CATS[a.cat][1]}"><b>${a.event}</b><br><span class="note">${a.headline || ''}</span></div>`).join('')}</div>` : ''}`;
+  openPopup(`<div class="pp-h"><div><h3>${place}</h3><small>${coord}</small></div><button class="x" data-close>✕</button></div>${body}${extra}`);
+}
+function spark(h) {
+  const T = h.temperature_2m || [], P = h.precipitation_probability || [], n = T.length; if (!n) return '';
+  const W = 300, H = 70, mn = Math.min(...T), mx = Math.max(...T), sx = i => 4 + i / (n - 1) * (W - 8), sy = v => 8 + (1 - (v - mn) / ((mx - mn) || 1)) * (H - 28);
+  const path = T.map((v, i) => `${i ? 'L' : 'M'}${sx(i).toFixed(1)},${sy(v).toFixed(1)}`).join('');
+  const bars = P.map((p, i) => `<rect x="${(sx(i) - 4).toFixed(1)}" y="${(H - p / 100 * 18).toFixed(1)}" width="8" height="${(p / 100 * 18).toFixed(1)}" fill="#5cc8ff" opacity=".45"/>`).join('');
+  const times = h.time || [];
+  return `<svg viewBox="0 0 ${W} ${H + 14}" width="100%" role="img" aria-label="24 hour temperature and rain chance">${bars}
+  <path d="${path}" fill="none" stroke="#ffd25c" stroke-width="2" stroke-linejoin="round"/>
+  <text x="4" y="10" fill="#e8eefc" font-size="10">${U.tempN(mx)}</text><text x="4" y="${H - 18}" fill="#8e9bb8" font-size="10">${U.tempN(mn)}</text>
+  ${[0, Math.floor(n / 2), n - 1].map(i => `<text x="${sx(i)}" y="${H + 12}" fill="#8e9bb8" font-size="9.5" text-anchor="${i ? i === n - 1 ? 'end' : 'middle' : 'start'}">${(times[i] || '').slice(11, 16)}</text>`).join('')}</svg>
+  <div class="note"><span style="color:#ffd25c">━</span> temperature &nbsp; <span style="color:#5cc8ff">▮</span> chance of rain</div>`;
+}
+
+/* =====================================================================
+   Search (Open-Meteo geocoding)
+   ===================================================================== */
+const q = $('#q'), qres = $('#qres'); let qT;
+q.addEventListener('input', () => {
+  clearTimeout(qT); const v = q.value.trim(); if (v.length < 2) { qres.style.display = 'none'; return; }
+  qT = setTimeout(async () => {
+    try {
+      const js = await fetchJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(v)}&count=6&language=en`);
+      const r = js.results || [];
+      qres.innerHTML = r.length ? r.map((p, i) => `<button data-i="${i}">${p.name} <small>${[p.admin1, p.country].filter(Boolean).join(', ')}</small></button>`).join('') : '<button disabled><small>No matches</small></button>';
+      qres.style.display = 'block'; qres._r = r;
+    } catch (e) { qres.innerHTML = `<button disabled><small>Search unavailable (${e.message})</small></button>`; qres.style.display = 'block'; }
+  }, 300);
+});
+qres.addEventListener('click', e => {
+  const b = e.target.closest('button[data-i]'); if (!b) return; const p = qres._r[+b.dataset.i];
+  qres.style.display = 'none'; q.value = p.name; q.blur();
+  flyTo(p.latitude, p.longitude, 1.9); openWeather(p.latitude, p.longitude, [p.name, p.admin1 || p.country].filter(Boolean).join(', '));
+});
+q.addEventListener('keydown', e => { if (e.key === 'Enter') qres.querySelector('button[data-i]')?.click(); if (e.key === 'Escape') { qres.style.display = 'none'; q.blur(); } });
+document.addEventListener('click', e => { if (!e.target.closest('.search')) qres.style.display = 'none'; });
+
+/* =====================================================================
+   Panel UI
+   ===================================================================== */
+const LAYERS = [
+  { title: 'Live weather', items: [
+    ['clouds', 'Clouds', 'Live satellite infrared', 'clouds', 'clouds'],
+    ['radar', 'Radar precipitation', 'Rain & snow, ~10 min old', 'radar', 'radar'],
+    ['imerg', 'Global precipitation', 'NASA satellites, ~5 h delay', 'imerg', 'imerg'],
+    ['wind', 'Wind flow', 'Animated surface wind', null, 'grid'],
+    ['lightning', 'Lightning strikes', 'Live strikes, flash on arrival', null, 'lightning'],
+    ['stormcells', 'Thunderstorm cells', 'Model-diagnosed storms', null, 'grid'],
+    ['isobars', 'Pressure isobars', 'Every 4 hPa, highs & lows', null, 'grid'],
+    ['storms', 'Tropical cyclones', 'Hurricanes, typhoons + tracks', null, 'storms'],
+    ['alerts', 'Severe weather alerts', 'US warnings & watches', null, 'alerts'],
+    ['aurora', 'Aurora oval', '30-min aurora forecast', null, 'aurora'],
+    ['sst', 'Sea surface temperature', 'Daily ocean temperature', 'sst', 'sst'],
+  ] },
+  { title: 'Hazards', items: [
+    ['quakes', 'Earthquakes', 'USGS, M2.5+', null, 'quakes'],
+    ['fires', 'Wildfires', 'Active fire events', null, 'eonet'],
+    ['volcanoes', 'Volcanoes', 'Active eruptions', null, 'eonet'],
+  ] },
+  { title: 'Earth & sky', items: [
+    ['terminator', 'Day / night terminator', 'Twilight bands, subsolar point', null, null],
+    ['nightLights', 'City lights at night', 'NASA Black Marble', null, null],
+    ['satbase', "Yesterday's satellite view", 'Swap base map for VIIRS imagery', null, 'satbase'],
+    ['borders', 'Borders & coastlines', null, null, 'borders'],
+    ['graticule', 'Lat / lon grid', 'Equator, tropics, polar circles', null, null],
+    ['atmosphere', 'Atmosphere glow', null, null, null],
+    ['stars', 'Stars & sun', null, null, null],
+  ] },
+];
+let currentTab = 'layers';
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { currentTab = b.dataset.tab; document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b)); renderPanel(); });
+function sw(key, checked) { return `<label class="sw"><input type="checkbox" data-layer="${key}" ${checked ? 'checked' : ''} aria-label="${key}"><span></span></label>`; }
+function slider(id, label, min, max, step, val, fmt = v => v) { return `<div class="ctl"><label for="${id}">${label}</label><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}"><output>${fmt(val)}</output></div>`; }
+function renderPanel() {
+  const body = $('#panelBody'); const st = body.scrollTop;
+  if (currentTab === 'layers') {
+    let h = `<h4>Colour field</h4><div class="seg" id="fieldSeg">${[['none', 'None'], ...Object.entries(FIELDS).map(([k, f]) => [k, f.label.replace(' (model)', '').replace('Sea-level pressure', 'Pressure').replace('Storm energy (CAPE)', 'CAPE').replace('Relative humidity', 'Humidity')])].map(([k, l]) => `<button data-field="${k}" class="${S.field === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    if (S.field !== 'none') h += slider('op-field', 'Opacity', 0.1, 1, 0.05, S.opacity.field, v => Math.round(v * 100) + '%');
+    for (const g of LAYERS) {
+      h += `<h4>${g.title}</h4>`;
+      for (const [key, nm, sb, op, src] of g.items) {
+        h += `<div class="item"><div class="nm">${nm}</div>${sw(key, S.layers[key])}${sb || src ? `<div class="sb">${src ? sdot(src) : ''}${sb || ''}</div>` : ''}`;
+        if (S.layers[key] && op) h += slider('op-' + op, 'Opacity', 0.1, 1, 0.05, S.opacity[op], v => Math.round(v * 100) + '%');
+        if (S.layers[key] && key === 'radar') h += `<div class="ctl"><button class="mini" id="radarAnim">${radar.anim ? '■ Stop loop' : '▶ Play last 2 hours'}</button></div>`;
+        h += `</div>`;
+      }
+    }
+    h += `<h4>Units</h4><div class="seg"><button data-units="metric" class="${S.units === 'metric' ? 'on' : ''}">Metric</button><button data-units="imperial" class="${S.units === 'imperial' ? 'on' : ''}">Imperial</button></div>
+    <p class="note" style="margin-top:14px">Drag to rotate, scroll to zoom, double-click to dive in, click anywhere for a local forecast. Keys: <kbd>R</kbd> rotate, <kbd>L</kbd> panel, <kbd>Space</kbd> day cycle.</p>`;
+    body.innerHTML = h;
+  } else if (currentTab === 'filters') {
+    const F = S.filters;
+    body.innerHTML = `<h4>Clouds</h4>
+      <div class="ctl"><label>Source</label><select id="f-cloudsrc">${[['auto', 'Auto (best available)'], ['gmgsi', 'NOAA global IR mosaic'], ['gibs', 'NASA geostationary IR'], ['model', 'Model cloud cover']].map(([k, l]) => `<option value="${k}" ${F.cloudSource === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      ${slider('f-cloudth', 'Threshold', 0.25, 0.8, 0.01, F.cloudThreshold, v => (+v).toFixed(2))}
+      <p class="note">Higher threshold keeps only cold, high cloud tops (storms); lower shows thin and low cloud too.</p>
+      <h4>Wind particles</h4>
+      ${slider('f-windmin', 'Min speed', 0, 20, 0.5, F.windMin, v => U.wind(+v))}
+      ${slider('f-windcount', 'Particles', 1000, WIND_MAX, 500, F.windCount, v => (+v / 1000).toFixed(1) + 'k')}
+      ${slider('f-windspeed', 'Speed', 0.25, 3, 0.05, F.windSpeed, v => (+v).toFixed(2) + '×')}
+      ${slider('f-windtrail', 'Trail', 3, 24, 1, F.windTrail, v => v)}
+      <h4>Lightning</h4>
+      ${slider('f-lwin', 'Show last', 1, 120, 1, F.lightningWindow, v => v + ' min')}
+      <h4>Tropical cyclones</h4>
+      <div class="ctl"><label>Minimum</label><select id="f-stormmin">${CAT.map(c => `<option value="${c[0]}" ${F.stormMin == c[0] ? 'selected' : ''}>${c[1]}${c[0] ? ' (' + c[0] + '+ kt)' : ' and up'}</option>`).join('')}</select></div>
+      <h4>Severe weather alerts</h4>
+      <div class="chips" id="alertChips">${Object.entries(ALERT_CATS).map(([k, [l, c]]) => `<span class="chip ${F.alertTypes[k] ? '' : 'off'}" data-acat="${k}"><i style="background:${c}"></i>${l} <small>${alerts.filter(a => a.cat === k).length}</small></span>`).join('')}</div>
+      <h4>Earthquakes</h4>
+      ${slider('f-qmin', 'Min mag.', 2.5, 7, 0.1, F.quakeMin, v => 'M' + (+v).toFixed(1))}
+      <div class="ctl"><label>Period</label><div class="seg"><button data-qper="day" class="${F.quakePeriod === 'day' ? 'on' : ''}">24 hours</button><button data-qper="week" class="${F.quakePeriod === 'week' ? 'on' : ''}">7 days</button></div></div>
+      <div style="margin-top:16px"><button class="mini" id="resetAll">Reset all settings</button></div>`;
+  } else if (currentTab === 'events') {
+    const nowS = (Date.now() - T0) / 1000; let lmin = 0; const cut = Date.now() - 60e3; L.recent = L.recent.filter(t => t > cut); lmin = L.recent.length;
+    const st2 = storms.filter(s => (s.kts || 0) >= S.filters.stormMin).sort((a, b) => (b.kts || 0) - (a.kts || 0));
+    const big = quakeData.filter(q => q.mag >= Math.max(5, S.filters.quakeMin)).sort((a, b) => b.mag - a.mag).slice(0, 8);
+    const al = Object.entries(ALERT_CATS).map(([k, [l, c]]) => [l, c, alerts.filter(a => a.cat === k).length]).filter(a => a[2]);
+    const hot = lightningHotspots();
+    body.innerHTML = `<h4>Lightning</h4><div class="note">${L.connected ? `<b style="color:var(--accent2)">${lmin}</b> strikes in the last minute worldwide · ${Math.min(L.count, LMAX).toLocaleString()} received this session` : status.lightning?.msg || 'Not connected'}</div>
+      ${hot.length ? `<div class="list">${hot.map(h => `<button data-fly="${h.lat},${h.lon}"><span>Hotspot ${h.lat.toFixed(0)}°, ${h.lon.toFixed(0)}°</span><small>${h.n} strikes / 15 min</small></button>`).join('')}</div>` : ''}
+      ${grid ? `<div class="note" style="margin-top:6px">${grid.cells || 0} model grid points report thunderstorms right now.</div>` : ''}
+      <h4>Tropical cyclones</h4>${st2.length ? `<div class="list">${st2.map((s, i) => `<button data-storm="${storms.indexOf(s)}"><span>${s.title}</span><small style="color:${catOf(s.kts)[2]}">${catOf(s.kts)[1]}${s.kts ? ' · ' + Math.round(s.kts) + ' kt' : ''}</small></button>`).join('')}</div>` : `<div class="note">${status.storms?.state === 'ok' ? 'No active tropical systems.' : status.storms?.msg || 'Loading…'}</div>`}
+      <h4>US alerts</h4>${al.length ? `<div class="chips">${al.map(([l, c, n]) => `<span class="chip"><i style="background:${c}"></i>${l} ${n}</span>`).join('')}</div>` : `<div class="note">${status.alerts?.msg || 'Loading…'}</div>`}
+      <h4>Significant earthquakes</h4>${big.length ? `<div class="list">${big.map(q => `<button data-fly="${q.lat},${q.lon}"><span>M${q.mag.toFixed(1)} ${q.place || ''}</span><small>${ago(q.t)}</small></button>`).join('')}</div>` : '<div class="note">None M5+ in the selected period (turn on the Earthquakes layer to load).</div>'}
+      <h4>Jump to</h4><div class="seg">${[['N. America', 40, -100], ['S. America', -15, -60], ['Europe', 50, 12], ['Africa', 5, 20], ['Asia', 30, 100], ['Oceania', -25, 140], ['Arctic', 80, 0], ['Antarctica', -80, 0]].map(([n, a, o]) => `<button data-fly="${a},${o},2.6">${n}</button>`).join('')}</div>`;
+  } else {
+    body.innerHTML = `<h4>Data sources</h4>${Object.entries(SOURCES).map(([k, [n, d]]) => `<div class="src">${sdot(k)}<div><b>${n}</b></div><small>${status[k]?.msg ? status[k].msg + ' · ' : ''}${d}${status[k]?.t ? ' · checked ' + fmtTime(status[k].t) : ''}</small></div>`).join('')}
+      <p class="note" style="margin-top:14px">Everything here is free public data fetched straight from your browser. Wind, temperature, pressure, humidity and CAPE come from a global model grid (Open-Meteo, ~1000 km spacing, refreshed every 30 min); clouds, radar and lightning are observations. Lightning data © Blitzortung.org contributors, for non-commercial use.</p>`;
+  }
+  body.scrollTop = st; renderStatus2();
+}
+function renderStatus2() { document.querySelectorAll('[data-sdot]').forEach(el => { el.className = 'sdot ' + (status[el.dataset.sdot]?.state || ''); el.title = status[el.dataset.sdot]?.msg || ''; }); }
+function lightningHotspots() {
+  const nowS = (Date.now() - T0) / 1000, bins = new Map();
+  for (let i = 0; i < Math.min(L.count, LMAX); i++) {
+    if (nowS - L.birth[i] > 900) continue;
+    const k = Math.floor(L.lat[i] / 5) * 1000 + Math.floor(L.lon[i] / 5);
+    const b = bins.get(k) || { n: 0, la: 0, lo: 0 }; b.n++; b.la += L.lat[i]; b.lo += L.lon[i]; bins.set(k, b);
+  }
+  return [...bins.values()].sort((a, b) => b.n - a.n).slice(0, 5).filter(b => b.n > 3).map(b => ({ n: b.n, lat: b.la / b.n, lon: b.lo / b.n }));
+}
+
+const panelBody = $('#panelBody');
+panelBody.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.layer) { setLayer(t.dataset.layer, t.checked); return; }
+  if (t.id === 'f-cloudsrc') { S.filters.cloudSource = t.value; saveSettings(); loadClouds(); }
+  if (t.id === 'f-stormmin') { S.filters.stormMin = +t.value; saveSettings(); drawStorms(); }
+  if (t.id === 'f-windcount' || t.id === 'f-windtrail') resetWind();
+  if (t.id === 'f-cloudth') { if (cloudSrc || grid) { toast('Re-processing clouds…', 1200); setTimeout(buildClouds, 30); } }
+  if (t.id === 'f-qmin') drawQuakes();
+  if (t.id === 'f-windmin') resetWind();
+});
+panelBody.addEventListener('input', e => {
+  const t = e.target; if (t.type !== 'range') return;
+  const v = +t.value, out = t.parentElement.querySelector('output');
+  if (t.id.startsWith('op-')) { const k = t.id.slice(3); S.opacity[k] = v; applyOpacity(); out.textContent = Math.round(v * 100) + '%'; }
+  const F = S.filters;
+  if (t.id === 'f-cloudth') { F.cloudThreshold = v; out.textContent = v.toFixed(2); }
+  if (t.id === 'f-windmin') { F.windMin = v; out.textContent = U.wind(v); }
+  if (t.id === 'f-windcount') { F.windCount = v; out.textContent = (v / 1000).toFixed(1) + 'k'; }
+  if (t.id === 'f-windspeed') { F.windSpeed = v; out.textContent = v.toFixed(2) + '×'; }
+  if (t.id === 'f-windtrail') { F.windTrail = v; out.textContent = v; }
+  if (t.id === 'f-lwin') { F.lightningWindow = v; lMat.uniforms.win.value = v * 60; out.textContent = v + ' min'; }
+  if (t.id === 'f-qmin') { F.quakeMin = v; out.textContent = 'M' + v.toFixed(1); }
+  saveSettings();
+});
+panelBody.addEventListener('click', e => {
+  const t = e.target.closest('button,[data-acat]'); if (!t) return;
+  if (t.dataset.field) { S.field = t.dataset.field; saveSettings(); buildField(); renderPanel(); updateLegend(); }
+  if (t.dataset.units) { S.units = t.dataset.units; saveSettings(); renderPanel(); updateLegend(); }
+  if (t.id === 'radarAnim') toggleRadarAnim();
+  if (t.dataset.acat) { const k = t.dataset.acat; S.filters.alertTypes[k] = !S.filters.alertTypes[k]; saveSettings(); drawAlerts(); renderPanel(); }
+  if (t.dataset.qper) { S.filters.quakePeriod = t.dataset.qper; saveSettings(); renderPanel(); safe(loadQuakes, 'quakes'); }
+  if (t.dataset.fly) { const [a, o, d] = t.dataset.fly.split(',').map(Number); flyTo(a, o, d || 1.9); }
+  if (t.dataset.storm) { const s = storms[+t.dataset.storm]; flyTo(s.lat, s.lon, 2.0); showStorm(s); }
+  if (t.id === 'resetAll') { try { localStorage.removeItem('wg-settings'); } catch {} location.reload(); }
+});
+
+/* =====================================================================
+   Layer switching
+   ===================================================================== */
+const lazy = { radar: () => loadRadar(), imerg: () => loadIMERG(), sst: () => loadSST(), aurora: () => loadAurora(), storms: () => loadStorms(), alerts: () => loadAlerts(), quakes: () => loadQuakes(), fires: () => loadEonet(), volcanoes: () => loadEonet(), borders: () => loadBorders(), clouds: () => loadClouds() };
+const loaded = new Set();
+const srcKey = { fires: 'eonet', volcanoes: 'eonet' };
+async function safe(fn, key) { try { await fn(); } catch (e) { setStatus(key, 'error', e.message); console.warn(key, e); } }
+function ensure(key) {
+  const k = srcKey[key] || key;
+  if (!lazy[key] || loaded.has(k)) return;
+  loaded.add(k); safe(lazy[key], k);
+}
+function setLayer(key, on) {
+  S.layers[key] = on; saveSettings();
+  if (on) ensure(key);
+  if (key === 'lightning') { on ? (L.fails = 0, connectLightning()) : (disconnectLightning(), setStatus('lightning', '', 'off')); }
+  if (key === 'satbase') applyBase();
+  applyVisibility(); renderPanel(); updateLegend();
+}
+function applyVisibility() {
+  const Ly = S.layers;
+  clouds.visible = Ly.clouds; earthMat.uniforms.cloudShadow.value = Ly.clouds ? S.opacity.clouds : 0;
+  shells.radar.visible = Ly.radar; shells.imerg.visible = Ly.imerg; shells.sst.visible = Ly.sst;
+  shells.alertFill.visible = Ly.alerts && alerts.length > 0; if (alertLines) alertLines.visible = Ly.alerts;
+  shells.field.visible = S.field !== 'none' && !!grid;
+  if (wind) wind.mesh.visible = Ly.wind;
+  lightning.visible = Ly.lightning;
+  if (isobarLines) isobarLines.visible = Ly.isobars;
+  if (stormLines) stormLines.visible = Ly.storms;
+  aurora.visible = Ly.aurora;
+  pts.quakes.visible = Ly.quakes; pts.fires.visible = Ly.fires; pts.volcanoes.visible = Ly.volcanoes;
+  if (borders) borders.visible = Ly.borders; graticule.visible = Ly.graticule;
+  atmo.visible = Ly.atmosphere; stars.visible = Ly.stars; sunSprite.visible = Ly.stars;
+  earthMat.uniforms.nightLights.value = Ly.nightLights ? 1 : 0; earthMat.uniforms.showTerm.value = Ly.terminator ? 1 : 0;
+  controls.autoRotate = S.autorotate; $('#btnRotate').classList.toggle('on', S.autorotate);
+}
+function applyOpacity() {
+  cloudMat.uniforms.opacity.value = S.opacity.clouds; earthMat.uniforms.cloudShadow.value = S.layers.clouds ? S.opacity.clouds : 0;
+  for (const k of ['radar', 'imerg', 'sst', 'field']) shells[k].material.uniforms.opacity.value = S.opacity[k];
+  saveSettings();
+}
+
+/* =====================================================================
+   Legend
+   ===================================================================== */
+function legendBar(title, stops, fmt, extra = '') {
+  const lo = stops[0][0], hi = stops.at(-1)[0], mid = stops[Math.floor(stops.length / 2)][0];
+  return `<div class="lg glass"><b>${title}</b><div class="bar" style="background:${cssGradient(stops.map(([v, h]) => [v, h.slice(0, 7)]))}"></div><div class="ticks"><span>${fmt(lo)}</span><span>${fmt(mid)}</span><span>${fmt(hi)}</span></div>${extra}</div>`;
+}
+function fieldFmt(f) {
+  if (f.unit === '°C') return v => U.tempN(v);
+  if (f.unit === 'm/s') return v => U.wind(v).replace(' ', '');
+  if (f.unit === 'hPa') return v => S.units === 'metric' ? v : (v * 0.02953).toFixed(1);
+  return v => v + (f.unit === '%' ? '%' : '');
+}
+function updateLegend() {
+  const out = [];
+  const f = FIELDS[S.field]; if (f) out.push(legendBar(f.label + (f.unit === '°C' || f.unit === 'm/s' || f.unit === 'hPa' ? '' : ` (${f.unit})`), f.stops, fieldFmt(f)));
+  if (S.layers.wind && grid) out.push(legendBar('Wind particles', [[0, '#9fd8ff'], [8, '#f4ffd0'], [17, '#ffad4a'], [33, '#ff3fd0']], v => U.wind(v).replace(' ', '')));
+  if (S.layers.lightning) out.push(`<div class="lg glass"><b>Lightning age</b><div class="bar" style="background:linear-gradient(90deg,#fff,#ffe04d 25%,#f24d26)"></div><div class="ticks"><span>now</span><span>${Math.round(S.filters.lightningWindow / 2)} min</span><span>${S.filters.lightningWindow} min</span></div></div>`);
+  if (S.layers.radar && radar.time) out.push(`<div class="lg glass"><b>Radar ${radar.anim ? '(loop) ' : ''}${fmtTime(radar.time)}</b><div class="bar" style="background:linear-gradient(90deg,#88ddee,#0099cc,#0077aa,#ffee00,#ffaa00,#ff4400,#c10000,#ff00ff)"></div><div class="ticks"><span>light</span><span>moderate</span><span>extreme</span></div></div>`);
+  if (S.layers.storms && storms.length) out.push(`<div class="lg glass"><b>Cyclone category</b><div class="keys">${CAT.map(c => `<span><i style="background:${c[2]}"></i>${c[1]}</span>`).join('')}</div></div>`);
+  if (S.layers.alerts && alerts.length) out.push(`<div class="lg glass"><b>US alerts</b><div class="keys">${Object.entries(ALERT_CATS).filter(([k]) => S.filters.alertTypes[k]).map(([, [l, c]]) => `<span><i style="background:${c}"></i>${l}</span>`).join('')}</div></div>`);
+  if (S.layers.quakes) out.push(`<div class="lg glass"><b>Earthquake depth</b><div class="keys"><span><i style="background:#ffd23f"></i>&lt;70 km</span><span><i style="background:#ff8a3d"></i>70–300</span><span><i style="background:#e0445a"></i>&gt;300 km</span></div></div>`);
+  $('#legend').innerHTML = out.slice(0, 5).join('');
+}
+
+/* =====================================================================
+   Top bar & time controls
+   ===================================================================== */
+$('#btnPanel').onclick = () => { const p = $('#panel'); p.classList.toggle('hidden'); $('#btnPanel').classList.toggle('on', !p.classList.contains('hidden')); };
+$('#btnRotate').onclick = () => { S.autorotate = !S.autorotate; saveSettings(); applyVisibility(); };
+$('#btnRefresh').onclick = () => { toast('Refreshing live data…'); refreshAll(true); };
+const tslider = $('#tslider');
+tslider.oninput = () => { sunOffsetH = +tslider.value; };
+$('#btnNow').onclick = () => { sunOffsetH = 0; tslider.value = 0; playing = false; $('#btnPlay').textContent = '▶'; };
+$('#btnPlay').onclick = () => { playing = !playing; $('#btnPlay').textContent = playing ? '❚❚' : '▶'; };
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'r' || e.key === 'R') $('#btnRotate').click();
+  if (e.key === 'l' || e.key === 'L') $('#btnPanel').click();
+  if (e.key === ' ') { e.preventDefault(); $('#btnPlay').click(); }
+  if (e.key === 'Escape') { popup.hidden = true; removeLabels('pin'); }
+});
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+if (innerWidth < 760) { $('#panel').classList.add('hidden'); $('#btnPanel').classList.remove('on'); }
+
+const subsolarLbl = (() => { const el = document.createElement('div'); el.className = 'subsolar'; el.title = 'Subsolar point (sun directly overhead)'; return addLabel(el, 0, 0, 'sun', 1.004); })();
+
+/* =====================================================================
+   Refresh cycle
+   ===================================================================== */
+async function refreshAll(force = false) {
+  gridPromise = loadGrid(force).catch(e => { setStatus('grid', 'error', e.message); throw e; });
+  gridPromise.catch(() => {});
+  if (S.layers.clouds) safe(loadClouds, 'clouds');
+  for (const k of ['radar', 'imerg', 'sst', 'aurora', 'storms', 'alerts', 'quakes', 'fires', 'volcanoes']) {
+    if (!S.layers[k]) { if (force) loaded.delete(srcKey[k] || k); continue; }
+    if (force || !loaded.has(srcKey[k] || k)) { loaded.add(srcKey[k] || k); safe(lazy[k], srcKey[k] || k); }
+  }
+  if (force) { radar.frames.forEach(f => f.tex.dispose()); radar.frames = []; if (radar.anim) stopRadarAnim(); }
+}
+setInterval(() => refreshAll(true), 10 * 60e3);
+
+/* =====================================================================
+   Main loop
+   ===================================================================== */
+const clock = $('#clock'); let lastT = performance.now(), lastClock = 0, lastEvents = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+  if (playing) { sunOffsetH += dt * 1.5; if (sunOffsetH > 24) sunOffsetH = -24; tslider.value = sunOffsetH; }
+  const date = simDate(), ss = subsolar(date);
+  ll2v(ss.lat, ss.lon, 1, sunDir); sunSprite.position.copy(sunDir).multiplyScalar(1100);
+  subsolarLbl.pos.copy(ll2v(ss.lat, ss.lon, 1.004));
+  if (now - lastClock > 500) {
+    lastClock = now;
+    const utc = new Date().toISOString().slice(11, 19);
+    clock.textContent = `${utc} UTC · ${L.connected ? L.recent.filter(t => t > Date.now() - 60e3).length + ' strikes/min' : 'lightning offline'}`;
+    $('#tlabel').innerHTML = sunOffsetH === 0 ? '<b>Live</b> · sun now' : `<b>${date.toISOString().slice(5, 16).replace('T', ' ')} UTC</b> · ${sunOffsetH > 0 ? '+' : ''}${sunOffsetH.toFixed(1)} h`;
+    if (L.recent.length > 20000) L.recent = L.recent.filter(t => t > Date.now() - 60e3);
+  }
+  if (currentTab === 'events' && now - lastEvents > 5000) { lastEvents = now; renderPanel(); }
+  const d = camera.position.length();
+  controls.rotateSpeed = clamp((d - 1) * 0.45, 0.02, 1); controls.zoomSpeed = clamp((d - 1) * 0.6, 0.15, 1);
+  camera.near = clamp((d - 1) * 0.3, 0.0008, 0.1); camera.updateProjectionMatrix();
+  stepFly(now); if (!fly) controls.update();
+  stepWind(dt);
+  const tS = (Date.now() - T0) / 1000;
+  flushStrikes(); lMat.uniforms.now.value = tS; lMat.uniforms.win.value = S.filters.lightningWindow * 60;
+  auroraMat.uniforms.time.value = tS; for (const p of Object.values(pts)) p.material.uniforms.time.value = tS;
+  renderer.render(scene, camera);
+  updateLabels();
+}
+
+/* =====================================================================
+   Boot
+   ===================================================================== */
+(async () => {
+  renderPanel(); applyVisibility(); applyOpacity(); updateLegend();
+  requestAnimationFrame(frame);
+  try { await loadEarth(); }
+  catch (e) { setStatus('textures', 'error', e.message); $('#loadmsg').textContent = 'Could not load Earth imagery (' + e.message + '). Check your connection.'; }
+  $('#loader').classList.add('done');
+  if (S.layers.satbase) applyBase();
+  if (S.layers.borders) ensure('borders');
+  refreshAll(false);
+  for (const k of ['radar', 'imerg', 'sst', 'aurora', 'storms', 'alerts', 'quakes', 'fires', 'volcanoes', 'clouds']) if (S.layers[k]) loaded.add(srcKey[k] || k);
+  if (S.layers.lightning) connectLightning();
+  gridPromise.then(() => { updateLegend(); renderPanel(); }).catch(() => {});
+})();
+window.__wg = { S, status, L, addStrike, get grid() { return grid; } };
+</script>
+</body>
+</html>
