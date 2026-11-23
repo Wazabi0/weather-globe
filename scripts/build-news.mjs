@@ -129,11 +129,13 @@ function linkOf(block) {
   const g = text(tag(block, ['guid', 'id']));
   return /^https?:\/\//i.test(g) ? g : '';
 }
+// Yonhap marks updated stories "(LEAD)", "(2nd LD)", "(URGENT)"; without the tag they also dedupe
+const TITLE_TAG = /^\((?:LEAD|URGENT|\d+(?:st|nd|rd|th) LD|News Focus|Yonhap Interview|Yonhap Feature)\)\s*/i;
 function parseFeed(xml) {
   const blocks = xml.match(/<item\b[\s\S]*?<\/item>/gi) || xml.match(/<entry\b[\s\S]*?<\/entry>/gi) || [];
   const out = [];
   for (const b of blocks) {
-    const title = text(tag(b, ['title'])), link = linkOf(b);
+    const title = text(tag(b, ['title'])).replace(TITLE_TAG, ''), link = linkOf(b);
     if (!title || !link) continue;
     out.push({ title, link, t: parseDate(text(tag(b, ['pubDate', 'dc:date', 'published', 'updated', 'a10:updated']))), desc: text(tag(b, ['description', 'summary', 'content:encoded', 'content'])) });
   }
