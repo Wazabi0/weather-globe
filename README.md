@@ -47,7 +47,7 @@ You can also just double-click `index.html`; everything works except that some b
 | Disease outbreaks | WHO Disease Outbreak News | daily |
 | UK travel advice by country | GOV.UK (FCDO) content API | as published |
 | Rocket launches | Launch Library 2 (The Space Devs) | 25 min |
-| Breaking news ticker | About 60 news sites' RSS feeds and Google News searches for about 950 places, collected by this repository's GitHub Actions job (see below) | 15 min (each place's search every 4 to 8 h) |
+| Breaking news ticker | About 60 news sites' RSS feeds and Google News searches for about 1,200 places, collected by this repository's GitHub Actions job (see below) | 15 min (each place's search every 6 to 12 h) |
 | Capitals, cities, states and provinces | [GeoNames](https://www.geonames.org/) (CC BY 4.0) with Natural Earth country names, built into `data/places.json` | static |
 | Significant earthquakes, space weather (threat score only) | USGS, NOAA SWPC | minutes |
 
@@ -77,7 +77,7 @@ Browsers can't read most news sites' RSS feeds directly, because those sites don
 
 ### Cities, states and provinces
 
-The same job also runs Google News searches for headlines that name about 950 places in their title: every capital, the biggest cities, and the states and provinces of the larger countries. It runs 40 searches each time, oldest first, so capitals are refreshed about every 4 hours and other places about every 8, and writes them to `local/<country code>.json` on the `news-data` branch. The page adds those to the headlines from the news sites above that name the place.
+The same job also runs Google News searches for headlines that name about 1,200 places in their title: every capital, each country's five largest cities, every city of over a million people, and the states and provinces of 18 large countries. It runs 40 searches each time, oldest first, so capitals are refreshed about every 6 hours and other places about every 12, and writes them to `local/<country code>.json` on the `news-data` branch. The page adds those to the headlines from the news sites above that name the place. Google News sometimes refuses searches from GitHub's shared servers for a while; the job then keeps the previous results and carries on next time.
 
 The places come from `data/places.json`: 240 capitals, about 5,500 cities and 2,600 states and provinces from [GeoNames](https://www.geonames.org/) (CC BY 4.0), plus a grid of towns used to tell which state or province a point is in. The capitals are also built into the page so the stars show at once; the rest loads the first time you zoom in to country height. To rebuild it, run "Build places data" from the Actions tab: it pushes a fresh `data/places.json` and `data/local-queries.json` (the list of searches) to the `places-update` branch, ready to merge through a pull request. You can also run `node scripts/build-places.mjs data/places.json` on any machine that can reach download.geonames.org.
 

@@ -223,7 +223,8 @@ console.log(`wrote ${OUT}`);
 
 /* ---------- local news: Google News searches for cities and regions, in turns ---------- */
 // Each place keeps its last search for up to a week, so a run only refreshes the places that are due:
-// capitals every 4 hours, other big cities and regions every 8.
+// capitals every 6 hours, other big cities and regions every 12. Google News refuses (HTTP 429) when GitHub's
+// shared runners have searched too much, so a run stops at the first refusal and the next run carries on.
 const LOCAL_QUERIES = process.env.LOCAL_QUERIES || 'data/local-queries.json', LOCAL_PREV = process.env.LOCAL_PREV || 'prev/local';
 const LOCAL_OUT = join(dirname(OUT), 'local'), LOCAL_KEEP = 12, LOCAL_MAX_AGE_D = 7;
 const NOT_NEWS = /^(?:https?:|www\.|Flightradar24|Robinhood|Coinbase|Kalshi|Polymarket|Facebook|Instagram|TikTok|LinkedIn|X$|IMDb|Britannica|Wikipedia|Tripadvisor|Booking\.com|Expedia|Yelp|Zillow|Realtor\.com|Indeed|Glassdoor|Flashscore|LiveScore|SofaScore|FotMob|YouTube|Amazon|eBay|Etsy|Artsy|PR Newswire|GlobeNewswire|Business Wire|EIN Presswire|openPR|Newsfile|Morningstar|MarketScreener|MarketBeat|Investing\.com|TradingView|Simply Wall St|Stock Titan|Zacks|Seeking Alpha)/i; // not news outlets, or market data
@@ -235,9 +236,9 @@ async function localNews() {
   try { for (const f of await readdir(LOCAL_PREV)) if (f.endsWith('.json')) for (const [k, v] of Object.entries(JSON.parse(await readFile(join(LOCAL_PREV, f), 'utf8')).places || {})) prev.set(k, v); }
   catch { /* first run */ }
   const nowS = Math.round(now / 1000), minP = nowS - LOCAL_MAX_AGE_D * 86400;
-  const due = Q.map(q => ({ q, score: (nowS - (prev.get(q[0])?.[0] || 0)) / ((q[4] === 1 ? 4 : 8) * 3600) })).filter(x => x.score >= 1).sort((a, b) => b.score - a.score);
+  const due = Q.map(q => ({ q, score: (nowS - (prev.get(q[0])?.[0] || 0)) / ((q[4] === 1 ? 6 : 12) * 3600) })).filter(x => x.score >= 1).sort((a, b) => b.score - a.score);
   const fresh = Q.filter(q => !prev.has(q[0])).length;
-  const perRun = +process.env.LOCAL_PER_RUN || (fresh > 50 ? 100 : 60); // about 45 a run fall due, so 60 keeps up; new places fill faster
+  const perRun = +process.env.LOCAL_PER_RUN || (fresh > 50 ? 80 : 40); // about 30 a run fall due, so 40 keeps up; new places fill faster
   let okN = 0, failN = 0, streak = 0, kept = 0;
   for (const { q: [key, query, ed] } of due.slice(0, perRun)) {
     const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-${ed}&gl=${ed}&ceid=${ed}:en`;
@@ -257,7 +258,7 @@ async function localNews() {
       failN++; streak++; console.log(`local FAIL ${key} ${query}: ${e.message}`);
       if (/HTTP (429|503)/.test(e.message) || streak >= 3) { console.log('Google News is refusing searches; the rest wait for the next run'); break; }
     }
-    await new Promise(r => setTimeout(r, 1200));
+    await new Promise(r => setTimeout(r, 1500));
   }
   const byCountry = new Map(), cc = new Map(Q.map(q => [q[0], q[3]]));
   for (const [k, [t, list]] of prev) {
