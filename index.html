@@ -262,7 +262,7 @@ const DEFAULTS = {
     terminator: true, nightLights: true, borders: true, graticule: false, atmosphere: true, stars: true, satbase: false,
   },
   field: 'none',
-  opacity: { clouds: 0.95, radar: 0.85, imerg: 0.85, field: 0.55, sst: 0.75, travel: 0.8 },
+  opacity: { clouds: 0.95, radar: 0.85, imerg: 0.85, field: 0.55, sst: 0.75, travel: 0.7 },
   filters: {
     cloudSource: 'auto', cloudThreshold: 0.5, windMin: 0, windCount: 7000, windSpeed: 1, windTrail: 10,
     lightningWindow: 30, quakeMin: 4.5, quakePeriod: 'day', stormMin: 0,
@@ -1823,10 +1823,10 @@ async function drawTravel() {
   travelByCountry = new Map();
   for (const a of travel) for (const c of atlasFor(C, a.name, FCDO_EXTRA)) travelByCountry.set(c, a);
   const W = 4096, H = 2048, cv = mkCanvas(W, H), x = cv.getContext('2d');
-  const hatch = col => { const p = mkCanvas(12, 12), q = p.getContext('2d'); q.strokeStyle = col; q.lineWidth = 3.2; q.beginPath(); for (let k = -12; k <= 24; k += 6) { q.moveTo(k, 12); q.lineTo(k + 12, 0); } q.stroke(); return x.createPattern(p, 'repeat'); };
+  const hatch = col => { const p = mkCanvas(16, 16), q = p.getContext('2d'); q.strokeStyle = col; q.lineWidth = 1.6; q.beginPath(); for (let k = -16; k <= 32; k += 8) { q.moveTo(k, 16); q.lineTo(k + 16, 0); } q.stroke(); return x.createPattern(p, 'repeat'); };
   const style = {
-    all: ['rgba(255,59,79,.55)', 'rgba(255,59,79,.95)'], essential: ['rgba(255,159,26,.5)', 'rgba(255,159,26,.9)'],
-    allParts: [hatch('rgba(255,59,79,.8)'), 'rgba(255,59,79,.7)'], essentialParts: [hatch('rgba(255,159,26,.75)'), 'rgba(255,159,26,.6)'],
+    all: ['rgba(255,59,79,.42)', 'rgba(255,59,79,.95)'], essential: ['rgba(255,159,26,.36)', 'rgba(255,159,26,.9)'],
+    allParts: [hatch('rgba(255,59,79,.7)'), 'rgba(255,59,79,.6)'], essentialParts: [hatch('rgba(255,159,26,.6)'), 'rgba(255,159,26,.5)'],
   };
   x.lineWidth = 2; x.lineJoin = 'round';
   for (const [c, a] of travelByCountry) { const st = style[a.code]; if (!st) continue; x.fillStyle = st[0]; x.strokeStyle = st[1]; fillCountry(x, c, W, H); }
@@ -1905,7 +1905,7 @@ function refreshThreats(force = false) {
 const THREAT_FEEDS = ['gdacs', 'sigquakes', 'storms', 'alerts', 'wiki', 'fcdo', 'who', 'spacewx'];
 let threat = null, threatTop = [], threatTimer = 0, lastNear = [];
 function scheduleThreat() { clearTimeout(threatTimer); threatTimer = setTimeout(() => { computeThreat(); updateBadge(); if (currentTab === 'threats') renderPanel(); updateLegend(); }, 300); }
-const quakeSev = q => clamp(20 + (q.mag - 5) * 20 + ({ yellow: 10, orange: 25, red: 40 }[q.alert] || 0) + (q.tsunami ? 10 : 0), 5, 98);
+const quakeSev = q => clamp(15 + (q.mag - 5) * 12 + ({ yellow: 20, orange: 40, red: 60 }[q.alert] || 0), 5, 98);
 const gdSev = e => (({ Red: 85, Orange: 60, Green: 18 })[e.level] + (e.type === 'EQ' && e.level === 'Green' && parseFloat((/(\d+(?:\.\d+)?)\s*M/.exec(e.sevText) || [])[1]) >= 6 ? 15 : 0)) * (e.current ? 1 : 0.7);
 const STORM_SEV = { TD: 15, TS: 25, 'Cat 1': 40, 'Cat 2': 50, 'Cat 3': 65, 'Cat 4': 80, 'Cat 5': 90 };
 function eventPool() {
@@ -1913,7 +1913,7 @@ function eventPool() {
   const push = (ref, kind, sev, t, title, meta, lat, lon) => pool.push({ ref, kind, sev: clamp(sev, 0, 100), t, title, meta, lat, lon });
   for (const e of gdacsData) if (e.current || now - e.end < 3 * DAY) push(e, 'gdacs', gdSev(e), e.current ? new Date() : e.end, e.title, `GDACS ${e.level.toLowerCase()} alert · ${shortPlace(e.country)}${e.current ? '' : ' · ended'}`, e.lat, e.lon);
   for (const q of sigQuakes) if (!pool.some(p => p.kind === 'gdacs' && p.ref.type === 'EQ' && gcDist(p.lat, p.lon, q.lat, q.lon) < 150 && Math.abs(p.ref.start - q.t) < 3 * 3600e3 && p.sev >= quakeSev(q)))
-    push(q, 'quake', quakeSev(q), q.t, `M${q.mag.toFixed(1)} earthquake${q.place ? ', ' + q.place : ''}`, `USGS · ${ago(q.t)}${q.alert ? ' · PAGER ' + q.alert : ''}${q.tsunami ? ' · tsunami flag' : ''}`, q.lat, q.lon);
+    push(q, 'quake', quakeSev(q), q.t, `M${q.mag.toFixed(1)} earthquake${q.place ? ', ' + q.place : ''}`, `USGS · ${ago(q.t)}${q.alert ? ' · PAGER ' + q.alert : ''}`, q.lat, q.lon);
   for (const s of storms) push(s, 'storm', STORM_SEV[catOf(s.kts)[1]] || 15, s.t, s.title, `Tropical cyclone · ${catOf(s.kts)[1]}${s.kts ? ' · ' + Math.round(s.kts) + ' kt' : ''}`, s.lat, s.lon);
   for (const a of alerts) if (/tornado warning/i.test(a.event) || a.severity === 'Extreme') {
     const ring = a.polys[0]?.[0] || []; if (!ring.length) continue;
@@ -1938,16 +1938,16 @@ function computeThreat() {
     dom.push({ key: 'conflict', name: 'Conflict & security', have: ok('wiki', 'fcdo'), text: bits.join('. '), score: clamp(n + 6 * Math.log10(1 + k) + nAll + 0.5 * nEss + 0.15 * nP + 0.05 * nEP, 0, 100) });
   }
   { // natural hazards
-    let s = 0, green = 0, mx = 0; const cnt = { Red: 0, Orange: 0, Green: 0 };
+    let s = 0, green = 0, mx = 0, ended = 0; const cnt = { Red: 0, Orange: 0, Green: 0 };
     for (const e of gdacsData) {
       if (e.type === 'TC' || !(e.current || now - e.end < 3 * DAY)) continue;
-      const w = e.current ? 1 : 0.5; if (e.current) cnt[e.level]++;
+      const w = (e.current ? 1 : 0.5) * (e.type === 'DR' ? 0.5 : 1); if (e.current) cnt[e.level]++; else if (e.level !== 'Green') ended++;
       if (e.level === 'Red') s += 28 * w; else if (e.level === 'Orange') s += 9 * w; else green += 0.25 * w;
     }
     s += Math.min(12, green);
-    for (const q of sigQuakes) { const w = Math.max(0.3, 1 - (now - q.t) / (7 * DAY)); s += w * (2 + ({ yellow: 4, orange: 10, red: 20 }[q.alert] || 0) + (q.tsunami ? 4 : 0)); mx = Math.max(mx, q.mag); }
+    for (const q of sigQuakes) { const w = Math.max(0.3, 1 - (now - q.t) / (7 * DAY)); s += w * (2 + ({ yellow: 4, orange: 10, red: 20 }[q.alert] || 0)); mx = Math.max(mx, q.mag); }
     const bits = [];
-    if (ok('gdacs')) bits.push(`${cnt.Red} red and ${cnt.Orange} orange disaster alerts active, ${pl(cnt.Green, 'lower-impact event')} tracked`);
+    if (ok('gdacs')) bits.push(`${cnt.Red || cnt.Orange ? `${cnt.Red} red and ${cnt.Orange} orange disaster alerts active` : 'No red or orange disaster alerts active'}${ended ? ` (${ended} more ended in the last 3 days)` : ''}, ${pl(cnt.Green, 'lower-impact event')} tracked`);
     if (ok('sigquakes')) bits.push(sigQuakes.length ? `${pl(sigQuakes.length, 'significant earthquake')} this week, ${sigQuakes.length > 1 ? 'largest ' : ''}M${mx.toFixed(1)}` : 'no significant earthquakes this week');
     dom.push({ key: 'natural', name: 'Natural hazards', have: ok('gdacs', 'sigquakes'), text: bits.join('. '), score: clamp(s, 0, 100) });
   }
@@ -2006,7 +2006,7 @@ function renderThreats() {
   h += '<h4>By domain</h4>' + T.dom.map(d => { const l = levelOf(d.score); return `<div class="dom" style="--lv:${d.have ? l[2] : '#55607a'}"><div class="dn">${d.name}</div><span class="pill${d.have ? '' : ' na'}">${d.have ? l[1] : 'No data'}</span><div class="mb"><i style="width:${d.have ? Math.max(2, d.score).toFixed(0) : 0}%"></i></div><small>${esc(d.have ? d.text : 'Feed unavailable right now.')}</small></div>`; }).join('');
   if (spaceWx) { const w = spaceWx; h += `<div class="swx" title="NOAA space weather scales, 0 to 5"><span><b>G${w.G}</b>Geomagnetic</span><span><b>S${w.S}</b>Radiation</span><span><b>R${w.R}</b>Radio</span><span><b>${w.kp != null ? w.kp.toFixed(1) : '—'}</b>Kp index</span></div>`; }
   h += topList();
-  h += `<details class="note how"><summary>How this is worked out</summary><p>Each domain gets a score from 0 to 100, worked out in your browser from the live feeds. Conflict counts Wikipedia's conflict and attack reports from the last two days, the deaths they mention, and UK travel advice levels. Natural hazards weight GDACS alerts (red 28 points, orange 9) and USGS significant earthquakes. Storms count active tropical cyclones by strength plus US tornado and extreme warnings. Outbreaks count WHO reports from the last 30 days, with extra weight for diseases such as Ebola, Marburg and MERS. Space weather follows NOAA's G, S and R scales.</p><p>The overall score is 60% the worst domain and 40% the average. It is a rough guide to how much is happening, not an official assessment, and Wikipedia entries are written by volunteers.</p></details>`;
+  h += `<details class="note how"><summary>How this is worked out</summary><p>Each domain gets a score from 0 to 100, worked out in your browser from the live feeds. Conflict counts Wikipedia's conflict and attack reports from the last two days, the deaths they mention, and UK travel advice levels. Natural hazards weight GDACS alerts (red 28 points, orange 9, droughts half that) and USGS significant earthquakes by their PAGER impact level. Storms count active tropical cyclones by strength plus US tornado and extreme warnings. Outbreaks count WHO reports from the last 30 days, with extra weight for diseases such as Ebola, Marburg and MERS. Space weather follows NOAA's G, S and R scales.</p><p>The overall score is 60% the worst domain and 40% the average. It is a rough guide to how much is happening, not an official assessment, and Wikipedia entries are written by volunteers.</p></details>`;
   return h;
 }
 function topList() {
