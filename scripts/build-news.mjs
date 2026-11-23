@@ -226,7 +226,7 @@ console.log(`wrote ${OUT}`);
 // capitals every 4 hours, other big cities and regions every 8.
 const LOCAL_QUERIES = process.env.LOCAL_QUERIES || 'data/local-queries.json', LOCAL_PREV = process.env.LOCAL_PREV || 'prev/local';
 const LOCAL_OUT = join(dirname(OUT), 'local'), LOCAL_KEEP = 12, LOCAL_MAX_AGE_D = 7;
-const NOT_NEWS = /^(?:Flightradar24|Robinhood|Coinbase|Kalshi|Polymarket|Facebook|Instagram|TikTok|LinkedIn|X|IMDb|Britannica|Wikipedia|Tripadvisor|Booking\.com|Expedia|Yelp|Zillow|Realtor\.com|Indeed|Glassdoor|Flashscore.*|LiveScore|SofaScore|FotMob|YouTube|Amazon|eBay|Etsy|Artsy|PR Newswire|GlobeNewswire|Business Wire|EIN Presswire|openPR.*|Newsfile|Morningstar|MarketScreener|Investing\.com|TradingView|Simply Wall St)$/i;
+const NOT_NEWS = /^(?:https?:|www\.|Flightradar24|Robinhood|Coinbase|Kalshi|Polymarket|Facebook|Instagram|TikTok|LinkedIn|X$|IMDb|Britannica|Wikipedia|Tripadvisor|Booking\.com|Expedia|Yelp|Zillow|Realtor\.com|Indeed|Glassdoor|Flashscore|LiveScore|SofaScore|FotMob|YouTube|Amazon|eBay|Etsy|Artsy|PR Newswire|GlobeNewswire|Business Wire|EIN Presswire|openPR|Newsfile|Morningstar|MarketScreener|MarketBeat|Investing\.com|TradingView|Simply Wall St|Stock Titan|Zacks|Seeking Alpha)/i; // not news outlets, or market data
 const NOT_A_STORY = /\b(?:Prediction Market|Moneyline|Betting Odds|Odds and Predictions|Live Score|Arrivals|Departures|Horoscope|Obituar(?:y|ies))\b/i;
 async function localNews() {
   let Q;

@@ -141,12 +141,12 @@ console.log('regions', regions.length);
 
 // ---------- local news queries (Google News search, run in turns by the news collector) ----------
 const EDITIONS = new Set(['US', 'GB', 'CA', 'AU', 'IN', 'IE', 'NZ', 'ZA', 'NG', 'KE', 'GH', 'PK', 'PH', 'SG', 'MY', 'UG', 'ZW', 'BW', 'NA', 'TZ', 'ET']);
-const QUERY_FIX = { 'US.GA': '"Georgia" Atlanta', 'US.WA': '"Washington state"', 'US.NY': '"New York state"', 'US.DC': null };
+const QUERY_FIX = { 'US.GA': ['intitle:"Georgia" Atlanta', 'US'], 'US.WA': ['intitle:"Washington state"', 'US'], 'US.NY': ['intitle:"New York state"', 'US'], 'US.DC': null };
 function query(name, cc, key) {
   if (key in QUERY_FIX) return QUERY_FIX[key];
   const C = countries.get(cc); const ed = EDITIONS.has(cc) ? cc : 'US';
   const cn = C.name; const f = fold(name), fc = fold(cn);
-  const q = `"${name}"` + (ed === cc || f.includes(fc) || fc.includes(f) ? '' : ` ${cn}`);
+  const q = `intitle:"${name}"` + (ed === cc || f.includes(fc) || fc.includes(f) ? '' : ` ${cn}`); // the place in the headline, not just somewhere in the story
   return [q, ed];
 }
 
