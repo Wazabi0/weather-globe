@@ -3390,7 +3390,7 @@ function updateLegend() {
 /* =====================================================================
    Top bar & time controls
    ===================================================================== */
-$('#btnPanel').onclick = () => { const p = $('#panel'); p.classList.toggle('hidden'); $('#btnPanel').classList.toggle('on', !p.classList.contains('hidden')); };
+$('#btnPanel').onclick = () => { const p = $('#panel'); p.classList.toggle('hidden'); $('#btnPanel').classList.toggle('on', !p.classList.contains('hidden')); if (!p.classList.contains('hidden') && innerWidth < 760) toggleNews(false); }; // phones have room for one sheet
 $('#btnRotate').onclick = () => { S.autorotate = !S.autorotate; saveSettings(); applyVisibility(); };
 $('#btnRefresh').onclick = () => { toast('Refreshing live data…'); refreshAll(true); };
 $('#threatBtn').onclick = () => { if ($('#panel').classList.contains('hidden')) $('#btnPanel').click(); currentTab = 'threats'; document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === 'threats')); renderPanel(); };

@@ -8,7 +8,7 @@ on:
     - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
   push:
-    branches: [main, local-news-capitals]   # remove local-news-capitals before merge
+    branches: [main]
     paths: ['scripts/build-news.mjs', 'data/local-queries.json', '.github/workflows/news.yml']
 
 permissions:

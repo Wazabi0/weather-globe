@@ -4,9 +4,6 @@
 name: Build places data
 on:
   workflow_dispatch:
-  push:
-    branches: [local-news-capitals]   # remove before merge
-    paths: ['scripts/build-places.mjs', '.github/workflows/places.yml']
 permissions:
   contents: write
 jobs:
