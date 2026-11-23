@@ -258,6 +258,94 @@ a.ni:focus-visible{outline:none}
   .nb-age{display:none}
   #newsList{top:auto;bottom:66px;left:8px;right:8px;width:auto;transform:none;max-height:62%}
 }
+/* event media window (picture in picture) */
+#pip{position:fixed;left:342px;bottom:76px;width:400px;min-width:300px;max-width:calc(100vw - 24px);display:flex;flex-direction:column;overflow:hidden;resize:horizontal;z-index:6}
+#pip[hidden]{display:none}
+#pip.drag{opacity:.92;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.pip-h{display:flex;align-items:center;gap:6px;padding:7px 7px 7px 12px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none}
+.pip-h:active{cursor:grabbing}
+.pip-t{flex:1;min-width:0}
+.pip-t b{display:block;font-size:12.5px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pip-t small{display:block;color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pip-b{flex:none;width:26px;height:26px;border:0;border-radius:7px;background:rgba(255,255,255,.07);cursor:pointer;font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+.pip-b:hover,.pip-b:focus-visible{background:rgba(92,200,255,.25);outline:none}
+.pip-b[hidden]{display:none}
+.pip-tabs{display:flex;gap:2px;padding:0 6px}
+.pip-tabs button{flex:1;padding:6px 4px 7px;border:0;border-radius:8px 8px 0 0;background:none;color:var(--muted);cursor:pointer;font-size:11.5px;font-weight:500;white-space:nowrap}
+.pip-tabs button:hover{color:var(--text)}
+.pip-tabs button.on{background:#000;color:var(--text)}
+.pip-tabs button[hidden]{display:none}
+.pip-tabs small{font-size:10px;margin-left:4px;padding:0 5px;border-radius:8px;background:rgba(255,255,255,.1)}
+.pip-tabs small:empty{display:none}
+.pip-tabs button.rec span:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff3b4f;margin-right:5px;vertical-align:1px;box-shadow:0 0 8px #ff3b4f;animation:blink 1.4s infinite}
+.pip-v{position:relative;aspect-ratio:16/9;background:#000;overflow:hidden;flex:none}
+.pv{position:absolute;inset:0}
+.pv[hidden]{display:none}
+.pv iframe{display:block;width:100%;height:100%;border:0}
+.pv .msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;text-align:center;color:var(--muted);font-size:12px;line-height:1.5}
+.poster{position:absolute;inset:0;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px;border:0;color:var(--text);background:radial-gradient(circle at 50% 38%,#1b2a4a,#05070d 75%) center/cover no-repeat;cursor:pointer;text-align:center}
+.poster i{width:52px;height:52px;margin-bottom:4px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:19px;background:#ff3b4f;box-shadow:0 0 26px rgba(255,59,79,.6)}
+.poster b{font-size:13.5px}
+.poster small{color:#c7d1e8;font-size:11px}
+.poster.lp{cursor:default;background-size:cover;background-position:center}
+.poster .cd{font-size:26px;font-weight:700;letter-spacing:.3px;font-variant-numeric:tabular-nums;text-shadow:0 2px 10px #000}
+.pip-c{display:flex;gap:5px;padding:7px 8px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line)}
+.pip-c:empty{display:none}
+.pip-c::-webkit-scrollbar{display:none}
+.pip-c button,.pip-c a{flex:none;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font-size:11px;line-height:16px;white-space:nowrap;cursor:pointer;text-decoration:none}
+.pip-c button:hover,.pip-c a:hover{border-color:var(--accent)}
+.pip-c .on{background:rgba(92,200,255,.2);border-color:var(--accent)}
+.crawl{display:flex;align-items:stretch;height:26px;flex:none;background:rgba(0,0,0,.5);border-top:1px solid var(--line);cursor:pointer;overflow:hidden}
+.crawl b{flex:none;display:flex;align-items:center;padding:0 9px;background:#ff3b4f;color:#fff;font-size:9.5px;letter-spacing:.8px;text-transform:uppercase}
+.crawl div{flex:1;min-width:0;display:flex;align-items:center;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10px,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,transparent,#000 10px,#000 calc(100% - 14px),transparent)}
+.crawl span{display:inline-block;padding-left:100%;font-size:11.5px;font-weight:500;animation:crawl var(--dur,40s) linear infinite}
+.crawl:hover span{animation-play-state:paused}
+@keyframes crawl{to{transform:translateX(-100%)}}
+@media (prefers-reduced-motion:reduce){.crawl span{animation:none;padding-left:8px;overflow:hidden;text-overflow:ellipsis;max-width:100%}}
+#pip.min .pip-tabs,#pip.min .pip-v,#pip.min .pip-c{display:none}
+#pip.min{resize:none}
+.sat{position:absolute;inset:0;cursor:ew-resize;touch-action:pan-y;outline:none;user-select:none;-webkit-user-select:none}
+.sat img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
+.sat img[hidden]{display:none}
+.sat .bf{position:absolute;inset:0;clip-path:inset(0 calc(100% - var(--x)) 0 0)}
+.sat .bar{position:absolute;top:0;bottom:0;left:var(--x);width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #000;pointer-events:none}
+.sat .bar:after{content:"⟷";position:absolute;top:50%;left:50%;width:26px;height:26px;transform:translate(-50%,-50%);border-radius:50%;background:#fff;color:#0b0f1a;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 6px rgba(0,0,0,.6)}
+.sat:focus-visible .bar:after{box-shadow:0 0 0 3px var(--accent)}
+.sat .tag{position:absolute;top:6px;padding:2px 7px;border-radius:6px;background:rgba(0,0,0,.62);font-size:10.5px;font-weight:600;pointer-events:none}
+.sat .tag.l{left:6px}.sat .tag.r{right:6px}
+.sat .mk{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border:2px solid #ffd25c;border-radius:50%;box-shadow:0 0 0 2px rgba(0,0,0,.45),0 0 10px rgba(255,210,92,.7);pointer-events:none}
+.ph{position:absolute;inset:0;background:#05070d}
+.ph a{display:block;width:100%;height:100%}
+.ph img{display:block;width:100%;height:100%;object-fit:contain}
+.ph.sun img{object-fit:contain;background:#000}
+.ph .cap{position:absolute;left:0;right:0;bottom:0;padding:18px 10px 6px;background:linear-gradient(transparent,rgba(0,0,0,.88) 45%);font-size:11.5px;line-height:1.35;pointer-events:none}
+.ph .cap small{display:block;margin-top:2px;color:#aab6d0;font-size:10px}
+.ph .nav{position:absolute;top:42%;width:28px;height:40px;border:0;border-radius:8px;background:rgba(0,0,0,.5);color:#fff;font-size:18px;cursor:pointer}
+.ph .nav:hover{background:rgba(0,0,0,.75)}
+.ph .nav.p{left:6px}.ph .nav.n{right:6px}
+.ph .ct{position:absolute;top:6px;right:6px;padding:1px 7px;border-radius:6px;background:rgba(0,0,0,.62);font-size:10px;font-variant-numeric:tabular-nums}
+.mnews{position:absolute;inset:0;overflow-y:auto;padding:0 10px;background:var(--panel-solid);scrollbar-width:thin;scrollbar-color:rgba(150,180,255,.25) transparent}
+.mnews>a,.mnews>div{display:grid;grid-template-columns:72px minmax(0,1fr);gap:3px 10px;align-items:start;padding:8px 0;border-bottom:1px solid rgba(150,180,255,.08);color:var(--text);text-decoration:none}
+.mnews>.noimg{grid-template-columns:minmax(0,1fr)}
+.mnews img{grid-row:1/3;width:72px;height:46px;object-fit:cover;border-radius:6px;background:#1c2438}
+.mnews b{font-size:12px;font-weight:600;line-height:1.32;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mnews b em{font-style:normal;color:#ff4d6d;font-weight:700;font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;margin-right:6px}
+.mnews small{color:var(--muted);font-size:10.5px}
+.mnews a:hover b{color:var(--accent)}
+.pp-media{margin:8px 0 0 6px}
+.pp-media:first-child,p+.pp-media{margin-left:0}
+body.pipwin{background:var(--panel-solid)}
+.pipwin #pip{position:static;width:100%!important;max-width:none;height:100vh;border:0;border-radius:0;resize:none;box-shadow:none}
+.pipwin .pip-h{cursor:default}
+.pipwin .pip-v{flex:1;aspect-ratio:auto;min-height:0}
+.pipwin [data-pip="size"],.pipwin [data-pip="min"]{display:none}
+@media (max-width:760px){
+  #pip{left:8px;right:8px;bottom:66px;width:auto;min-width:0;max-width:none;resize:none}
+  #pip.min{top:var(--pip-top,120px);bottom:auto}
+  .pip-h{cursor:default}
+  .pip-tabs small{display:none}
+  [data-pip="size"]{display:none}
+}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -319,7 +407,7 @@ const DEFAULTS = {
   layers: {
     clouds: true, radar: true, imerg: false, wind: true, isobars: false, lightning: true, stormcells: true,
     storms: true, alerts: true, aurora: true, sst: false, quakes: false, fires: false, volcanoes: false,
-    gdacs: true, conflict: true, news: false, outbreaks: true, travel: true, launches: true, headlines: true,
+    gdacs: true, conflict: true, news: false, outbreaks: true, travel: true, launches: true, headlines: true, media: true,
     terminator: true, nightLights: true, borders: true, places: true, graticule: false, atmosphere: true, stars: true, satbase: false,
   },
   field: 'none',
@@ -437,6 +525,7 @@ const SOURCES = {
   launches: ['Rocket launches', 'The Space Devs Launch Library 2'],
   headlines: ['Breaking news', 'BBC, Al Jazeera, The Guardian, NPR, DW, France 24, UN News and about 50 national and regional news sites, plus Google News searches for about 950 capitals, cities, states and provinces, collected every 15 minutes by this site\'s GitHub Actions job'],
   places: ['Capitals, cities, states and provinces', 'GeoNames (CC BY 4.0), loaded when you zoom in'],
+  media: ['Event media window', 'YouTube live streams of 14 news channels, Launch Library webcasts, NASA GIBS satellite images (NOAA-21 and NOAA-20 VIIRS), photos from news sites, Wikipedia and Wikimedia Commons, USGS ShakeMap, NASA SDO, ESA/NASA SOHO and NOAA SWPC images'],
 };
 const status = {};
 function setStatus(k, state, msg = '') { status[k] = { state, msg, t: new Date() }; renderStatus(); }
@@ -1292,9 +1381,10 @@ let satBaseTex = null;
 async function loadSatBase() {
   setStatus('satbase', 'loading');
   const d = new Date(Date.now() - 86400e3);
-  const r = await gibsGlobal('VIIRS_SNPP_CorrectedReflectance_TrueColor', { tms: '250m', level: 3, ext: 'jpg', time: isoDay(d), W: 4096, H: 2048 });
+  const o = { tms: '250m', level: 3, ext: 'jpg', time: isoDay(d), W: 4096, H: 2048 }; // NOAA-21, then NOAA-20: Suomi NPP stopped sending images on 2 November 2026
+  let r, sat = 'NOAA-21'; try { r = await gibsGlobal('VIIRS_NOAA21_CorrectedReflectance_TrueColor', o); } catch { r = await gibsGlobal('VIIRS_NOAA20_CorrectedReflectance_TrueColor', o); sat = 'NOAA-20'; }
   satBaseTex = canvasTex(r.canvas); satBaseTex.keep = true;
-  setStatus('satbase', 'ok', `VIIRS true colour ${isoDay(d)}`);
+  setStatus('satbase', 'ok', `VIIRS ${sat} true colour ${isoDay(d)}`);
 }
 async function applyBase() {
   if (S.layers.satbase) {
@@ -1382,6 +1472,7 @@ function showStorm(s) {
   <div><small>Track points</small><span>${s.track.length || 1}</span></div><div><small>Category</small><span style="color:${c[2]}">${c[1]}</span></div></div>
   ${s.link ? `<p class="note" style="margin-top:10px"><a href="${s.link}" target="_blank" rel="noopener">Official advisory ↗</a></p>` : ''}
   <button class="mini" data-wx="${s.lat},${s.lon}" style="margin-top:8px">Weather at storm centre</button>`);
+  mediaButton({ ...s, kind: 'storm' });
 }
 
 /* =====================================================================
@@ -1924,6 +2015,7 @@ const slimLaunch = l => l.slim ? l : {
   slim: 1, name: l.name || 'Launch', net: l.net, status: l.status?.abbrev || '', statusName: l.status?.name || '', provider: l.launch_service_provider?.name || '',
   pad: l.pad?.name || '', loc: l.pad?.location?.name || '', lat: parseFloat(l.pad?.latitude), lon: parseFloat(l.pad?.longitude),
   orbit: l.mission?.orbit?.name || '', mission: l.mission?.description || '',
+  id: String(l.id || ''), image: safeUrl(typeof l.image === 'string' ? l.image : l.image?.image_url) || '', live: !!l.webcast_live,
 };
 async function loadLaunches() {
   setStatus('launches', 'loading');
@@ -2605,7 +2697,7 @@ function renderNewsList() {
 function toggleNews(open = newsList.hidden) {
   if (open && !S.layers.headlines) return;
   newsList.hidden = !open; newsBtn.setAttribute('aria-expanded', String(open));
-  if (open) { if (innerWidth < 760) { popup.hidden = true; sheetAway(); } renderNewsList(); }
+  if (open) { if (innerWidth < 760) { popup.hidden = true; sheetAway(); if (!pip.hidden) minPip(true); } renderNewsList(); }
 }
 newsBtn.onclick = () => toggleNews();
 newsBtn.addEventListener('mouseenter', () => { tickHold = true; });
@@ -3051,15 +3143,16 @@ canvas.addEventListener('gesturestart', e => { e.preventDefault(); gScale = 1; }
 canvas.addEventListener('gesturechange', e => { e.preventDefault(); if (!touches.size) zoomBy(Math.pow(gScale / e.scale, 1.5), e.clientX, e.clientY); gScale = e.scale; });
 
 const popup = $('#popup');
-function openPopup(html) { popup.innerHTML = html; popup.hidden = false; if (innerWidth < 760) toggleNews(false); } // phones have room for one bottom sheet
+function openPopup(html) { popup.innerHTML = html; popup.hidden = false; if (innerWidth < 760) { toggleNews(false); if (!pip.hidden) minPip(true); } } // phones have room for one bottom sheet
 popup.addEventListener('click', e => {
   if (e.target.closest('[data-close]')) { popup.hidden = true; removeLabels('pin'); }
+  if (e.target.closest('[data-media]')) openMedia(popup._ev);
   const wx = e.target.closest('[data-wx]'); if (wx) { const [a, b] = wx.dataset.wx.split(',').map(Number); openWeather(a, b); }
   const nb = e.target.closest('[data-near]'); if (nb) { const it = lastNear[+nb.dataset.near]; if (it) { if (it.lat != null) flyTo(it.lat, it.lon, Math.min(camera.position.length(), 2.2)); openEvent(it); } }
 });
 function showFeature(it) {
   if (it.lat != null) setPin(it.lat, it.lon); else removeLabels('pin');
-  if (showThreatFeature(it)) return;
+  if (showThreatFeature(it)) { mediaButton(it); return; }
   if (it.kind === 'quake') openPopup(`<div class="pp-h"><div><h3>M${it.mag.toFixed(1)} earthquake</h3><small>${it.place || ''}</small></div><button class="x" data-close>✕</button></div>
     <div class="pp-grid" style="margin-top:12px"><div><small>Time</small><span>${ago(it.t)}</span></div><div><small>Depth</small><span>${it.depth.toFixed(0)} km</span></div>
     <div><small>Magnitude</small><span>${it.mag.toFixed(1)}</span></div><div><small>Tsunami flag</small><span>${it.tsunami ? 'Yes' : 'No'}</span></div></div>
@@ -3067,6 +3160,7 @@ function showFeature(it) {
   else openPopup(`<div class="pp-h"><div><h3>${it.title}</h3><small>${it.kind === 'fire' ? 'Wildfire' : 'Volcano'} · updated ${ago(it.t)}</small></div><button class="x" data-close>✕</button></div>
     ${it.link ? `<p class="note" style="margin-top:10px"><a href="${it.link}" target="_blank" rel="noopener">Source ↗</a></p>` : ''}
     <button class="mini" data-wx="${it.lat},${it.lon}" style="margin-top:6px">Weather here</button>`);
+  mediaButton(it);
 }
 function setPin(lat, lon) { removeLabels('pin'); const el = document.createElement('div'); el.className = 'pin'; addLabel(el, lat, lon, 'pin', 1.012); }
 let wxReq = 0;
@@ -3117,6 +3211,503 @@ function spark(h) {
 }
 
 /* =====================================================================
+   Event media window (picture in picture)
+   Clicking an event opens a small window beside the globe: live TV news
+   for that part of the world (a launch's own webcast, or the Sun for space
+   weather), NASA satellite views from before and after, photos (news
+   pictures, Wikipedia, Wikimedia Commons near the spot, the USGS ShakeMap)
+   and the headlines that mention the event. Chrome and Edge can pop it out
+   into a window that stays on top of other apps.
+   ===================================================================== */
+const TV = { // news channels whose YouTube live stream other sites may embed (checked November 2026)
+  aje: ['Al Jazeera', 'UCNye-wNBqNL5ZzHSJj3l8Bg'], dw: ['DW News', 'UCknLrEdhRCp1aegoMqRaCZg'], f24: ['France 24', 'UCQfwfsi5VrQ8yKZ-UWmAEFg'],
+  euro: ['Euronews', 'UCSrZ3UV4jOidv8ppoVuvW9Q'], trt: ['TRT World', 'UC7fWeaHhqgM4Ry-RMpM2YYw'], i24: ['i24NEWS', 'UCvHDpsWKADrDia0c99X37vg'],
+  afn: ['Africanews', 'UC1_E8NeF5QHY2dtdLRBCCLA'], nhk: ['NHK World', 'UCSPEjw8F2nQDtmUKPFNF7_A'], cna: ['CNA', 'UC83jt4dlz1Gjl58fzQrrKZg'],
+  abc: ['ABC Australia', 'UCVgO39Bk5sMo66-6o6Spn6Q'], cbs: ['CBS News', 'UC8p1vwvWtl6T73JiExfWs1g'], bbg: ['Bloomberg', 'UCIALMKvObZNtJ6AmdCLP7Lg'],
+  sky: ['Sky News', 'UCoMdktPbSTixAyNGwb-UYkQ'], wion: ['WION', 'UC_gUM8rL-Lrg6O3adPW9K1g'],
+};
+const TV_FOR = { AF: ['afn', 'aje', 'f24'], ME: ['aje', 'trt', 'i24'], EU: ['dw', 'euro', 'sky'], NA: ['cbs', 'aje', 'dw'], SA: ['aje', 'f24', 'dw'], OC: ['abc', 'nhk', 'cna'], EA: ['nhk', 'cna', 'aje'], SEA: ['cna', 'nhk', 'aje'], AS: ['aje', 'wion', 'cna'], WORLD: ['aje', 'dw', 'f24'] };
+const ytId = u => (/(?:youtube\.com\/(?:watch\?(?:[^#\s]*&)?v=|live\/|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/.exec(u || '') || [])[1] || null;
+const ytSrc = (q, mute) => `https://www.youtube.com/embed/${q}${q.includes('?') ? '&' : '?'}autoplay=1&mute=${mute ? 1 : 0}&playsinline=1&rel=0`;
+const WMS = 'https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&STYLES=&CRS=EPSG:4326&WIDTH=800&HEIGHT=450';
+const SAT = { // NOAA-21 first, NOAA-20 as the fallback (Suomi NPP stopped sending images on 2 November 2026)
+  true: ['VIIRS_NOAA21_CorrectedReflectance_TrueColor', 'VIIRS_NOAA20_CorrectedReflectance_TrueColor'],
+  false: ['VIIRS_NOAA21_CorrectedReflectance_BandsM11-I2-I1', 'VIIRS_NOAA20_CorrectedReflectance_BandsM11-I2-I1'],
+  fires: ['VIIRS_NOAA21_Thermal_Anomalies_375m_All', 'VIIRS_NOAA20_Thermal_Anomalies_375m_All'],
+};
+const SUN = [ // NASA and NOAA refresh these every few minutes
+  ['https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0193.jpg', 'The Sun now in extreme ultraviolet: dark coronal holes send out fast solar wind, bright regions can flare', 'NASA Solar Dynamics Observatory', 'https://sdo.gsfc.nasa.gov/data/', 'Sun'],
+  ['https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0304.jpg', 'Prominences and flares on the Sun now', 'NASA Solar Dynamics Observatory', 'https://sdo.gsfc.nasa.gov/data/', 'Flares'],
+  ['https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_HMIIC.jpg', 'Sunspots in visible light', 'NASA Solar Dynamics Observatory', 'https://sdo.gsfc.nasa.gov/data/', 'Sunspots'],
+  ['https://soho.nascom.nasa.gov/data/realtime/c3/512/latest.jpg', 'Coronal mass ejections leaving the Sun (the Sun is hidden behind the disc)', 'ESA/NASA SOHO LASCO C3', 'https://soho.nascom.nasa.gov/data/realtime-images.html', 'CMEs'],
+  ['https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg', 'Aurora forecast for the northern hemisphere, the next 30 to 90 minutes', 'NOAA Space Weather Prediction Center', 'https://www.swpc.noaa.gov/products/aurora-30-minute-forecast', 'Aurora N'],
+  ['https://services.swpc.noaa.gov/images/animations/ovation/south/latest.jpg', 'Aurora forecast for the southern hemisphere, the next 30 to 90 minutes', 'NOAA Space Weather Prediction Center', 'https://www.swpc.noaa.gov/products/aurora-30-minute-forecast', 'Aurora S'],
+];
+const TOPIC = {
+  quake: /earthquake|quake|tremor|tsunami|aftershock|seismic/i, flood: /flood|heavy rain|torrential|landslide|mudslide|inundat|deluge|monsoon/i,
+  cyclone: /cyclone|typhoon|hurricane|tropical storm|storm|landfall/i, fire: /wildfire|bushfire|forest fire|blaze|fire|burn|evacuat/i,
+  volcano: /volcan|erupt|lava|ash cloud|ash plume|magma/i, drought: /drought|dry spell|water shortage|crop failure|heatwave|famine/i, tsunami: /tsunami/i,
+  conflict: /attack|strike|missile|drone|kill|shell|clash|war\b|troops|militant|gunmen|bomb|army|offensive|ceasefire|hostage/i,
+  disaster: /disaster|accident|crash|collapse|capsiz|sank|explosion|blast|derail|fire|flood|dead|killed|rescue|missing/i,
+  health: /outbreak|virus|disease|cases|infect|epidemic|pandemic|vaccin|deaths/i,
+  politics: /election|vote|ballot|poll|parliament|president|prime minister|government|protest|opposition|coalition|referendum/i,
+  intl: /talks|summit|sanction|treaty|diplomat|foreign minister|ceasefire|agreement|envoy|visit/i,
+  crime: /police|court|arrest|charged|trial|sentenced|murder|shooting|prosecutor|jail|prison/i,
+  economy: /econom|market|bank|inflation|trade|tariff|shares|company|strike|budget/i, science: /scien|research|space|study|discover|climate/i,
+  launch: /launch|rocket|satellite|lift-?off|orbit|spacecraft|astronaut|space station|mission/i,
+  severe: /tornado|storm|severe weather|flood|blizzard|snow|hail|winds?|warning|weather/i,
+  space: /solar|geomagnetic|aurora|northern lights|southern lights|space weather|sunspot|flare|coronal/i,
+};
+const GD_MEDIA = { EQ: ['quake', 3], TC: ['cyclone', 12], FL: ['flood', 4, 'false'], VO: ['volcano', 1, 'true', true], DR: ['drought', 10], WF: ['fire', 1.5, 'false', true], TS: ['tsunami', 6] }; // topic, satellite view height in degrees, band, fire overlay
+const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const titleCase = s => /\p{Ll}/u.test(s) ? s : s.toLowerCase().replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase());
+const fmtDay = s => new Date(s + 'T12:00:00Z').toLocaleDateString([], { day: 'numeric', month: 'short' });
+const stripTags = h => { const d = document.createElement('div'); d.innerHTML = String(h || ''); return d.textContent.replace(/\s+/g, ' ').trim(); };
+
+const pip = document.createElement('div');
+pip.id = 'pip'; pip.className = 'glass'; pip.hidden = true; pip.setAttribute('role', 'dialog'); pip.setAttribute('aria-label', 'Event media');
+pip.innerHTML = `<div class="pip-h"><div class="pip-t"><b></b><small></small></div>
+  <button class="pip-b" data-pip="out" title="Pop out into its own window, on top of other apps" aria-label="Pop out">⧉</button>
+  <button class="pip-b" data-pip="size" title="Bigger" aria-label="Bigger">⤢</button>
+  <button class="pip-b" data-pip="min" title="Minimise" aria-label="Minimise">–</button>
+  <button class="pip-b" data-pip="close" title="Close (M)" aria-label="Close">✕</button></div>
+  <div class="pip-tabs" role="tablist">${[['live', 'Live'], ['sat', 'Satellite'], ['photos', 'Photos'], ['news', 'Headlines']].map(([k, l]) => `<button data-ptab="${k}" role="tab"><span>${l}</span><small></small></button>`).join('')}</div>
+  <div class="pip-v">${['live', 'sat', 'photos', 'news'].map(k => `<div class="pv" data-pane="${k}" role="tabpanel" hidden></div>`).join('')}</div>
+  <div class="pip-c"></div>
+  <div class="crawl" title="Headlines about this event: click for the list"><b>Latest</b><div><span></span></div></div>`;
+document.body.append(pip);
+const pq = s => pip.querySelector(s), pane = k => pip.querySelector(`.pv[data-pane="${k}"]`), ptab = k => pip.querySelector(`[data-ptab="${k}"]`);
+const M = { ev: null, key: '', I: null, tab: 'live', pf: 'all', region: 'WORLD', live: null, pick: null, pickFor: '', sound: false, allTv: false, news: [], photos: null, busy: 0, pi: 0, sat: null, vids: null, pos: null, big: false, hover: false, facts: '', req: 0, tvPrefs: {} };
+try { const p = JSON.parse(localStorage.getItem('wg-tv') || '{}'); if (p && typeof p === 'object') M.tvPrefs = p; } catch {}
+try { const s = JSON.parse(localStorage.getItem('wg-pip') || 'null'); if (s) { M.pos = Array.isArray(s.pos) && s.pos.every(isFinite) ? s.pos : null; M.big = !!s.big; } } catch {}
+const savePip = () => { try { localStorage.setItem('wg-pip', JSON.stringify({ pos: M.pos, big: M.big })); } catch {} };
+let pipWin = null;
+const phone = () => innerWidth < 760;
+const evKey = e => e.kind + ':' + (e.id || e.url || e.link || e.title || e.name || e.text || '') + ':' + (e.lat ?? '') + ',' + (e.lon ?? '');
+
+function tvRegion(lat, lon) { // which news channels suit a spot: its region, with East and South-East Asia apart
+  let c = COUNTRIES && countryAt(COUNTRIES, lat, lon);
+  if (!c && COUNTRIES) { let bd = 1500; for (const x of COUNTRIES.list) { const d = gcDist(lat, lon, x.c.lat, x.c.lon); if (d < bd) { bd = d; c = x; } } }
+  let r = c && regionFor(c, lat, lon);
+  if (!r) r = lon > 140 || lon < -140 ? (lat > 20 ? 'AS' : 'OC') : lon < -25 ? (lat > 15 ? 'NA' : 'SA') : lon > 60 ? (lat < -10 ? 'OC' : 'AS') : lat > 36 ? 'EU' : lon > 34 && lat > 12 ? 'ME' : 'AF';
+  if (r === 'AS') r = lon > 115 && lat > 20 ? 'EA' : lon > 92 && lat < 25 ? 'SEA' : 'AS';
+  return r;
+}
+function mediaHead(ev) { // the window's title and subtitle
+  switch (ev.kind) {
+    case 'quake': return [`M${(+ev.mag).toFixed(1)} earthquake`, `${ev.place || ''} · ${ago(ev.t)}`];
+    case 'gdacs': return [ev.title, `${GD_TYPE[ev.type] || ev.type} · ${ev.level} alert · ${shortPlace(ev.country)}`];
+    case 'wiki': return [clip(ev.text, 110), `${(NEWS[ev.cat] || NEWS.other)[2]} · ${dayLabel(ev)}${ev.place ? ' · ' + ev.place : ''}`];
+    case 'who': return [ev.disease || ev.title, `Outbreak · ${ev.placeName || ev.where || ''} · WHO ${fmtDate(ev.t)}`];
+    case 'launch': return [ev.name, `${ev.provider} · ${countdown(ev.net)} · ${ev.loc || ev.pad || ''}`];
+    case 'nws': return [ev.event, clip(ev.area, 90)];
+    case 'storm': return [ev.title || ev.name, `${catOf(ev.kts)[1]}${ev.kts ? ' · ' + Math.round(ev.kts) + ' kt' : ''}`];
+    case 'space': { const w = spaceWx || {}; return ['Space weather', `Geomagnetic G${w.G ?? 0} · solar radiation S${w.S ?? 0} · radio R${w.R ?? 0}${w.kp != null ? ' · Kp ' + w.kp.toFixed(1) : ''}`]; }
+    case 'fire': return [ev.title, `Wildfire · updated ${ago(ev.t)}`];
+    case 'volcano': return [ev.title, `Volcano · updated ${ago(ev.t)}`];
+  }
+  return [ev.title || 'Event', ''];
+}
+function mediaInfo(ev) { // what to look for: topic words, names, countries, the nearest place, and how wide a satellite view to take
+  const I = { topic: null, names: [], wiki: [], cs: new Set(), place: null, need: false, span: 3, near: true, band: 'true', fires: false, sat: ev.lat != null, start: null };
+  const isCountry = s => !!COUNTRIES?.byName.get(norm(s)) || [...REGION_OF.keys()].some(n => norm(niceName(n)) === norm(s));
+  const name = (s, ci = false, wiki = false) => { s = String(s || '').replace(/\s+/g, ' ').trim(); if (s.length < 3 || isCountry(s) || I.names.some(n => n[0] === s)) return; I.names.push([s, new RegExp(`(^|[^\\p{L}\\p{N}])${reEsc(s)}(?![\\p{L}\\p{N}])`, ci ? 'iu' : 'u')]); if (wiki) I.wiki.push(s); };
+  let text = '';
+  switch (ev.kind) {
+    case 'quake': {
+      I.topic = TOPIC.quake; I.need = true; I.start = ev.t; text = ev.place || '';
+      const town = text.replace(/^\s*[\d.]+\s*km\s+[NSEW]{1,3}\s+of\s+/i, '').replace(/^(?:[a-z]+\s+)+/, '').split(',')[0].trim();
+      if (town && !/\b(?:region|ridge|rise|sea|ocean|islands?|coast|trench|basin|gulf|strait|border|peninsula)\b/i.test(town)) name(town, false, true);
+      break;
+    }
+    case 'gdacs': {
+      const T = GD_MEDIA[ev.type] || ['disaster', 4];
+      [I.topic, I.span, I.band = 'true', I.fires = false] = [TOPIC[T[0]], T[1], T[2], T[3]];
+      I.need = true; I.start = ev.start; text = `${ev.country}. ${ev.title}`;
+      if (ev.type === 'TC' && ev.eventname) name(titleCase(ev.eventname.replace(/[-_ ]?\d+$/, '')));
+      if (ev.type === 'VO') { const v = ev.title.replace(/^(?:Volcanic\s+)?(?:Eruption|Activity|Volcano)\s+(?:of\s+|at\s+)?/i, '').replace(/\s+(?:in|-)\s+.*$/, '').trim(); if (v !== ev.title && /^\p{Lu}[\p{L}' -]*$/u.test(v)) name(v, false, true); }
+      if (ev.type === 'TC' || ev.type === 'DR') I.near = false;
+      break;
+    }
+    case 'fire': case 'volcano': {
+      const [head, where] = String(ev.title || '').split(/\s*,\s*/); text = ev.title; I.start = ev.kind === 'fire' ? new Date(ev.t - 6 * DAY) : null; I.fires = true;
+      if (ev.kind === 'volcano') { I.topic = TOPIC.volcano; I.span = 0.6; name(head.replace(/\s+Volcan(?:o|ic)\b.*$/i, ''), false, true); }
+      else { I.topic = TOPIC.fire; I.span = 1.2; I.band = 'false'; I.need = true; const f = head.replace(/^(?:Wildfires?|Rx|Prescribed)\s*[-–:]?\s*/i, ''); if (/\bFire$/i.test(f) && f.split(' ').length <= 4) name(f, true); if (where) name(where); }
+      break;
+    }
+    case 'storm': I.topic = TOPIC.cyclone; I.need = true; I.span = 14; I.near = false; I.start = ev.track?.[0]?.t; if (ev.name) name(titleCase(ev.name)); break;
+    case 'wiki': {
+      text = ev.text; I.topic = TOPIC[ev.cat] || null; I.start = ev.date;
+      for (const t0 of ev.links || []) {
+        const t = t0.replace(/\s*\(.*\)$/, '').trim();
+        if (!t || t.split(/\s+/).length > 4 || /\s\p{Ll}/u.test(t) || (!t.includes(' ') && !ev.text.includes(t))) continue; // proper names only: Kharkiv or Rapid Support Forces, not "Strikes on Kharkiv" or a linked "ceasefire"
+        name(t, false, true);
+      }
+      I.span = ev.ptype === 'country' ? 8 : ev.ptype === 'city' ? 1.2 : 3; I.near = ev.ptype !== 'country'; I.sat = ev.lat != null && ev.cat !== 'politics' && ev.cat !== 'sports';
+      break;
+    }
+    case 'who': {
+      text = `${ev.title}. ${ev.where || ''}`; I.topic = TOPIC.health; I.sat = false; I.near = false;
+      const d = ev.disease || ev.title || '', w = d.split(/[\s,(]+/), ac = /\(([A-Z][\w-]{1,10})\)/.exec(d);
+      if (ac) name(ac[1]);
+      if (/avian influenza|bird flu|\bH5N\d/i.test(d)) { name('bird flu', true); name('H5N1'); }
+      else if (/^(?:fever|flu|influenza|virus)$/i.test(w[1] || '')) name(`${w[0]} ${w[1]}`, true, true);
+      else if (w[0] && w[0].length > 3 && !/^(?:Middle|Avian|Novel|Acute|Severe|Disease|Infection|Undiagnosed|Unknown)$/i.test(w[0])) name(w[0], true, true);
+      break;
+    }
+    case 'launch': {
+      text = ev.loc || ''; I.topic = TOPIC.launch; I.need = 'name'; I.sat = false; I.near = false;
+      const [rocket, mission] = String(ev.name || '').split(/\s*\|\s*/);
+      if (ev.provider && ev.provider.length < 30) name(ev.provider.replace(/\s+\(.*\)$/, ''));
+      if (rocket) name(rocket.replace(/\s+Block\s+\d.*$|\s+v\d.*$/i, '').replace(/^(\S+)\s+[\d.]+\w?$/, '$1'), false, true);
+      if (mission) { const m = mission.replace(/\s*\(.*\)$/, '').split(/\s+/)[0]; if (m.length > 4 && /^\p{Lu}/u.test(m)) name(m); }
+      break;
+    }
+    case 'nws': {
+      text = ev.area || ''; I.need = true; I.span = 3;
+      const c = alertCat(ev.event || ''); I.topic = c === 'tornado' ? /tornado/i : c === 'flood' ? TOPIC.flood : c === 'winter' ? /snow|blizzard|ice storm|winter storm|freez|cold/i : c === 'heat' ? /heat/i : c === 'fire' ? TOPIC.fire : c === 'tropical' ? TOPIC.cyclone : TOPIC.severe;
+      const st = /,\s*([A-Z]{2})\b/.exec(text)?.[1], sn = US_STATES[st]; if (sn) name(sn);
+      break;
+    }
+    case 'space': I.topic = TOPIC.space; I.need = true; I.sat = false; I.near = false; break;
+  }
+  try { if (!GAZ) gazetteer(); for (const c of placesIn(text, ev.kind === 'nws').cs) I.cs.add(c); } catch {}
+  if (ev.lat != null && COUNTRIES && ev.kind !== 'space') { const c = countryAt(COUNTRIES, ev.lat, ev.lon); if (c) I.cs.add(c.name); }
+  if (ev.kind === 'nws') I.cs.add('United States of America');
+  if (PLACES && ev.lat != null && I.near) { const cn = [...I.cs][0]; I.place = cityNear(ev.lat, ev.lon, 40, null) || regionAt(ev.lat, ev.lon, cn); if (I.place) name(I.place.label || I.place.name); }
+  const where = I.names[0]?.[0] || niceName([...I.cs][0] || '');
+  I.q = { quake: `${where} earthquake`, gdacs: ev.type === 'TC' ? ev.title : `${I.names[0]?.[0] || ''} ${(GD_TYPE[ev.type] || '').toLowerCase()} ${niceName([...I.cs][0] || '')}`, fire: `${where} wildfire`, volcano: `${where} volcano`, storm: ev.title || ev.name,
+    wiki: I.names.length ? I.names.slice(0, 2).map(n => n[0]).join(' ') : ev.text?.split(/\s+/).slice(0, 8).join(' '), who: `${(ev.disease || '').split(/\s+caused by|\s*[-–(]/)[0]} outbreak ${niceName([...I.cs][0] || '')}`,
+    launch: `${String(ev.name || '').split('|').pop().replace(/\(.*\)/, '').trim()} launch`, nws: `${ev.event} ${I.names[0]?.[0] || ''}`, space: 'geomagnetic storm aurora' }[ev.kind]?.replace(/\s+/g, ' ').trim() || '';
+  return I;
+}
+const US_STATES = Object.fromEntries('AL Alabama|AK Alaska|AZ Arizona|AR Arkansas|CA California|CO Colorado|CT Connecticut|DE Delaware|FL Florida|GA Georgia|HI Hawaii|ID Idaho|IL Illinois|IN Indiana|IA Iowa|KS Kansas|KY Kentucky|LA Louisiana|ME Maine|MD Maryland|MA Massachusetts|MI Michigan|MN Minnesota|MS Mississippi|MO Missouri|MT Montana|NE Nebraska|NV Nevada|NH New Hampshire|NJ New Jersey|NM New Mexico|NY New York|NC North Carolina|ND North Dakota|OH Ohio|OK Oklahoma|OR Oregon|PA Pennsylvania|RI Rhode Island|SC South Carolina|SD South Dakota|TN Tennessee|TX Texas|UT Utah|VT Vermont|VA Virginia|WA Washington|WV West Virginia|WI Wisconsin|WY Wyoming|PR Puerto Rico|GU Guam'.split('|').map(s => [s.slice(0, 2), s.slice(3)]));
+function relatedNews(I) { // headlines about the event: its topic or its names, then its country, place and freshness
+  if (!newsData) return [];
+  const now = Date.now() / 1e3, scored = [], local = I.place && localNews.get(I.place.cc)?.byKey;
+  const pool = local ? [...newsData.items, ...(local.get(I.place.key) || [])] : newsData.items;
+  for (const it of pool) {
+    const t = it.t || '', d = it.d || '';
+    let topic = 0, nm = 0;
+    if (I.topic) topic = I.topic.test(t) ? 3 : d && I.topic.test(d) ? 1 : 0;
+    for (const [, re] of I.names) { if (re.test(t)) { nm = 4; break; } if (d && re.test(d)) nm = 2; }
+    if (I.need === 'name' ? !nm : I.need ? !topic : !(topic || nm)) continue;
+    let s = topic + nm;
+    if (I.cs.size && it.cs?.some(c => I.cs.has(c))) s += 2;
+    if (I.place && it.pl?.some(p => p === I.place || p === I.place.region || p.region === I.place || p.part === I.place)) s += 2;
+    if (it.p && now - it.p < 86400) s += 1;
+    if (s >= (I.cs.size ? 5 : 4)) scored.push([s, it]);
+  }
+  scored.sort((a, b) => b[0] - a[0] || (b[1].p || 0) - (a[1].p || 0));
+  const seen = new Set(), out = [];
+  for (const [, it] of scored) { const k = titleKey(it.t); if (seen.has(k)) continue; seen.add(k); out.push(it); if (out.length >= 15) break; }
+  return out;
+}
+function mediaFacts(ev) { // what the crawl shows when no headline mentions the event yet
+  const [t, s] = mediaHead(ev);
+  const x = ev.kind === 'quake' ? `depth ${(+ev.depth || 0).toFixed(0)} km` : ev.kind === 'gdacs' ? ev.sevText : ev.kind === 'launch' ? `${ev.statusName || ''} ${ev.orbit ? '· ' + ev.orbit : ''}` : ev.kind === 'nws' ? ev.headline : ev.kind === 'who' ? ev.title : '';
+  return [t, s, x, 'No headlines about it yet'].filter(Boolean).join('   ●   ');
+}
+
+/* ---------- opening, tabs and the crawl ---------- */
+function mediaButton(ev) { // every event card gets a button for the window; on a computer it also opens by itself
+  const label = ev.kind === 'launch' ? 'Webcast &amp; photos' : ev.kind === 'space' ? 'The Sun live &amp; aurora' : ev.kind === 'who' ? 'Live news &amp; photos' : 'Live, satellite &amp; photos';
+  popup.insertAdjacentHTML('beforeend', `<button class="mini pp-media" data-media>▶ ${label}</button>`);
+  popup._ev = ev;
+  if (S.layers.media && !phone()) openMedia(ev);
+}
+function openMedia(ev) {
+  if (!ev) return;
+  const key = evKey(ev), same = key === M.key && !pip.hidden;
+  M.ev = ev; M.key = key;
+  if (!same) {
+    M.req++; M.I = mediaInfo(ev); M.news = relatedNews(M.I); M.photos = null; M.pi = 0; M.pf = 'all'; M.sat = null; M.vids = null; M.facts = mediaFacts(ev);
+    M.region = ev.lat != null ? tvRegion(ev.lat, ev.lon) : 'WORLD';
+  }
+  const [t, s] = mediaHead(ev);
+  pq('.pip-t b').textContent = t; pq('.pip-t small').textContent = s; pq('.pip-t').title = `${t}\n${s}`;
+  ptab('sat').hidden = !M.I.sat; if (M.tab === 'sat' && !M.I.sat) M.tab = 'live';
+  ptab('live').querySelector('span').textContent = ev.kind === 'space' ? 'Sun now' : ev.kind === 'launch' ? 'Webcast' : 'Live TV';
+  pip.hidden = false; pip.classList.toggle('big', M.big); minPip(false);
+  pq('[data-pip="out"]').hidden = !('documentPictureInPicture' in window) || phone();
+  if (phone()) sheetAway();
+  setCounts(); showTab(M.tab); renderCrawl();
+  if (ev.kind === 'launch' && !same) launchVideos(ev, M.req);
+  if (M.tab !== 'photos' && !same) setTimeout(() => { if (M.ev === ev && M.photos === null && M.busy !== M.req) loadPhotos(); }, 1500); // the count shows on the tab
+}
+function closeMedia() {
+  if (pipWin) pipWin.close();
+  pip.hidden = true; pane('live').innerHTML = ''; M.live = null; M.key = ''; ptab('live').classList.remove('rec'); // the stream stops
+}
+function minPip(on) {
+  pip.classList.toggle('min', on); const b = pq('[data-pip="min"]'); b.textContent = on ? '▢' : '–'; b.title = on ? 'Restore' : 'Minimise';
+  if (!on && phone()) { popup.hidden = true; toggleNews(false); }
+  placePip();
+}
+function toggleMedia() {
+  if (!pip.hidden) closeMedia();
+  else if (M.ev) openMedia(M.ev);
+  else toast('Click an event on the globe for its live news, satellite views and photos');
+}
+function setCounts() {
+  const n = (k, v) => { ptab(k).querySelector('small').textContent = v ? v : ''; };
+  n('news', M.news.length); n('photos', M.photos?.length || '');
+}
+function showTab(k) {
+  M.tab = k;
+  for (const b of pip.querySelectorAll('[data-ptab]')) { const on = b.dataset.ptab === k; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); }
+  for (const p of pip.querySelectorAll('.pv')) p.hidden = p.dataset.pane !== k;
+  if (k === 'live') renderLive(); else if (k === 'sat') renderSat(); else if (k === 'photos') { if (M.photos === null && M.busy !== M.req) loadPhotos(); renderPhotos(); } else renderMediaNews();
+  renderChips();
+}
+function renderCrawl() {
+  const c = pq('.crawl'), L = M.news.slice(0, 8), txt = L.length ? L.map(it => it.t).join('   ●   ') : M.facts, s = c.querySelector('span');
+  c.querySelector('b').textContent = L.some(isFresh) ? 'Breaking' : L.length ? 'Headlines' : M.ev?.kind === 'space' ? 'Space' : 'Event';
+  if (s.textContent !== txt) { s.textContent = txt; s.style.setProperty('--dur', Math.round(txt.length * 0.13 + 8) + 's'); }
+}
+function renderChips() {
+  const c = pq('.pip-c'), ev = M.ev; let h = '';
+  if (M.tab === 'live' && ev.kind === 'space') h = SUN.map((s, i) => `<button data-sun="${i}" class="${i === M.pi % SUN.length ? 'on' : ''}">${s[4]}</button>`).join('');
+  else if (M.tab === 'live') {
+    const list = liveList();
+    h = list.map(x => `<button data-live="${esc(x.k)}" class="${x.k === M.live ? 'on' : ''}" title="${esc(x.title || x.name + ' live')}">${x.vid ? '🚀 ' : ''}${esc(x.name)}</button>`).join('')
+      + `<button data-tvall>${M.allTv ? 'Fewer' : 'More channels'}</button>` + (ev.kind === 'launch' && M.vids?.ext ? `<a href="${esc(M.vids.ext)}" target="_blank" rel="noopener">Official webcast ↗</a>` : '');
+  } else if (M.tab === 'sat' && M.sat) {
+    h = `<button data-band="true" class="${M.sat.band === 'true' ? 'on' : ''}" title="As your eye would see it">True colour</button><button data-band="false" class="${M.sat.band === 'false' ? 'on' : ''}" title="Shortwave infrared: water is dark blue, burn scars brown, plants green">Water &amp; burn scars</button>`
+      + `<button data-fires class="${M.sat.fires ? 'on' : ''}" title="Hot spots that NOAA-21 and NOAA-20 detected that day">Fires</button><a href="${esc(M.sat.wv)}" target="_blank" rel="noopener" title="Open this view in NASA Worldview">Worldview ↗</a>`;
+  } else if (M.tab === 'photos') {
+    const P = M.photos || [], n = g => P.filter(p => p.g === g).length, G = [['all', 'All', P.length], ['event', ev.kind === 'quake' ? 'ShakeMap' : ev.kind === 'launch' ? 'Rocket' : 'Event', n('event')], ['news', 'News', n('news')], ['wiki', 'Wikipedia', n('wiki')], ['near', 'Near here', n('near')]];
+    h = P.length ? G.filter(g => g[2]).map(([k, l, c]) => `<button data-pf="${k}" class="${M.pf === k ? 'on' : ''}">${l} ${c}</button>`).join('') : `<button disabled>${M.photos === null ? 'Searching news, Wikipedia and Wikimedia Commons…' : 'Nothing found'}</button>`;
+  } else if (M.tab === 'news') {
+    h = `<a href="https://news.google.com/search?q=${encodeURIComponent(M.I.q || '')}&hl=en" target="_blank" rel="noopener" title="Search Google News for “${esc(M.I.q || '')}”">More on Google News ↗</a>${S.layers.headlines ? '<button data-nlist title="The breaking news list for the area in view (N)">News for this area</button>' : ''}`;
+  }
+  c.innerHTML = h;
+}
+
+/* ---------- Live: news TV, a launch webcast, or the Sun ---------- */
+function liveList() { // the event's own streams, then news channels for its part of the world
+  const out = [];
+  for (const v of M.vids?.yt || []) out.push({ k: 'v:' + v.id, name: v.name, title: v.title, vid: v.id });
+  const pref = M.tvPrefs[M.region], keys = M.allTv ? Object.keys(TV) : [...new Set([...(TV[pref] ? [pref] : []), ...(TV_FOR[M.region] || TV_FOR.WORLD), ...(TV[M.pick] ? [M.pick] : [])])];
+  for (const k of keys) out.push({ k, name: TV[k][0] });
+  return out;
+}
+function liveDefault() { // what the Live tab plays: your pick for this event, a launch's webcast, the channel you were watching, your usual channel for the region
+  const L = liveList(), has = k => k && L.some(x => x.k === k);
+  if (M.pickFor === M.key && has(M.pick)) return M.pick;
+  if (M.ev.kind === 'launch') return M.vids?.yt?.length ? 'v:' + M.vids.yt[0].id : null; // otherwise its countdown
+  if (TV[M.pick]) return M.pick;
+  return has(M.tvPrefs[M.region]) ? M.tvPrefs[M.region] : (TV_FOR[M.region] || TV_FOR.WORLD)[0];
+}
+function renderLive() {
+  const el = pane('live'), ev = M.ev;
+  if (ev.kind === 'space') { renderStage(el, SUN.map(s => ({ src: `${s[0]}?t=${Math.floor(Date.now() / 6e5)}`, cap: s[1], credit: s[2], href: s[3] })), 'sun'); return; }
+  const k = liveDefault();
+  if (!k) { // a launch with no webcast to show here: its countdown
+    el.innerHTML = launchPoster(!M.vids ? 'Looking for the webcast…' : M.vids.ext ? 'Its webcast plays on another site: the link is below' : 'No webcast listed yet. Live news channels are below');
+    M.live = null; ptab('live').classList.remove('rec'); renderChips(); return;
+  }
+  if (M.live === k && el.querySelector('iframe')) return; // already playing: switching tabs or events never restarts it
+  const x = liveList().find(i => i.k === k);
+  if (phone() && !M.sound) { el.innerHTML = `<button class="poster" data-play="${esc(k)}"><i>▶</i><b>Watch ${esc(x.name)}${x.vid ? '' : ' live'}</b><small>${x.vid ? 'The launch webcast' : 'Live news for ' + esc(REGION_NAMES[M.region.replace(/^S?EA$/, 'AS')] || 'the world')}</small></button>`; M.live = null; ptab('live').classList.remove('rec'); renderChips(); return; }
+  playLive(k);
+}
+function playLive(k, sound = M.sound) {
+  const x = liveList().find(i => i.k === k); if (!x) return;
+  M.live = k;
+  const src = pipWin ? `${new URL('tv.html', location.href).href}?${x.vid ? 'v=' + x.vid : 'channel=' + TV[k][1]}&mute=${sound ? 0 : 1}` // the pop-out window has no address for YouTube to check, so the player loads through tv.html
+    : x.vid ? ytSrc(x.vid, !sound) : ytSrc(`live_stream?channel=${TV[k][1]}`, !sound);
+  pane('live').innerHTML = `<iframe src="${esc(src)}" title="${esc(x.name)}${x.vid ? ' webcast' : ' live'}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  ptab('live').classList.add('rec');
+  renderChips();
+}
+function launchPoster(msg) {
+  const ev = M.ev, img = safeUrl(ev.image);
+  return `<div class="poster lp" style="${img ? `background-image:linear-gradient(rgba(3,5,11,.35),rgba(3,5,11,.85)),url('${esc(img)}')` : ''}"><b class="cd">${esc(countdown(ev.net))}</b><small>${esc(fmtDT(ev.net))}</small><small>${esc(msg)}</small></div>`;
+}
+async function launchVideos(ev, req) { // Launch Library lists webcasts only in a launch's own record; asked once an hour at most
+  let v = null;
+  try { const c = JSON.parse(localStorage.getItem('wg-ll2v') || '{}'); if (c[ev.id] && Date.now() - c[ev.id].at < 3600e3) v = c[ev.id].v; } catch {}
+  if (!v && ev.id) {
+    try {
+      const js = await fetchJSON(`https://ll.thespacedevs.com/2.2.0/launch/${encodeURIComponent(ev.id)}/`, {}, 20000);
+      const list = (js.vidURLs || []).map(u => ({ url: safeUrl(u.url), id: ytId(u.url), name: clip(u.publisher || u.source || 'Webcast', 28), title: clip(u.title || '', 120), off: /official/i.test(u.type?.name || '') })).filter(u => u.url);
+      v = { yt: list.filter(u => u.id).sort((a, b) => b.off - a.off).slice(0, 3).map(({ id, name, title }) => ({ id, name, title })), ext: (list.find(u => !u.id && u.off) || list.find(u => !u.id))?.url || null };
+      try { const c = JSON.parse(localStorage.getItem('wg-ll2v') || '{}'); for (const k in c) if (Date.now() - c[k].at > 3600e3) delete c[k]; c[ev.id] = { at: Date.now(), v }; localStorage.setItem('wg-ll2v', JSON.stringify(c)); } catch {}
+    } catch (e) { console.warn('webcast', e); }
+  }
+  if (req !== M.req) return;
+  M.vids = v || { yt: [], ext: null };
+  if (M.tab === 'live') renderLive();
+}
+
+/* ---------- Satellite: before and after ---------- */
+function satView() {
+  const ev = M.ev, I = M.I, H = 450, W = 800, span = I.span;
+  const lat = clamp(ev.lat, -82 + span / 2, 82 - span / 2), dLat = span / 2, dLon = Math.min(180, span * W / H / 2 / Math.max(0.15, Math.cos(lat * DEG)));
+  const lon = clamp(ev.lon, -180 + dLon, 180 - dLon), b = [lat - dLat, lon - dLon, lat + dLat, lon + dLon];
+  const now = new Date(), h = now.getUTCHours() + now.getUTCMinutes() / 60, pass = 13.5 - ev.lon / 15; // the satellites cross at about 1:30 pm local time; images follow about four hours later
+  const after = new Date(+now - (pass + 4 < 24 && h > pass + 4 ? 0 : DAY));
+  let before = I.start ? new Date(+I.start - DAY) : new Date(+after - 5 * DAY);
+  if (ev.kind === 'storm') before = new Date(+after - DAY); // a storm moves: yesterday against today shows where it went
+  before = new Date(clamp(+before, +after - 30 * DAY, +after - DAY));
+  return { bb: b.map(v => v.toFixed(3)).join(','), b, after: isoDay(after), before: isoDay(before), mx: (ev.lon - b[1]) / (b[3] - b[1]) * 100, my: (b[2] - ev.lat) / (b[2] - b[0]) * 100 };
+}
+function imgTry(img, urls, onFail) { // GIBS map servers sometimes answer with an error page, so try again, then the other satellite
+  let i = 0;
+  img.onerror = () => { if (i < urls.length) img.src = urls[i++]; else { img.hidden = true; onFail?.(); } };
+  img.onload = () => { img.hidden = false; };
+  img.src = urls[i++];
+}
+function renderSat() {
+  const el = pane('sat');
+  if (!M.sat) { const v = satView(); M.sat = { ...v, band: M.I.band, fires: M.I.fires, x: 50, drawn: '' }; }
+  const s = M.sat, key = `${M.key}|${s.band}|${s.fires}`;
+  s.wv = `https://worldview.earthdata.nasa.gov/?v=${[s.b[1], s.b[0], s.b[3], s.b[2]].map(v => v.toFixed(2)).join(',')}&t=${s.after}&l=Reference_Labels_15m,Coastlines_15m,${s.fires ? SAT.fires[0] + ',' : ''}${SAT[s.band][0]}`;
+  if (s.drawn === key) return; s.drawn = key;
+  const url = (L, day, png) => `${WMS}&LAYERS=${L}&BBOX=${s.bb}&TIME=${day}&FORMAT=image/${png ? 'png&TRANSPARENT=TRUE' : 'jpeg'}`;
+  const tries = (Ls, day, png) => [url(Ls[0], day, png), url(Ls[0], day, png) + '&r=1', url(Ls[1], day, png), url(Ls[1], day, png) + '&r=1'];
+  el.innerHTML = `<div class="sat" tabindex="0" role="slider" aria-label="Satellite view before and after: drag or use the arrow keys" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${s.x}" style="--x:${s.x}%">
+    <div class="msg">Loading NASA satellite images…</div><img class="a" alt="" hidden><img class="a ov" alt="" hidden>
+    <div class="bf"><img class="b" alt="" hidden><img class="b ov" alt="" hidden></div><img class="lb" alt="" hidden>
+    <i class="mk" style="left:${s.mx.toFixed(1)}%;top:${s.my.toFixed(1)}%"></i><div class="bar"></div>
+    <span class="tag l">◀ ${fmtDay(s.before)}</span><span class="tag r">${fmtDay(s.after)} ▶</span></div>`;
+  const q = c => el.querySelector(c), fail = () => { if (q('img.a').hidden && q('img.b').hidden) q('.msg').textContent = 'NASA has no satellite image of this spot for these days yet.'; };
+  imgTry(q('img.a:not(.ov)'), tries(SAT[s.band], s.after), fail);
+  imgTry(q('img.b:not(.ov)'), tries(SAT[s.band], s.before), fail);
+  if (s.fires) { imgTry(q('img.a.ov'), tries(SAT.fires, s.after, true)); imgTry(q('img.b.ov'), tries(SAT.fires, s.before, true)); }
+  imgTry(q('img.lb'), [`${WMS}&LAYERS=Reference_Labels_15m&BBOX=${s.bb}&FORMAT=image/png&TRANSPARENT=TRUE`, `${WMS}&LAYERS=Reference_Labels_15m&BBOX=${s.bb}&FORMAT=image/png&TRANSPARENT=TRUE&r=1`]);
+  const sat = q('.sat'), setX = x => { s.x = clamp(x, 0, 100); sat.style.setProperty('--x', s.x + '%'); sat.setAttribute('aria-valuenow', Math.round(s.x)); };
+  sat.addEventListener('pointerdown', e => { sat.setPointerCapture(e.pointerId); const r = sat.getBoundingClientRect(), mv = ev => setX((ev.clientX - r.left) / r.width * 100); mv(e); sat.onpointermove = mv; sat.onpointerup = sat.onpointercancel = () => { sat.onpointermove = null; }; });
+  sat.addEventListener('keydown', e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); setX(s.x + (e.key === 'ArrowLeft' ? -5 : 5)); } });
+}
+
+/* ---------- Photos ---------- */
+async function loadPhotos() {
+  const ev = M.ev, I = M.I, req = M.req; M.busy = req;
+  const first = [], news = [], wiki = [], near = [];
+  const add = (arr, src, cap, credit, href) => { src = safeUrl(src); if (src) arr.push({ src, cap: String(cap || ''), credit: String(credit || ''), href: safeUrl(href), g: arr === first ? 'event' : arr === news ? 'news' : arr === wiki ? 'wiki' : 'near' }); };
+  if (ev.kind === 'launch') add(first, ev.image, `${ev.name}: ${ev.provider}`, 'The Space Devs', 'https://thespacedevs.com/');
+  for (const it of M.news) if (it.i) add(news, it.i, it.t, it.src, it.u);
+  const jobs = [];
+  if (ev.kind === 'quake' && /\/eventpage\/[\w-]+/.test(ev.url || '')) jobs.push(fetchJSON(`https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/${/\/eventpage\/([\w-]+)/.exec(ev.url)[1]}.geojson`, {}, 15000).then(js => {
+    const P = js.properties?.products || {}, sm = P.shakemap?.[0]?.contents?.['download/intensity.jpg']?.url, pg = P.losspager?.[0]?.contents?.['exposure.png']?.url;
+    if (sm) add(first, sm, `How strongly the ground shook (ShakeMap) in the M${(+ev.mag).toFixed(1)} earthquake`, 'USGS', ev.url);
+    if (pg) add(first, pg, 'How many people felt each level of shaking (PAGER estimate)', 'USGS', ev.url);
+  }));
+  if (I.wiki.length) jobs.push(fetchJSON(`${WIKI_API}action=query&redirects=1&prop=pageimages|description&piprop=thumbnail|name&pithumbsize=640&titles=${encodeURIComponent(I.wiki.slice(0, 8).join('|'))}`, {}, 15000).then(js => {
+    for (const p of js.query?.pages || []) if (p.thumbnail?.source && !/\.(svg|png|gif)$/i.test(p.pageimage || '')) add(wiki, p.thumbnail.source, `${p.title}${p.description ? ': ' + p.description : ''}`, 'Wikipedia', 'https://en.wikipedia.org/wiki/' + encodeURIComponent(p.title.replace(/ /g, '_')));
+  }));
+  if (I.near && ev.lat != null) jobs.push(fetchJSON(`https://commons.wikimedia.org/w/api.php?action=query&format=json&formatversion=2&origin=*&generator=geosearch&ggscoord=${(+ev.lat).toFixed(4)}%7C${(+ev.lon).toFixed(4)}&ggsradius=10000&ggsnamespace=6&ggslimit=24&prop=imageinfo&iiprop=url%7Cmime%7Cextmetadata&iiurlwidth=640&iiextmetadatafilter=Artist%7CLicenseShortName%7CObjectName`, {}, 15000).then(js => {
+    const pages = (js.query?.pages || []).sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+    for (const p of pages) {
+      const ii = p.imageinfo?.[0], m = ii?.extmetadata || {};
+      if (!ii?.thumburl || ii.mime !== 'image/jpeg' || /\b(?:map|locator|flag|coat of arms|logo|diagram|chart|plan|seal|emblem|scan|document|page|text|sign)\b/i.test(p.title)) continue;
+      if (near.length < 8) add(near, ii.thumburl, `Near here: ${stripTags(m.ObjectName?.value) || p.title.replace(/^File:|\.\w+$/g, '')}`, [stripTags(m.Artist?.value), m.LicenseShortName?.value, 'Wikimedia Commons'].filter(Boolean).join(' · '), ii.descriptionurl);
+    }
+  }));
+  await Promise.allSettled(jobs);
+  if (req !== M.req) return;
+  M.busy = 0; const seen = new Set(); M.photos = [...first, ...news.slice(0, 10), ...wiki, ...near].filter(p => !seen.has(p.src) && seen.add(p.src));
+  setCounts(); if (M.tab === 'photos') { renderPhotos(); renderChips(); }
+}
+const photoList = () => (M.photos || []).filter(p => M.pf === 'all' || p.g === M.pf);
+function renderPhotos() {
+  const el = pane('photos'), L = photoList();
+  if (!L.length) { el.innerHTML = `<div class="msg">${M.photos === null ? 'Looking for photos…' : 'No photos of this event yet.'}</div>`; return; }
+  renderStage(el, L, 'photos');
+}
+function renderStage(el, list, kind) { // one photo at a time with its caption, like a slideshow
+  if (!list.length) return;
+  const i = ((M.pi % list.length) + list.length) % list.length, p = list[i];
+  el.innerHTML = `<div class="ph ${kind}"><a href="${esc(p.href || p.src)}" target="_blank" rel="noopener noreferrer" title="Open the source"><img src="${esc(p.src)}" alt="${esc(p.cap)}" referrerpolicy="no-referrer"></a>
+    <div class="cap">${esc(clip(p.cap, 150))}<small>${esc(clip(p.credit, 90))}</small></div>
+    ${list.length > 1 ? `<button class="nav p" data-pn="-1" aria-label="Previous">‹</button><button class="nav n" data-pn="1" aria-label="Next">›</button><span class="ct">${i + 1} / ${list.length}</span>` : ''}</div>`;
+  el.querySelector('img').onerror = () => { if (kind !== 'photos') return; const j = M.photos.indexOf(p); if (j >= 0) M.photos.splice(j, 1); setCounts(); renderPhotos(); renderChips(); }; // a picture that won't load drops out
+}
+
+/* ---------- Headlines ---------- */
+function renderMediaNews() {
+  const el = pane('news');
+  if (!M.news.length) { el.innerHTML = `<div class="msg">${newsData ? 'None of the latest headlines mention this event yet.' : 'Headlines are still loading.'}</div>`; return; }
+  el.innerHTML = `<div class="mnews">${M.news.map(it => {
+    const u = /^https?:\/\/[^\s"'<>]+$/i.test(it.u || '') ? it.u : null, img = safeUrl(it.i);
+    const meta = [it.src + (it.ns > 1 ? ` +${it.ns - 1}` : ''), it.p ? ago(it.p * 1000) : ''].filter(Boolean).join(' · ');
+    const body = `${img ? `<img src="${esc(img)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}<b>${isFresh(it) ? '<em>Breaking</em>' : ''}${esc(it.t)}</b><small>${esc(meta)}</small>`;
+    return u ? `<a class="${img ? '' : 'noimg'}" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${body}</a>` : `<div class="${img ? '' : 'noimg'}">${body}</div>`;
+  }).join('')}</div>`;
+  el.querySelectorAll('img').forEach(im => { im.onerror = () => { im.parentElement.classList.add('noimg'); im.remove(); }; });
+}
+
+/* ---------- moving, resizing, popping out ---------- */
+function placePip() {
+  if (pipWin) return;
+  const st = pip.style;
+  if (phone()) { st.left = st.top = st.bottom = st.width = ''; document.documentElement.style.setProperty('--pip-top', Math.round($('#top').getBoundingClientRect().bottom + 6) + 'px'); return; }
+  st.width = M.big ? '620px' : '';
+  if (M.pos) {
+    const w = pip.offsetWidth, h = pip.offsetHeight;
+    st.left = clamp(M.pos[0], 4, Math.max(4, innerWidth - w - 4)) + 'px'; st.top = clamp(M.pos[1], 4, Math.max(4, innerHeight - h - 4)) + 'px'; st.bottom = 'auto';
+  } else { st.left = ($('#panel').classList.contains('hidden') ? 12 : 342) + 'px'; st.top = 'auto'; st.bottom = '76px'; }
+}
+pq('.pip-h').addEventListener('pointerdown', e => {
+  if (e.target.closest('button') || pipWin || phone() || e.button) return;
+  const h = e.currentTarget, r = pip.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+  h.setPointerCapture(e.pointerId); pip.classList.add('drag');
+  h.onpointermove = m => { M.pos = [m.clientX - dx, m.clientY - dy]; placePip(); };
+  h.onpointerup = h.onpointercancel = () => { h.onpointermove = h.onpointerup = h.onpointercancel = null; pip.classList.remove('drag'); savePip(); };
+});
+pq('.pip-h').addEventListener('dblclick', e => { if (!e.target.closest('button') && !pipWin) { M.pos = null; savePip(); placePip(); } }); // double-click the title bar to put it back
+async function popOut() { // Document Picture-in-Picture: Chrome and Edge 116 or later, on a computer
+  if (pipWin) { pipWin.close(); return; }
+  let w;
+  try { w = await window.documentPictureInPicture.requestWindow({ width: Math.round(pip.offsetWidth), height: Math.round(pip.offsetHeight) }); }
+  catch (e) { toast(`This browser can't pop the window out (${e.message})`); return; }
+  for (const s of document.styleSheets) {
+    try { const st = w.document.createElement('style'); st.textContent = [...s.cssRules].map(r => r.cssText).join('\n'); w.document.head.append(st); }
+    catch { if (s.href) { const l = w.document.createElement('link'); l.rel = 'stylesheet'; l.href = s.href; w.document.head.append(l); } }
+  }
+  w.document.title = 'Event media · Live Weather Globe';
+  pipWin = w; w.document.body.classList.add('pipwin'); pip.classList.remove('min'); pip.classList.add('out'); w.document.body.append(pip);
+  pq('[data-pip="out"]').title = 'Put it back on the globe';
+  if (M.live) playLive(M.live);
+  w.addEventListener('pagehide', pipBack, { once: true });
+  const chk = setInterval(() => { if (!pipWin || pipWin !== w) clearInterval(chk); else if (w.closed) pipBack(); }, 1000);
+}
+function pipBack() { // the pop-out window closed: the media window returns to the page
+  if (!pipWin) return;
+  pipWin = null; pip.classList.remove('out'); document.body.append(pip);
+  pq('[data-pip="out"]').title = 'Pop out into its own window, on top of other apps';
+  if (!pip.hidden) { placePip(); if (M.live) playLive(M.live); }
+}
+pip.addEventListener('click', e => {
+  const t = e.target.closest('button,[data-ptab]'), c = pip.querySelector('.crawl');
+  if (!t) { if (e.target.closest('.crawl') === c) { if (pip.classList.contains('min')) minPip(false); showTab('news'); } else if (e.target.closest('.pip-t') && pip.classList.contains('min')) minPip(false); return; }
+  const d = t.dataset;
+  if (d.pip === 'close') closeMedia();
+  else if (d.pip === 'min') minPip(!pip.classList.contains('min'));
+  else if (d.pip === 'size') { M.big = !M.big; pip.classList.toggle('big', M.big); t.title = M.big ? 'Smaller' : 'Bigger'; savePip(); placePip(); }
+  else if (d.pip === 'out') popOut();
+  else if (d.ptab) showTab(d.ptab);
+  else if (d.live) { M.pick = d.live; M.pickFor = M.key; if (TV[d.live]) { M.tvPrefs[M.region] = d.live; try { localStorage.setItem('wg-tv', JSON.stringify(M.tvPrefs)); } catch {} } if (phone()) M.sound = true; playLive(d.live); }
+  else if (d.play) { M.sound = true; playLive(d.play, true); }
+  else if ('tvall' in d) { M.allTv = !M.allTv; renderChips(); }
+  else if (d.band) { M.sat.band = d.band; renderSat(); renderChips(); }
+  else if ('fires' in d) { M.sat.fires = !M.sat.fires; renderSat(); renderChips(); }
+  else if (d.sun) { M.pi = +d.sun; renderLive(); renderChips(); }
+  else if (d.pn) { M.pi += +d.pn; if (M.tab === 'photos') renderPhotos(); else { renderLive(); renderChips(); } }
+  else if (d.pf) { M.pf = d.pf; M.pi = 0; renderPhotos(); renderChips(); }
+  else if ('nlist' in d) toggleNews(true);
+});
+pip.addEventListener('pointerenter', () => { M.hover = true; });
+pip.addEventListener('pointerleave', () => { M.hover = false; });
+setInterval(() => { // the slideshow moves on every 8 seconds unless you are pointing at it
+  if (pip.hidden || M.hover || pip.classList.contains('min') || (pipWin || window).document.hidden) return;
+  if (M.tab === 'photos' && photoList().length > 1) { M.pi++; renderPhotos(); }
+}, 8000);
+addEventListener('resize', () => { if (!pip.hidden) placePip(); });
+
+/* =====================================================================
    Search (Open-Meteo geocoding)
    ===================================================================== */
 const q = $('#q'), qres = $('#qres'); let qT;
@@ -3164,6 +3755,7 @@ const LAYERS = [
     ['travel', 'Travel advice', 'UK government risk rating by country', 'travel', 'fcdo'],
     ['launches', 'Rocket launches', 'Next 7 days worldwide', null, 'launches'],
     ['headlines', 'Breaking news ticker', 'Follows the region you zoom into (N)', null, 'headlines'],
+    ['media', 'Event media window', 'Live TV, satellite and photos open when you click an event (M)', null, null],
   ] },
   { title: 'Hazards', items: [
     ['quakes', 'Earthquakes', 'USGS, M2.5+', null, 'quakes'],
@@ -3325,6 +3917,7 @@ function setLayer(key, on) {
   if (on) ensure(key);
   if (key === 'lightning') { on ? (L.fails = 0, connectLightning()) : (disconnectLightning(), setStatus('lightning', '', 'off')); }
   if (key === 'satbase') applyBase();
+  if (key === 'media' && !on) closeMedia();
   applyVisibility(); renderPanel(); updateLegend();
 }
 function applyVisibility() {
@@ -3404,6 +3997,7 @@ addEventListener('keydown', e => {
   if (e.key === 'l' || e.key === 'L') $('#btnPanel').click();
   if (e.key === 't' || e.key === 'T') $('#threatBtn').click();
   if (e.key === 'n' || e.key === 'N') toggleNews();
+  if (e.key === 'm' || e.key === 'M') toggleMedia();
   if (e.key === '+' || e.key === '=') zoomBy(1 / 1.6);
   if (e.key === '-' || e.key === '_') zoomBy(1.6);
   if (e.key === ' ') { e.preventDefault(); $('#btnPlay').click(); }
@@ -3482,7 +4076,8 @@ window.__wg = { S, status, L, addStrike, get grid() { return grid; }, get threat
   get data() { return { gdacsData, wikiEvents, whoData, whoPts, travel, launches, sigQuakes, spaceWx }; }, pts, flyTo, zoomBy, pick: pickGlobe, camPos: () => camera.position.toArray(),
   get news() { return { data: newsData, scope: newsScopeNow, sel: newsSel }; },
   get places() { return PLACES; }, getPlaces, focus, localNews, placesInText: (t, cs = []) => (PLACES && GAZ ? (PLACE_IDX ||= placeIndex(), placesInText(t, new Set(cs))) : null),
-  get names() { return cityShown.map(s => ({ name: s.p.label, kind: s.kind, key: s.p.key, x: s.x, y: s.y })); } };
+  get names() { return cityShown.map(s => ({ name: s.p.label, kind: s.kind, key: s.p.key, x: s.x, y: s.y })); },
+  media: M, openMedia, closeMedia, mediaInfo, relatedNews };
 </script>
 </body>
 </html>
