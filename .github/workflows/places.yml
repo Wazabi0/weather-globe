@@ -1,26 +1,26 @@
-# Rebuilds data/places.json (capitals, cities and regions) from GeoNames. Run it by hand from the
-# Actions tab; it uploads the file as an artifact, which then gets committed to the repository.
+# Rebuilds data/places.json (capitals, cities and regions) and data/local-queries.json from
+# GeoNames. Run it by hand from the Actions tab: it pushes the result to the places-update
+# branch, ready for a pull request.
 name: Build places data
 on:
   workflow_dispatch:
   push:
-    branches: [local-news-capitals]
+    branches: [local-news-capitals]   # remove before merge
     paths: ['scripts/build-places.mjs', '.github/workflows/places.yml']
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-        with:
-          sparse-checkout: scripts
-      - run: node scripts/build-places.mjs out/places.json
-      - uses: actions/upload-artifact@v4
-        with:
-          name: places
-          path: |
-            out/places.json
-            out/local-queries.json
-          retention-days: 7
+      - run: node scripts/build-places.mjs data/places.json
+      - name: Push to the places-update branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -q -B places-update
+          git add data/places.json data/local-queries.json
+          git commit -qm "Rebuild places data from GeoNames" || { echo "No changes"; exit 0; }
+          git push -fq origin places-update
