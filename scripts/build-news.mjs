@@ -11,13 +11,14 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 const OUT = process.argv[2] || 'out/news.json';
-const MAX_AGE_H = 48, PER_FEED = 40, MAX_ITEMS = 900, TIMEOUT_MS = 15000, CONCURRENCY = 8, MIN_OK = 6;
+const MAX_AGE_H = 72, PER_FEED = 40, MAX_ITEMS = 1400, TIMEOUT_MS = 15000, CONCURRENCY = 8, MIN_OK = 6;
 const UA = `Mozilla/5.0 (compatible; weather-globe-news/1.0; +https://github.com/${process.env.GITHUB_REPOSITORY || 'Wazabi0/weather-globe'})`;
 
 // [id, name, url, regions, country]
 // regions: WORLD, AF Africa, AS Asia, EU Europe, ME Middle East, NA North America, SA South America, OC Oceania.
 // country: a Natural Earth country name, used only when a headline names no country itself.
 const FEEDS = [
+  // world
   ['bbc-world', 'BBC News', 'https://feeds.bbci.co.uk/news/world/rss.xml', 'WORLD'],
   ['aljazeera', 'Al Jazeera', 'https://www.aljazeera.com/xml/rss/all.xml', 'WORLD'],
   ['guardian-world', 'The Guardian', 'https://www.theguardian.com/world/rss', 'WORLD'],
@@ -25,37 +26,73 @@ const FEEDS = [
   ['dw', 'DW', 'https://rss.dw.com/xml/rss-en-world', 'WORLD'],
   ['france24', 'France 24', 'https://www.france24.com/en/rss', 'WORLD'],
   ['un-news', 'UN News', 'https://news.un.org/feed/subscribe/en/news/all/rss.xml', 'WORLD'],
+  // Africa
   ['bbc-africa', 'BBC News', 'https://feeds.bbci.co.uk/news/world/africa/rss.xml', 'AF'],
   ['guardian-africa', 'The Guardian', 'https://www.theguardian.com/world/africa/rss', 'AF'],
   ['france24-africa', 'France 24', 'https://www.france24.com/en/africa/rss', 'AF'],
   ['allafrica', 'AllAfrica', 'https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf', 'AF'],
+  ['premiumtimes', 'Premium Times', 'https://www.premiumtimesng.com/feed', 'AF', 'Nigeria'],
+  ['dailymaverick', 'Daily Maverick', 'https://www.dailymaverick.co.za/dmrss/', 'AF', 'South Africa'],
+  // Asia
   ['bbc-asia', 'BBC News', 'https://feeds.bbci.co.uk/news/world/asia/rss.xml', 'AS'],
   ['guardian-asia', 'The Guardian', 'https://www.theguardian.com/world/asia-pacific/rss', 'AS OC'],
   ['france24-asia', 'France 24', 'https://www.france24.com/en/asia-pacific/rss', 'AS OC'],
   ['japantimes', 'The Japan Times', 'https://www.japantimes.co.jp/feed/', 'AS', 'Japan'],
   ['hindu', 'The Hindu', 'https://www.thehindu.com/news/national/feeder/default.rss', 'AS', 'India'],
+  ['yonhap', 'Yonhap', 'https://en.yna.co.kr/RSS/news.xml', 'AS', 'South Korea'],
+  ['dawn', 'Dawn', 'https://www.dawn.com/feeds/home', 'AS', 'Pakistan'],
+  ['rappler', 'Rappler', 'https://www.rappler.com/feed/', 'AS', 'Philippines'],
+  ['vnexpress', 'VnExpress International', 'https://e.vnexpress.net/rss/news.rss', 'AS', 'Vietnam'],
+  ['bangkokpost', 'Bangkok Post', 'https://www.bangkokpost.com/rss/data/topstories.xml', 'AS', 'Thailand'],
+  ['taipeitimes', 'Taipei Times', 'https://www.taipeitimes.com/xml/index.rss', 'AS', 'Taiwan'],
+  // Middle East
   ['bbc-me', 'BBC News', 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml', 'ME'],
   ['guardian-me', 'The Guardian', 'https://www.theguardian.com/world/middleeast/rss', 'ME'],
   ['france24-me', 'France 24', 'https://www.france24.com/en/middle-east/rss', 'ME'],
+  ['timesofisrael', 'The Times of Israel', 'https://www.timesofisrael.com/feed/', 'ME', 'Israel'],
+  ['middleeasteye', 'Middle East Eye', 'https://www.middleeasteye.net/rss', 'ME'],
+  // Europe
   ['bbc-europe', 'BBC News', 'https://feeds.bbci.co.uk/news/world/europe/rss.xml', 'EU'],
   ['guardian-europe', 'The Guardian', 'https://www.theguardian.com/world/europe-news/rss', 'EU'],
   ['france24-europe', 'France 24', 'https://www.france24.com/en/europe/rss', 'EU'],
-  ['euronews', 'Euronews', 'https://www.euronews.com/rss?level=theme&name=news', 'EU'],
+  ['france24-france', 'France 24', 'https://www.france24.com/en/france/rss', 'EU', 'France'],
+  ['euronews', 'Euronews', 'https://www.euronews.com/rss', 'EU'],
   ['bbc-uk', 'BBC News', 'https://feeds.bbci.co.uk/news/uk/rss.xml', 'EU', 'United Kingdom'],
+  ['rte', 'RTÉ', 'https://www.rte.ie/feeds/rss/?index=/news/', 'EU', 'Ireland'],
   ['thelocal-se', 'The Local Sweden', 'https://www.thelocal.se/feeds/rss.php', 'EU', 'Sweden'],
+  ['thelocal-dk', 'The Local Denmark', 'https://www.thelocal.dk/feeds/rss.php', 'EU', 'Denmark'],
+  ['thelocal-no', 'The Local Norway', 'https://www.thelocal.no/feeds/rss.php', 'EU', 'Norway'],
+  ['thelocal-de', 'The Local Germany', 'https://www.thelocal.de/feeds/rss.php', 'EU', 'Germany'],
+  ['thelocal-fr', 'The Local France', 'https://www.thelocal.fr/feeds/rss.php', 'EU', 'France'],
+  ['thelocal-es', 'The Local Spain', 'https://www.thelocal.es/feeds/rss.php', 'EU', 'Spain'],
+  ['thelocal-it', 'The Local Italy', 'https://www.thelocal.it/feeds/rss.php', 'EU', 'Italy'],
+  ['thelocal-at', 'The Local Austria', 'https://www.thelocal.at/feeds/rss.php', 'EU', 'Austria'],
+  ['thelocal-ch', 'The Local Switzerland', 'https://www.thelocal.ch/feeds/rss.php', 'EU', 'Switzerland'],
+  ['notesfrompoland', 'Notes from Poland', 'https://notesfrompoland.com/feed/', 'EU', 'Poland'],
+  ['balkaninsight', 'Balkan Insight', 'https://balkaninsight.com/feed/', 'EU'],
+  ['meduza', 'Meduza', 'https://meduza.io/rss/en/all', 'EU', 'Russia'],
   ['kyivindependent', 'The Kyiv Independent', 'https://kyivindependent.com/news-archive/rss/', 'EU', 'Ukraine'],
+  // North America
   ['bbc-us', 'BBC News', 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', 'NA'],
   ['npr-us', 'NPR', 'https://feeds.npr.org/1003/rss.xml', 'NA', 'United States of America'],
   ['guardian-us', 'The Guardian', 'https://www.theguardian.com/us-news/rss', 'NA', 'United States of America'],
-  ['cbc', 'CBC News', 'https://www.cbc.ca/webfeed/rss/rss-canada', 'NA', 'Canada'],
+  ['cbs', 'CBS News', 'https://www.cbsnews.com/latest/rss/main', 'NA', 'United States of America'],
+  ['cbc', 'CBC News', 'https://rss.cbc.ca/lineup/canada.xml', 'NA', 'Canada'],
+  ['mexiconewsdaily', 'Mexico News Daily', 'https://mexiconewsdaily.com/feed/', 'NA', 'Mexico'],
+  ['ticotimes', 'The Tico Times', 'https://ticotimes.net/feed', 'NA', 'Costa Rica'],
+  // South America (and Latin America feeds that also cover Mexico and the Caribbean)
   ['bbc-latam', 'BBC News', 'https://feeds.bbci.co.uk/news/world/latin_america/rss.xml', 'SA NA'],
   ['guardian-americas', 'The Guardian', 'https://www.theguardian.com/world/americas/rss', 'SA NA'],
   ['france24-americas', 'France 24', 'https://www.france24.com/en/americas/rss', 'SA NA'],
   ['mercopress', 'MercoPress', 'https://en.mercopress.com/rss', 'SA'],
+  ['riotimes', 'The Rio Times', 'https://www.riotimesonline.com/feed/', 'SA', 'Brazil'],
+  ['batimes', 'Buenos Aires Times', 'https://www.batimes.com.ar/feed', 'SA', 'Argentina'],
+  // Oceania
   ['bbc-australia', 'BBC News', 'https://feeds.bbci.co.uk/news/world/australia/rss.xml', 'OC'],
   ['guardian-au', 'The Guardian', 'https://www.theguardian.com/australia-news/rss', 'OC', 'Australia'],
   ['abc-au', 'ABC News (Australia)', 'https://www.abc.net.au/news/feed/2942460/rss.xml', 'OC', 'Australia'],
   ['rnz', 'RNZ', 'https://www.rnz.co.nz/rss/national.xml', 'OC', 'New Zealand'],
+  ['rnz-pacific', 'RNZ Pacific', 'https://www.rnz.co.nz/rss/pacific.xml', 'OC'],
 ];
 
 /* ---------- text helpers ---------- */
@@ -119,9 +156,13 @@ async function get(url) {
 }
 const cleanUrl = u => { try { const x = new URL(u); x.hash = ''; for (const k of [...x.searchParams.keys()]) if (/^(utm_|at_|cmp|ito|ns_|xtor)/i.test(k)) x.searchParams.delete(k); return x.toString(); } catch { return u; } };
 const titleKey = s => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim().slice(0, 90);
-async function pool(list, n, fn) {
-  const out = new Array(list.length); let i = 0;
-  await Promise.all(Array.from({ length: Math.min(n, list.length) }, async () => { while (i < list.length) { const k = i++; out[k] = await fn(list[k], k); } }));
+async function pool(list, n, fn) { // n sites in parallel, one request at a time per site
+  const out = new Array(list.length), groups = new Map();
+  list.forEach((x, k) => { const h = new URL(x[2]).hostname.replace(/^(www|rss|feeds|en|e)\./, ''); if (!groups.has(h)) groups.set(h, []); groups.get(h).push(k); });
+  const queue = [...groups.values()];
+  await Promise.all(Array.from({ length: Math.min(n, queue.length) }, async () => {
+    while (queue.length) for (const k of queue.shift()) { out[k] = await fn(list[k], k); await new Promise(r => setTimeout(r, 250)); }
+  }));
   return out;
 }
 
