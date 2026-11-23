@@ -1,0 +1,13 @@
+name: Probe media sources
+on:
+  push:
+    branches: [probe-media]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash probe/probe.sh
