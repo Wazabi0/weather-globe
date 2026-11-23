@@ -7,7 +7,7 @@ on:
     - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
   push:
-    branches: [main, regional-news-zoom]
+    branches: [main]
     paths: ['scripts/build-news.mjs', '.github/workflows/news.yml']
 
 permissions:
