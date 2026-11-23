@@ -1,0 +1,24 @@
+# Rebuilds data/places.json (capitals, cities and regions) from GeoNames. Run it by hand from the
+# Actions tab; it uploads the file as an artifact, which then gets committed to the repository.
+name: Build places data
+on:
+  workflow_dispatch:
+  push:
+    branches: [local-news-capitals]
+    paths: ['scripts/build-places.mjs', '.github/workflows/places.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+      - run: node scripts/build-places.mjs out/places.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: places
+          path: out/places.json
+          retention-days: 7
