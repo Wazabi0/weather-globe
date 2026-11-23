@@ -36,7 +36,6 @@ const FEEDS = [
   // Asia
   ['bbc-asia', 'BBC News', 'https://feeds.bbci.co.uk/news/world/asia/rss.xml', 'AS'],
   ['guardian-asia', 'The Guardian', 'https://www.theguardian.com/world/asia-pacific/rss', 'AS OC'],
-  ['france24-asia', 'France 24', 'https://www.france24.com/en/asia-pacific/rss', 'AS OC'],
   ['japantimes', 'The Japan Times', 'https://www.japantimes.co.jp/feed/', 'AS', 'Japan'],
   ['hindu', 'The Hindu', 'https://www.thehindu.com/news/national/feeder/default.rss', 'AS', 'India'],
   ['yonhap', 'Yonhap', 'https://en.yna.co.kr/RSS/news.xml', 'AS', 'South Korea'],
@@ -44,19 +43,14 @@ const FEEDS = [
   ['rappler', 'Rappler', 'https://www.rappler.com/feed/', 'AS', 'Philippines'],
   ['vnexpress', 'VnExpress International', 'https://e.vnexpress.net/rss/news.rss', 'AS', 'Vietnam'],
   ['bangkokpost', 'Bangkok Post', 'https://www.bangkokpost.com/rss/data/topstories.xml', 'AS', 'Thailand'],
-  ['taipeitimes', 'Taipei Times', 'https://www.taipeitimes.com/xml/index.rss', 'AS', 'Taiwan'],
   // Middle East
   ['bbc-me', 'BBC News', 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml', 'ME'],
   ['guardian-me', 'The Guardian', 'https://www.theguardian.com/world/middleeast/rss', 'ME'],
-  ['france24-me', 'France 24', 'https://www.france24.com/en/middle-east/rss', 'ME'],
-  ['timesofisrael', 'The Times of Israel', 'https://www.timesofisrael.com/feed/', 'ME', 'Israel'],
   ['middleeasteye', 'Middle East Eye', 'https://www.middleeasteye.net/rss', 'ME'],
   // Europe
   ['bbc-europe', 'BBC News', 'https://feeds.bbci.co.uk/news/world/europe/rss.xml', 'EU'],
   ['guardian-europe', 'The Guardian', 'https://www.theguardian.com/world/europe-news/rss', 'EU'],
   ['france24-europe', 'France 24', 'https://www.france24.com/en/europe/rss', 'EU'],
-  ['france24-france', 'France 24', 'https://www.france24.com/en/france/rss', 'EU', 'France'],
-  ['euronews', 'Euronews', 'https://www.euronews.com/rss', 'EU'],
   ['bbc-uk', 'BBC News', 'https://feeds.bbci.co.uk/news/uk/rss.xml', 'EU', 'United Kingdom'],
   ['rte', 'RTÉ', 'https://www.rte.ie/feeds/rss/?index=/news/', 'EU', 'Ireland'],
   ['thelocal-se', 'The Local Sweden', 'https://www.thelocal.se/feeds/rss.php', 'EU', 'Sweden'],
@@ -77,7 +71,7 @@ const FEEDS = [
   ['npr-us', 'NPR', 'https://feeds.npr.org/1003/rss.xml', 'NA', 'United States of America'],
   ['guardian-us', 'The Guardian', 'https://www.theguardian.com/us-news/rss', 'NA', 'United States of America'],
   ['cbs', 'CBS News', 'https://www.cbsnews.com/latest/rss/main', 'NA', 'United States of America'],
-  ['cbc', 'CBC News', 'https://rss.cbc.ca/lineup/canada.xml', 'NA', 'Canada'],
+  ['globalnews', 'Global News', 'https://globalnews.ca/feed/', 'NA', 'Canada'],
   ['mexiconewsdaily', 'Mexico News Daily', 'https://mexiconewsdaily.com/feed/', 'NA', 'Mexico'],
   ['ticotimes', 'The Tico Times', 'https://ticotimes.net/feed', 'NA', 'Costa Rica'],
   // South America (and Latin America feeds that also cover Mexico and the Caribbean)
@@ -161,7 +155,7 @@ async function pool(list, n, fn) { // n sites in parallel, one request at a time
   list.forEach((x, k) => { const h = new URL(x[2]).hostname.replace(/^(www|rss|feeds|en|e)\./, ''); if (!groups.has(h)) groups.set(h, []); groups.get(h).push(k); });
   const queue = [...groups.values()];
   await Promise.all(Array.from({ length: Math.min(n, queue.length) }, async () => {
-    while (queue.length) for (const k of queue.shift()) { out[k] = await fn(list[k], k); await new Promise(r => setTimeout(r, 250)); }
+    while (queue.length) { const g = queue.shift(); for (const k of g) { out[k] = await fn(list[k], k); if (g.length > 1) await new Promise(r => setTimeout(r, 2000)); } }
   }));
   return out;
 }
