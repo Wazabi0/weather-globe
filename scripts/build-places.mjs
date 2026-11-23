@@ -40,10 +40,10 @@ for (const g of atlas.objects.countries.geometries) { const n = g.properties?.na
 const countries = new Map(); // ISO2 -> { name, ne, pop, capital }
 for await (const l of lines(countryTxt)) {
   if (!l || l.startsWith('#')) continue;
-  const f = l.split('\t'); const iso = f[0], num = +f[2], name = f[4], pop = +f[7];
+  const f = l.split('\t'); const iso = f[0], num = +f[2], name = f[4], area = +f[6], pop = +f[7];
   let ne = neByNum.get(num) || (neNames.has(name) ? name : null);
   if (iso === 'XK') ne = 'Kosovo';
-  countries.set(iso, { name, ne, pop, capitalName: f[5] });
+  countries.set(iso, { name, ne, pop, area });
 }
 
 const admin1 = new Map(); // 'CC.code' -> { name, ascii, gid }
@@ -74,13 +74,20 @@ for (const [cc, names] of Object.entries(CAPITAL_FIX)) {
 const byRegion = new Map();
 for (const c of all) { if (!admin1.has(c.a1)) continue; (byRegion.get(c.a1) || byRegion.set(c.a1, []).get(c.a1)).push(c); }
 
+// ---------- which countries have a useful first level (states, provinces, counties) ----------
+// Some countries' first level is hundreds of small municipalities (Slovenia, Latvia, Malta); those get cities only.
+const regionLevel = new Set();
+{ const n = new Map(); for (const code of byRegion.keys()) { const cc = code.slice(0, 2); n.set(cc, (n.get(cc) || 0) + 1); }
+  for (const [cc, k] of n) { const C = countries.get(cc); if (C?.ne && k >= 2 && (k <= 50 || (k <= 90 && C.area > 250000))) regionLevel.add(cc); } }
+console.log('countries with regions', regionLevel.size);
+
 // ---------- which cities get names on the map ----------
 const named = new Map();
 for (const c of all) {
   const cap = capitalOf.get(c.gid) || 0;
-  if (cap || c.pop >= 100000 || (c.fc === 'PPLA' && c.pop >= 30000)) named.set(c.gid, c);
+  if (cap || c.pop >= 150000 || (c.fc === 'PPLA' && c.pop >= 50000)) named.set(c.gid, c);
 }
-for (const list of byRegion.values()) { const top = list.reduce((a, b) => (b.pop > a.pop ? b : a)); if (top.pop >= 5000) named.set(top.gid, top); }
+for (const [code, list] of byRegion) { if (!regionLevel.has(code.slice(0, 2))) continue; const top = list.reduce((a, b) => (b.pop > a.pop ? b : a)); if (top.pop >= 10000) named.set(top.gid, top); }
 console.log('named cities', named.size);
 
 // ---------- English names ----------
@@ -95,28 +102,37 @@ const en = new Map(); // gid -> [{n, pref, short}]
   }
 }
 const okAlias = s => s && s.length >= 3 && s.length <= 32 && !/[\d()\/,;]/.test(s) && /^[\p{L}\p{M}' .\-’]+$/u.test(s);
-function namesFor(gid, ...base) {
+const KNOWN_ALIASES = { Bengaluru: ['Bangalore'], 'Ho Chi Minh City': ['Saigon'], Kyiv: ['Kiev'], Odesa: ['Odessa'], Kharkiv: ['Kharkov'], 'New York City': ['New York', 'NYC'],
+  Almaty: ['Alma-Ata'], Astana: ['Nur-Sultan'], Ulaanbaatar: ['Ulan Bator'], 'Mexico City': ['CDMX'], Gurugram: ['Gurgaon'], Chisinau: ['Kishinev'], Yangon: ['Rangoon'] };
+const SUFFIX = / (?:Region|Province|Department|Governorate|Prefecture|District|Municipality|Voivodeship)$/;
+function namesFor(gid, base, ascii, cityNames) {
   const e = (en.get(gid) || []).filter(x => okAlias(x.n));
-  const pref = e.find(x => x.pref) || null;
-  const display = pref ? pref.n : base[0];
+  const pref = e.find(x => x.pref);
+  let display = pref ? pref.n : base;
+  if (SUFFIX.test(display) && fold(display.replace(SUFFIX, '')) === fold(base) && !cityNames?.has(fold(base))) display = base; // "Île-de-France Region" -> "Île-de-France"
   const seen = new Set([fold(display)]), aliases = [];
-  for (const n of [...base, ...e.map(x => x.n)]) { if (!okAlias(n)) continue; const k = fold(n); if (seen.has(k)) continue; seen.add(k); aliases.push(n); if (aliases.length >= 4) break; }
-  return { display, aliases };
+  const add = n => { if (!okAlias(n)) return; const k = fold(n); if (seen.has(k)) return; seen.add(k); aliases.push(n); };
+  add(base); add(ascii);
+  for (const n of KNOWN_ALIASES[display] || []) add(n);
+  for (const x of e) if (fold(x.n).slice(0, 3) === fold(display).slice(0, 3) && !fold(x.n).includes(' of ')) add(x.n); // Kiev, Malmoe, but not nicknames
+  return { display, aliases: aliases.slice(0, 4) };
 }
+const cityNamesIn = new Map(); // country -> folded names of its bigger towns
+for (const c of all) if (c.pop >= 50000) (cityNamesIn.get(c.cc) || cityNamesIn.set(c.cc, new Set()).get(c.cc)).add(fold(c.name));
 
 // Regions: label at the mean position of their towns, size from how far the towns spread
 const REGION_QUERY = new Set(['US', 'CA', 'AU', 'IN', 'BR', 'MX', 'NG', 'DE', 'GB', 'PK', 'ZA', 'CN', 'IT', 'ES', 'FR']);
 const regions = [], regionIdx = new Map();
 for (const [code, a] of admin1) {
   const list = byRegion.get(code); if (!list?.length) continue;
-  const cc = code.slice(0, 2), C = countries.get(cc); if (!C?.ne) continue;
+  const cc = code.slice(0, 2), C = countries.get(cc); if (!C?.ne || !regionLevel.has(cc)) continue;
   let x = 0, y = 0, z = 0; for (const c of list) { const u = unit(c.lat, c.lon); x += u[0]; y += u[1]; z += u[2]; }
   const m = Math.hypot(x, y, z), cu = [x / m, y / m, z / m];
   const lat = Math.asin(cu[2]) / DEG, lon = Math.atan2(cu[1], cu[0]) / DEG;
   const d = list.map(c => gc(cu, unit(c.lat, c.lon))).sort((p, q) => p - q);
   const radius = Math.round(d[Math.floor(d.length * 0.9)] || 20);
   const pop = list.reduce((s, c) => s + c.pop, 0);
-  let { display, aliases } = namesFor(a.gid, a.name, a.ascii);
+  let { display, aliases } = namesFor(a.gid, a.name, a.ascii, cityNamesIn.get(cc));
   if (display.length > 32) display = a.name;
   regionIdx.set(code, regions.length);
   regions.push({ code, cc, display, aliases, lat, lon, radius, pop });
@@ -157,7 +173,7 @@ for (const r of regions) {
 console.log('queries', queries.length, 'cities flagged', cities.filter(c => c[7] & 8).length, 'regions flagged', regions.filter(r => r.query).length);
 
 // ---------- dense points for "which region is this?" (nearest town with a known region) ----------
-const gridPts = all.filter(c => (c.pop >= 15000 || named.has(c.gid)) && regionIdx.has(c.a1));
+const gridPts = all.filter(c => (c.pop >= 20000 || named.has(c.gid)) && regionIdx.has(c.a1));
 const buf = Buffer.alloc(gridPts.length * 6);
 gridPts.forEach((c, i) => { buf.writeInt16LE(Math.round(c.lat * 100), i * 6); buf.writeInt16LE(Math.round(c.lon * 100), i * 6 + 2); buf.writeUInt16LE(regionIdx.get(c.a1), i * 6 + 4); });
 
@@ -167,15 +183,18 @@ const out = {
   credit: 'GeoNames (geonames.org, CC BY 4.0); country names from Natural Earth',
   countries: cc2ne,
   regions: regions.map(r => [r.code, r.display, r2(r.lat), r2(r.lon), r.radius, r.query ? 1 : 0, r.aliases.join('|')]),
-  cities, queries,
+  cities,
   grid: buf.toString('base64'),
 };
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(out));
+const QOUT = path.join(path.dirname(OUT), 'local-queries.json');
+fs.writeFileSync(QOUT, JSON.stringify({ v: 1, generated: out.generated, note: 'Google News searches the news collector runs in turns, [place key, query, edition]', queries }));
 const size = fs.statSync(OUT).size;
-console.log('wrote', OUT, (size / 1024).toFixed(0), 'KB;', 'grid points', gridPts.length, 'capitals', cities.filter(c => c[7] & 3).length);
+console.log('wrote', OUT, (size / 1024).toFixed(0), 'KB (regions', (JSON.stringify(out.regions).length / 1024).toFixed(0), 'KB, cities', (JSON.stringify(out.cities).length / 1024).toFixed(0), 'KB, grid', (out.grid.length / 1024).toFixed(0), 'KB) and', QOUT, (fs.statSync(QOUT).size / 1024).toFixed(0), 'KB;', 'grid points', gridPts.length, 'capitals', cities.filter(c => c[7] & 3).length);
 console.log('sample capitals', cities.filter(c => c[7] & 3).slice(0, 25).map(c => `${c[1]}/${c[2]}`).join(', '));
 console.log('sample queries', queries.slice(0, 12).map(q => q.join(' ~ ')).join('\n  '));
+console.log('region-level countries', [...regionLevel].sort().join(' '));
 for (const n of ['Gothenburg', 'Cologne', 'Munich', 'Kyiv', 'Bengaluru', 'Bangalore', 'Mumbai', 'Geneva', 'Antwerp', 'Seville', 'Ho Chi Minh City', 'Washington', 'Jerusalem', 'Ramallah', 'Lyon', 'Malmö'])
   console.log('  ', n, JSON.stringify(cities.find(c => c[1] === n || c[8].split('|').includes(n)) || null));
 for (const n of ['Bavaria', 'Stockholm', 'Stockholm County', 'Île-de-France', 'England', 'Scotland', 'California', 'Texas', 'Kerala', 'Punjab', 'Victoria', 'Ontario', 'Catalonia', 'Sicily'])

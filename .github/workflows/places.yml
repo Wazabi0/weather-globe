@@ -20,5 +20,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: places
-          path: out/places.json
+          path: |
+            out/places.json
+            out/local-queries.json
           retention-days: 7
