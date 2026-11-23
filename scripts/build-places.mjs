@@ -35,7 +35,9 @@ const atlasFile = download('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/count
 // Natural Earth names by ISO 3166-1 numeric code, as the globe's country shapes use them
 const atlas = JSON.parse(fs.readFileSync(atlasFile, 'utf8'));
 const neByNum = new Map(), neNames = new Set();
-for (const g of atlas.objects.countries.geometries) { const n = g.properties?.name; if (!n) continue; neNames.add(n); if (g.id != null && g.id !== '-99') neByNum.set(+g.id, n); }
+for (const g of atlas.objects.countries.geometries) { // the first name for a code wins: Australia shares 036 with Ashmore and Cartier Is.
+  const n = g.properties?.name; if (!n) continue; neNames.add(n); if (g.id != null && g.id !== '-99' && !neByNum.has(+g.id)) neByNum.set(+g.id, n);
+}
 
 const countries = new Map(); // ISO2 -> { name, ne, pop, capital }
 for await (const l of lines(countryTxt)) {
@@ -121,7 +123,7 @@ const cityNamesIn = new Map(); // country -> folded names of its bigger towns
 for (const c of all) if (c.pop >= 50000) (cityNamesIn.get(c.cc) || cityNamesIn.set(c.cc, new Set()).get(c.cc)).add(fold(c.name));
 
 // Regions: label at the mean position of their towns, size from how far the towns spread
-const REGION_QUERY = new Set(['US', 'CA', 'AU', 'IN', 'BR', 'MX', 'NG', 'DE', 'GB', 'PK', 'ZA', 'CN', 'IT', 'ES', 'FR']);
+const REGION_QUERY = new Set(['US', 'CA', 'AU', 'IN', 'BR', 'MX', 'NG', 'DE', 'GB', 'PK', 'ZA', 'CN', 'IT', 'ES', 'FR', 'JP', 'ID', 'KE']);
 const regions = [], regionIdx = new Map();
 for (const [code, a] of admin1) {
   const list = byRegion.get(code); if (!list?.length) continue;
@@ -150,6 +152,16 @@ function query(name, cc, key) {
   return [q, ed];
 }
 
+// Districts and suburbs (Brooklyn, Pudong, Thane) count as the big city next door, as the page does: they get no search of their own.
+const partOf = new Map();
+{
+  const list = [...named.values()];
+  for (const c of list) {
+    if (capitalOf.get(c.gid)) continue;
+    for (const o of list) if (o !== c && o.cc === c.cc && o.pop >= 3 * c.pop && Math.abs(o.lat - c.lat) < 0.3 && gc(unit(c.lat, c.lon), unit(o.lat, o.lon)) <= 20) { partOf.set(c.gid, o.gid); break; }
+  }
+}
+const rankIn = new Map(); // a city's place among its country's cities that aren't districts of another
 const cities = [], queries = [];
 const cityNamesByCountry = new Map();
 for (const c of [...named.values()].sort((a, b) => b.pop - a.pop)) {
@@ -158,7 +170,8 @@ for (const c of [...named.values()].sort((a, b) => b.pop - a.pop)) {
   const cap = capitalOf.get(c.gid) || 0;
   const ri = regionIdx.has(c.a1) ? regionIdx.get(c.a1) : -1;
   const isSeat = c.fc === 'PPLA';
-  const big = c.pop >= 1e6, capQ = cap && (countries.get(c.cc).pop >= 200000 || c.pop >= 50000);
+  const part = partOf.has(c.gid), rank = part ? Infinity : (rankIn.get(c.cc) || 0); if (!part) rankIn.set(c.cc, rank + 1);
+  const big = !part && (c.pop >= 1e6 || (rank < 5 && c.pop >= 200000)), capQ = cap && (countries.get(c.cc).pop >= 200000 || c.pop >= 50000); // every big city, and each country's five largest
   let flags = (cap === 1 ? 1 : 0) | (cap === 2 ? 2 : 0) | (isSeat ? 4 : 0);
   if (big || capQ) { const q = query(display, c.cc, String(c.gid)); if (q) { flags |= 8; queries.push([String(c.gid), q[0] + ' when:3d', q[1], c.cc, cap ? 1 : 2]); } }
   cities.push([flags & 8 ? c.gid : 0, display, c.cc, ri, r2(c.lat), r2(c.lon), Math.round(c.pop / 1000), flags, aliases.join('|')]); // the GeoNames id keys the local news files

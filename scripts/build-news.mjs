@@ -227,7 +227,7 @@ console.log(`wrote ${OUT}`);
 const LOCAL_QUERIES = process.env.LOCAL_QUERIES || 'data/local-queries.json', LOCAL_PREV = process.env.LOCAL_PREV || 'prev/local';
 const LOCAL_OUT = join(dirname(OUT), 'local'), LOCAL_KEEP = 12, LOCAL_MAX_AGE_D = 7;
 const NOT_NEWS = /^(?:https?:|www\.|Flightradar24|Robinhood|Coinbase|Kalshi|Polymarket|Facebook|Instagram|TikTok|LinkedIn|X$|IMDb|Britannica|Wikipedia|Tripadvisor|Booking\.com|Expedia|Yelp|Zillow|Realtor\.com|Indeed|Glassdoor|Flashscore|LiveScore|SofaScore|FotMob|YouTube|Amazon|eBay|Etsy|Artsy|PR Newswire|GlobeNewswire|Business Wire|EIN Presswire|openPR|Newsfile|Morningstar|MarketScreener|MarketBeat|Investing\.com|TradingView|Simply Wall St|Stock Titan|Zacks|Seeking Alpha)/i; // not news outlets, or market data
-const NOT_A_STORY = /\b(?:Prediction Market|Moneyline|Betting Odds|Odds and Predictions|Live Score|Arrivals|Departures|Horoscope|Obituar(?:y|ies))\b/i;
+const NOT_A_STORY = /\b(?:Prediction Market|Moneyline|Betting Odds|Odds and Predictions|Live Score|Arrivals|Departures|Horoscope|Obituar(?:y|ies)|Blu-ray|4K UHD|DVD|Things to Do|Where to Stay|Travel Guide|Best Hotels|Gold Rate|Silver Rate|Gold Price Today|Petrol Price|Diesel Price|Fuel Price|Lottery Result|Lotto Results?|Weather Today|AQI Today|Tide Times|Prayer Times?)\b/i; // listings and shopping, not news
 async function localNews() {
   let Q;
   try { Q = JSON.parse(await readFile(LOCAL_QUERIES, 'utf8')).queries; } catch (e) { console.log(`no local searches (${e.message})`); return; }
@@ -237,7 +237,7 @@ async function localNews() {
   const nowS = Math.round(now / 1000), minP = nowS - LOCAL_MAX_AGE_D * 86400;
   const due = Q.map(q => ({ q, score: (nowS - (prev.get(q[0])?.[0] || 0)) / ((q[4] === 1 ? 4 : 8) * 3600) })).filter(x => x.score >= 1).sort((a, b) => b.score - a.score);
   const fresh = Q.filter(q => !prev.has(q[0])).length;
-  const perRun = +process.env.LOCAL_PER_RUN || (fresh > Q.length / 2 ? 100 : 40); // fill faster after a reset
+  const perRun = +process.env.LOCAL_PER_RUN || (fresh > 50 ? 100 : 60); // about 45 a run fall due, so 60 keeps up; new places fill faster
   let okN = 0, failN = 0, streak = 0, kept = 0;
   for (const { q: [key, query, ed] } of due.slice(0, perRun)) {
     const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-${ed}&gl=${ed}&ceid=${ed}:en`;
