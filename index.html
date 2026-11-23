@@ -17,8 +17,20 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
 button,input,select{font:inherit;color:inherit}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #c:active{cursor:grabbing}
+#c.onname{cursor:pointer}
 #labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
 .lbl{position:absolute;left:0;top:0;will-change:transform;white-space:nowrap;transition:opacity .2s}
+/* capitals, cities and regions (clicks are read from the canvas, so the names never block dragging) */
+#cityLabels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.cl{position:absolute;left:0;top:0;display:flex;align-items:center;gap:3px;white-space:nowrap;font-size:11px;font-weight:600;line-height:14px;color:#eef4ff;text-shadow:0 0 3px #000,0 0 6px rgba(0,0,0,.85);will-change:transform}
+.cl i{flex:none;width:9px;height:9px;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;line-height:1;color:#ffd25c}
+.cl:not(.cap) i:before{content:"";width:5px;height:5px;border-radius:50%;background:#eef4ff;box-shadow:0 0 0 1.5px rgba(0,0,0,.55)}
+.cl.cap b{color:#fff4d6}
+.cl.dot b{display:none}
+.cl.on b{color:#ffd166}
+.cl.reg{font-size:9.5px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:rgba(214,226,255,.6)}
+.cl.reg i{display:none}
+.cl.reg.on{color:#ffd166}
 .glass{background:var(--panel);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 10px 40px rgba(0,0,0,.45)}
 /* top bar */
 #top{position:fixed;top:12px;left:12px;right:12px;display:flex;gap:10px;align-items:center;pointer-events:none;z-index:5}
@@ -221,6 +233,7 @@ details.how p{margin:6px 0 0}
 .crumbs button:hover{border-color:var(--accent)}
 .crumbs button.on{background:rgba(92,200,255,.18);border-color:var(--accent);font-weight:600}
 .crumbs i{color:var(--muted);font-style:normal}
+.crumbs .star{color:#ffd25c}
 .nl-b{overflow-y:auto;padding:2px 14px 8px;scrollbar-width:thin;scrollbar-color:rgba(150,180,255,.25) transparent}
 .nl-b h5{margin:14px 0 2px;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
 .nl-b .note{margin:12px 0}
@@ -253,6 +266,7 @@ a.ni:focus-visible{outline:none}
 <body>
 <div id="loader"><div class="spin"></div><div id="loadmsg">Loading Earth…</div></div>
 <canvas id="c"></canvas>
+<div id="cityLabels"></div>
 <div id="labels"></div>
 <header id="top">
   <div class="brand glass"><div class="livedot" title="Live"></div><div><b>Live Weather Globe</b><small id="clock">—</small></div></div>
@@ -306,7 +320,7 @@ const DEFAULTS = {
     clouds: true, radar: true, imerg: false, wind: true, isobars: false, lightning: true, stormcells: true,
     storms: true, alerts: true, aurora: true, sst: false, quakes: false, fires: false, volcanoes: false,
     gdacs: true, conflict: true, news: false, outbreaks: true, travel: true, launches: true, headlines: true,
-    terminator: true, nightLights: true, borders: true, graticule: false, atmosphere: true, stars: true, satbase: false,
+    terminator: true, nightLights: true, borders: true, places: true, graticule: false, atmosphere: true, stars: true, satbase: false,
   },
   field: 'none',
   opacity: { clouds: 0.95, radar: 0.85, imerg: 0.85, field: 0.55, sst: 0.75, travel: 0.7 },
@@ -421,7 +435,8 @@ const SOURCES = {
   fcdo: ['Travel advice', 'UK Foreign, Commonwealth & Development Office via GOV.UK'],
   spacewx: ['Space weather', 'NOAA SWPC storm scales and Kp index'],
   launches: ['Rocket launches', 'The Space Devs Launch Library 2'],
-  headlines: ['Breaking news', 'BBC, Al Jazeera, The Guardian, NPR, DW, France 24, UN News and about 50 national and regional news sites, collected every 15 minutes by this site\'s GitHub Actions job'],
+  headlines: ['Breaking news', 'BBC, Al Jazeera, The Guardian, NPR, DW, France 24, UN News and about 50 national and regional news sites, plus Google News searches for about 950 capitals, cities, states and provinces, collected every 15 minutes by this site\'s GitHub Actions job'],
+  places: ['Capitals, cities, states and provinces', 'GeoNames (CC BY 4.0), loaded when you zoom in'],
 };
 const status = {};
 function setStatus(k, state, msg = '') { status[k] = { state, msg, t: new Date() }; renderStatus(); }
@@ -2422,7 +2437,7 @@ const fold = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').repla
 let GAZ = null, GAZ_RE = null;
 function gazetteer() {
   GAZ = new Map();
-  for (const n of REGION_OF.keys()) if (!n.includes('.')) GAZ.set(fold(n), [n]);
+  for (const n of REGION_OF.keys()) { if (!n.includes('.')) GAZ.set(fold(n), [n]); else if (niceName(n) !== n) GAZ.set(fold(niceName(n)), [n]); }
   for (const line of NEWS_WORDS.trim().split('\n')) {
     const i = line.indexOf(':'), to = line.slice(0, i).trim();
     for (const w of line.slice(i + 1).split('|')) if (w.trim()) GAZ.set(fold(w.trim()), to === '-' ? [] : to.split(','));
@@ -2465,6 +2480,14 @@ function diversify(list, per = 3, top = 15) { // at most `per` headlines from on
 }
 function newsFor(sc, D) { // a country's news newest first; a country with little news borrows from its region
   const pick = (f, max, top) => { const l = D.items.filter(f); l.sort(top ? (a, b) => b.k - a.k : (a, b) => (b.p || 0) - (a.p || 0)); return diversify(l).slice(0, max); };
+  if (sc.place) { // a state, province or city: its own headlines, then more from the state it is in, or the country
+    const P = sc.place, items = placeItems(P).slice(0, 25), have = new Set(items);
+    if (items.length >= 6) return { label: P.label, items, more: [] };
+    const up = P.kind === 'city' ? P.region : null, upItems = up ? placeItems(up).filter(it => !have.has(it)) : [];
+    if (upItems.length >= 3) return { label: P.label, items, more: upItems.slice(0, 10), moreLabel: up.label };
+    const n = sc.country.name;
+    return { label: P.label, items, more: pick(it => it.cs.includes(n) && !have.has(it), 10), moreLabel: niceName(n) };
+  }
   if (sc.country) {
     const n = sc.country.name, items = pick(it => it.cs.includes(n), 20);
     return { label: niceName(n), items, more: items.length < 6 ? pick(it => it.rg.includes(sc.region) && !it.cs.includes(n), 10, true) : [], moreLabel: REGION_NAMES[sc.region] };
@@ -2486,7 +2509,7 @@ async function loadHeadlines() {
     catch (e) { if (NEWS_REPO === NEWS_HOME) throw e; D = await fetchJSON(newsUrl(NEWS_HOME), {}, 20000); }
     if (!Array.isArray(D?.items) || !Array.isArray(D.sources)) throw new Error('unexpected news.json format');
   } catch (e) { newsErr = true; if (!newsData) showTicker(); throw e; }
-  tagHeadlines(D); newsData = D; newsErr = false;
+  tagHeadlines(D); tagPlaces(D.items); newsData = D; newsErr = false;
   setStatus('headlines', 'ok', `${pl(D.items.length, 'headline')} from ${D.sources.filter(s => s.ok).length} of ${D.sources.length} news sites, collected ${ago(Date.parse(D.generated))}`);
   getCountries().then(() => scopeCam.set(1e9, 0, 0)).catch(() => {}); // country shapes decide the scope; the world list shows meanwhile
   updateNews(true);
@@ -2498,18 +2521,41 @@ function regionFor(c, lat, lon) {
   for (const r of rs) { const v = REGION_VIEW[r], dd = gcDist(lat, lon, v[0], v[1]); if (dd < bd) { bd = dd; best = r; } }
   return best;
 }
-function newsScope() { // what the camera looks at: the world, a region, or (zoomed in over land) a country
+const focus = { u: null }; // the globe point you last zoomed in toward: the news follows it rather than the middle of the screen
+const _fc = new THREE.Vector3(), _fv = new THREE.Vector3();
+function focusLL() {
+  const u = focus.u;
+  if (u && u.dot(_fc.copy(camera.position).normalize()) > 1 / camera.position.length() + 0.02) {
+    _fv.copy(u).project(camera);
+    if (Math.abs(_fv.x) < 0.96 && Math.abs(_fv.y) < 0.96) return v2ll(u);
+  }
+  return v2ll(camera.position);
+}
+function newsScope() { // what the camera looks at: the world, a region, a country, or (closer in) a state, province or city
   const a = camera.position.length() - 1;
   if (a > 1.3 || !COUNTRIES) return { k: 'world' };
-  const { lat, lon } = v2ll(camera.position);
-  let c = countryAt(COUNTRIES, lat, lon); const over = !!c;
+  const { lat, lon } = a <= 0.45 ? focusLL() : v2ll(camera.position);
+  if (a <= 0.5) wantPlaces();
+  const local = a <= LOCAL_ALT && PLACES;
+  let c = countryAt(COUNTRIES, lat, lon), over = !!c, city = null;
+  if (local && a <= CITY_ALT) {
+    city = cityNear(lat, lon, 4140 * a * 0.12 + 15, over ? c.name : null);
+    if (city && !over) { const cc = COUNTRIES.byName.get(norm(city.country || '')); if (cc) { c = cc; over = true; } } // New York, Lagos and Stockholm sit partly on water at this map's detail
+  }
   if (!c) { let bd = 2500; for (const x of COUNTRIES.list) { const dd = gcDist(lat, lon, x.c.lat, x.c.lon); if (dd < bd) { bd = dd; c = x; } } }
   const region = c && regionFor(c, lat, lon); if (!region) return { k: 'world' };
-  return over && a <= 0.45 && REGION_OF.has(c.name) ? { k: 'c:' + c.name, country: c, region } : { k: 'r:' + region, region };
+  if (!(over && a <= 0.45 && REGION_OF.has(c.name))) return { k: 'r:' + region, region };
+  if (local) {
+    const place = (city?.country === c.name ? city : null) || regionAt(lat, lon, c.name);
+    if (place) return { k: 'p:' + place.key, country: c, region, place };
+  }
+  return { k: 'c:' + c.name, country: c, region };
 }
 function updateNews(force) {
   if (!newsData) return;
   const sc = newsScope(); if (!force && sc.k === newsScopeNow.k) return;
+  if (sc.place) wantLocal(sc.place.cc);
+  if (sc.place?.key !== newsScopeNow.place?.key) cityLabelsDirty = true; // the name in view turns gold
   newsScopeNow = sc; newsSel = newsFor(sc, newsData); tickIdx = 0; tickT = performance.now(); showTicker();
   if (!newsList.hidden) renderNewsList();
 }
@@ -2544,11 +2590,16 @@ function renderNewsList() {
   const sc = newsScopeNow, N = newsSel, D = newsData;
   let h = `<div class="nl-h"><div class="crumbs"><button data-nscope="world" class="${sc.region ? '' : 'on'}">World</button>`;
   if (sc.region) h += `<i>›</i><button data-nscope="r:${sc.region}" class="${sc.country ? '' : 'on'}">${REGION_NAMES[sc.region]}</button>`;
-  if (sc.country) h += `<i>›</i><button data-nscope="c" class="on">${esc(N.label)}</button>`;
+  if (sc.country) h += `<i>›</i><button data-nscope="c" class="${sc.place ? '' : 'on'}">${esc(niceName(sc.country.name))}</button>`;
+  const P = sc.place, up = P?.kind === 'city' ? P.region : null;
+  if (up) h += `<i>›</i><button data-nscope="p:${esc(up.key)}">${esc(up.label === P.label ? up.name : up.label)}</button>`;
+  if (P) h += `<i>›</i><button data-nscope="p:${esc(P.key)}" class="on">${P.cap ? '<span class="star">★</span> ' : ''}${esc(P.label)}</button>`;
   h += `</div>${close}</div><div class="nl-b">`;
   h += N.items.length ? N.items.map(newsRow).join('') : `<p class="note">No headlines from the last three days mention ${esc(N.label)}.</p>`;
   if (N.more.length) h += `<h5>More from ${N.moreLabel}</h5>${N.more.map(newsRow).join('')}`;
-  h += `</div><div class="nl-f note">${sc.region ? '' : 'Zoom in on a region, then a country, to follow its news. '}Headlines from ${D.sources.filter(s => s.ok).length} news sites, collected ${ago(Date.parse(D.generated))}. Each is placed by the places it names, so a few may land in the wrong country.</div>`;
+  const how = P ? (P.searched ? `Headlines for ${esc(P.label)} also come from a Google News search for its name, run every few hours. ` : '')
+    : sc.country ? 'Zoom in closer for a state, province or city, or click a name on the globe. ' : sc.region ? '' : 'Zoom in on a region, then a country, then a city to follow its news. ';
+  h += `</div><div class="nl-f note">${how}Headlines from ${D.sources.filter(s => s.ok).length} news sites, collected ${ago(Date.parse(D.generated))}. Each is placed by the places it names, so a few may land in the wrong place.</div>`;
   newsList.innerHTML = h;
 }
 function toggleNews(open = newsList.hidden) {
@@ -2565,7 +2616,8 @@ newsList.addEventListener('click', e => {
   const s = t.dataset.nscope;
   if (s === 'world') { const p = v2ll(camera.position); flyTo(p.lat, p.lon, Math.max(3.1, camera.position.length())); }
   else if (s.startsWith('r:')) { const v = REGION_VIEW[s.slice(2)]; if (v) flyTo(v[0], v[1], v[2]); }
-  else if (newsScopeNow.country) { const c = newsScopeNow.country.c; flyTo(c.lat, c.lon, Math.min(camera.position.length(), 1.4)); }
+  else if (s.startsWith('p:')) { const p = PLACES?.byKey.get(s.slice(2)); if (p) openPlaceNews(p); }
+  else if (newsScopeNow.country) { const c = newsScopeNow.country.c; flyTo(c.lat, c.lon, newsScopeNow.place ? 1.35 : Math.min(camera.position.length(), 1.4)); }
 });
 function newsTick(now) { // called every frame: follow the camera once it settles, and rotate the ticker
   if (!newsData || !S.layers.headlines) return;
@@ -2574,6 +2626,291 @@ function newsTick(now) { // called every frame: follow the camera once it settle
   if (p.distanceToSquared(scopeCam) > 1e-10 && (now - camStill > 450 || now - scopeT > 2000)) { scopeT = now; scopeCam.copy(p); updateNews(false); }
   if (!tickHold && now - tickT > 7000) { tickT = now; if (tickList().length > 1) nextHeadline(); }
   if (!newsList.hidden && now - listT > 60000) renderNewsList();
+}
+
+/* ---------- Places: capitals, cities and regions (GeoNames, built by scripts/build-places.mjs) ---------- */
+// Capitals ship with the page so they show at once; data/places.json (about 600 kB) adds 5,500 cities, 2,600 states and
+// provinces and a grid of towns for "which region is this?", and loads the first time you zoom in to country height.
+const CAPITALS = {"c":{"CN":"China","CD":"Dem. Rep. Congo","MX":"Mexico","RU":"Russia","BD":"Bangladesh","KR":"South Korea","JP":"Japan","EG":"Egypt","GB":"United Kingdom","ID":"Indonesia","VN":"Vietnam","TW":"Taiwan","PE":"Peru","CO":"Colombia","HK":"Hong Kong","IQ":"Iraq","IR":"Iran","CI":"Côte d'Ivoire","SG":"Singapore","TH":"Thailand","CL":"Chile","ZA":"South Africa","AF":"Afghanistan","KE":"Kenya","ML":"Mali","SA":"Saudi Arabia","ET":"Ethiopia","TR":"Turkey","DE":"Germany","ES":"Spain","KP":"North Korea","VE":"Venezuela","UA":"Ukraine","AR":"Argentina","EC":"Ecuador","AO":"Angola","NG":"Nigeria","SN":"Senegal","SO":"Somalia","BF":"Burkina Faso","DZ":"Algeria","AZ":"Azerbaijan","IT":"Italy","ZM":"Zambia","BR":"Brazil","DO":"Dominican Rep.","TG":"Togo","CU":"Cuba","FR":"France","BO":"Bolivia","CG":"Congo","UZ":"Uzbekistan","SD":"Sudan","GH":"Ghana","YE":"Yemen","GN":"Guinea","LB":"Lebanon","RO":"Romania","AE":"United Arab Emirates","BY":"Belarus","HU":"Hungary","PL":"Poland","AT":"Austria","UG":"Uganda","MA":"Morocco","PH":"Philippines","KH":"Cambodia","SY":"Syria","KZ":"Kazakhstan","ZW":"Zimbabwe","LR":"Liberia","SE":"Sweden","PY":"Paraguay","MY":"Malaysia","NP":"Nepal","TD":"Chad","MG":"Madagascar","NE":"Niger","LY":"Libya","CM":"Cameroon","JO":"Jordan","RS":"Serbia","UY":"Uruguay","MZ":"Mozambique","HT":"Haiti","MR":"Mauritania","CZ":"Czechia","DK":"Denmark","BG":"Bulgaria","AM":"Armenia","RW":"Rwanda","MW":"Malawi","NO":"Norway","GE":"Georgia","TM":"Turkmenistan","IE":"Ireland","BE":"Belgium","CA":"Canada","GT":"Guatemala","NI":"Nicaragua","IL":"Israel","JM":"Jamaica","MM":"Myanmar","KG":"Kyrgyzstan","HN":"Honduras","GA":"Gabon","MN":"Mongolia","LA":"Laos","CF":"Central African Rep.","SL":"Sierra Leone","OM":"Oman","TZ":"Tanzania","LV":"Latvia","NL":"Netherlands","BA":"Bosnia and Herz.","TN":"Tunisia","US":"United States of America","TJ":"Tajikistan","BJ":"Benin","GR":"Greece","HR":"Croatia","FI":"Finland","MO":"Macao","LK":"Sri Lanka","MD":"Moldova","DJ":"Djibouti","PK":"Pakistan","ER":"Eritrea","XK":"Kosovo","LT":"Lithuania","SV":"El Salvador","PT":"Portugal","MK":"Macedonia","SS":"S. Sudan","GW":"Guinea-Bissau","SK":"Slovakia","AL":"Albania","PR":"Puerto Rico","PA":"Panama","EE":"Estonia","NA":"Namibia","NZ":"New Zealand","AU":"Australia","LS":"Lesotho","QA":"Qatar","CR":"Costa Rica","IN":"India","PG":"Papua New Guinea","SI":"Slovenia","BW":"Botswana","ME":"Montenegro","GY":"Guyana","BS":"Bahamas","SR":"Suriname","CY":"Cyprus","MU":"Mauritius","TL":"Timor-Leste","BH":"Bahrain","CV":"Cabo Verde","CW":"Curaçao","CH":"Switzerland","IS":"Iceland","MV":"Maldives","BT":"Bhutan","BB":"Barbados","NC":"New Caledonia","FJ":"Fiji","LU":"Luxembourg","SZ":"eSwatini","KM":"Comoros","BI":"Burundi","BN":"Brunei","KW":"Kuwait","SB":"Solomon Is.","ST":"São Tomé and Principe","AG":"Antigua and Barb.","TT":"Trinidad and Tobago","MP":"N. Mariana Is.","PS":"Palestine","WS":"Samoa","KI":"Kiribati","GM":"Gambia","VU":"Vanuatu","MC":"Monaco","AW":"Aruba","KY":"Cayman Is.","JE":"Jersey","PF":"Fr. Polynesia","IM":"Isle of Man","MH":"Marshall Is.","VC":"St. Vin. and Gren.","SC":"Seychelles","TO":"Tonga","AD":"Andorra","LC":"Saint Lucia","VI":"U.S. Virgin Is.","DM":"Dominica","GG":"Guernsey","GL":"Greenland","BZ":"Belize","CK":"Cook Is.","FO":"Faeroe Is.","KN":"St. Kitts and Nevis","AS":"American Samoa","AX":"Åland","VG":"British Virgin Is.","GD":"Grenada","FM":"Micronesia","MT":"Malta","PM":"St. Pierre and Miquelon","BL":"St-Barthélemy","MF":"St-Martin","LI":"Liechtenstein","SM":"San Marino","TC":"Turks and Caicos Is.","FK":"Falkland Is.","AI":"Anguilla","GQ":"Eq. Guinea","SX":"Sint Maarten","WF":"Wallis and Futuna Is.","NR":"Nauru","GU":"Guam","BM":"Bermuda","NF":"Norfolk Island","VA":"Vatican","SH":"Saint Helena","NU":"Niue","PN":"Pitcairn Is.","TF":"Fr. S. Antarctic Lands","GS":"S. Geo. and the Is.","MS":"Montserrat","PW":"Palau"},"r":[[1816670,"Beijing","CN",-1,39.91,116.4,18961,9,""],[2314302,"Kinshasa","CD",-1,-4.33,15.31,16000,9,""],[3530597,"Mexico City","MX",-1,19.43,-99.13,12294,9,"CDMX"],[524901,"Moscow","RU",-1,55.75,37.62,10381,9,""],[1185241,"Dhaka","BD",-1,23.71,90.41,10357,9,""],[1835848,"Seoul","KR",-1,37.57,126.98,10349,9,"Seoul-si"],[1850147,"Tokyo","JP",-1,35.69,139.69,9733,9,""],[360630,"Cairo","EG",-1,30.06,31.25,9607,9,""],[2643743,"London","GB",-1,51.51,-0.13,8962,9,""],[1642911,"Jakarta","ID",-1,-6.21,106.85,8540,9,""],[1581130,"Hanoi","VN",-1,21.02,105.84,8054,9,""],[1668341,"Taipei","TW",-1,25.05,121.53,7872,9,""],[3936456,"Lima","PE",-1,-12.04,-77.03,7737,9,""],[3688689,"Bogotá","CO",-1,4.61,-74.08,7674,9,""],[1819729,"Hong Kong","HK",-1,22.28,114.17,7396,9,""],[98182,"Baghdad","IQ",-1,33.34,44.4,7216,9,""],[112931,"Tehran","IR",-1,35.69,51.42,7153,9,""],[2293538,"Abidjan","CI",-1,5.35,-4,6321,14,""],[1880252,"Singapore","SG",-1,1.29,103.85,5639,9,""],[1609350,"Bangkok","TH",-1,13.75,100.5,5104,9,""],[3871336,"Santiago","CL",-1,-33.46,-70.65,4837,9,"Santiago de Chile"],[3369157,"Cape Town","ZA",-1,-33.93,18.42,4773,14,""],[1138958,"Kabul","AF",-1,34.53,69.17,4435,9,""],[184745,"Nairobi","KE",-1,-1.28,36.82,4397,9,""],[2460596,"Bamako","ML",-1,12.61,-7.98,4228,9,""],[108410,"Riyadh","SA",-1,24.69,46.72,4206,9,""],[344979,"Addis Ababa","ET",-1,9.02,38.75,3860,9,""],[323786,"Ankara","TR",-1,39.92,32.85,3517,9,""],[2950159,"Berlin","DE",-1,52.52,13.41,3426,9,""],[3117735,"Madrid","ES",-1,40.42,-3.7,3256,9,""],[1871859,"Pyongyang","KP",-1,39.03,125.75,3222,9,"Pyongyang-si"],[3646738,"Caracas","VE",-1,10.49,-66.88,3000,9,""],[703448,"Kyiv","UA",-1,50.45,30.52,2952,9,"Kiev"],[3435910,"Buenos Aires","AR",-1,-34.61,-58.38,2891,9,""],[3652462,"Quito","EC",-1,-0.23,-78.52,2782,9,""],[2240449,"Luanda","AO",-1,-8.84,13.23,2776,9,""],[2352778,"Abuja","NG",-1,9.06,7.5,2690,9,""],[2253354,"Dakar","SN",-1,14.69,-17.44,2647,9,""],[53654,"Mogadishu","SO",-1,2.04,45.34,2587,9,""],[2357048,"Ouagadougou","BF",-1,12.37,-1.53,2415,9,""],[2507480,"Algiers","DZ",-1,36.73,3.09,2364,9,""],[587084,"Baku","AZ",-1,40.38,49.89,2351,9,""],[3169070,"Rome","IT",-1,41.89,12.51,2319,9,"Roma"],[909137,"Lusaka","ZM",-1,-15.41,28.29,2212,9,""],[3469058,"Brasília","BR",-1,-15.78,-47.93,2208,9,""],[3492908,"Santo Domingo","DO",-1,18.47,-69.89,2202,9,"Santo Domingo City"],[2365267,"Lomé","TG",-1,6.13,1.22,2188,9,""],[3553478,"Havana","CU",-1,23.13,-82.38,2164,9,""],[2988507,"Paris","FR",-1,48.85,2.35,2139,9,""],[964137,"Pretoria","ZA",-1,-25.74,28.19,2113,9,""],[3911925,"La Paz","BO",-1,-16.5,-68.15,2005,10,""],[2260535,"Brazzaville","CG",-1,-4.27,15.28,1982,9,""],[1512569,"Tashkent","UZ",-1,41.26,69.22,1978,9,""],[379252,"Khartoum","SD",-1,15.55,32.53,1975,9,""],[2306104,"Accra","GH",-1,5.56,-0.2,1963,9,""],[71137,"Sanaa","YE",-1,15.35,44.21,1937,9,""],[2422465,"Conakry","GN",-1,9.54,-13.68,1928,9,""],[276781,"Beirut","LB",-1,33.89,35.5,1916,9,""],[683506,"Bucharest","RO",-1,44.43,26.11,1877,9,""],[292968,"Abu Dhabi","AE",-1,24.45,54.4,1807,9,""],[625144,"Minsk","BY",-1,53.9,27.57,1742,9,""],[3054643,"Budapest","HU",-1,47.5,19.04,1741,9,""],[756135,"Warsaw","PL",-1,52.23,21.01,1702,9,""],[2761369,"Vienna","AT",-1,48.21,16.37,1691,9,""],[232422,"Kampala","UG",-1,0.32,32.58,1681,9,""],[2538475,"Rabat","MA",-1,34.01,-6.83,1656,9,""],[1701668,"Manila","PH",-1,14.6,120.98,1600,9,"Manila City"],[1821306,"Phnom Penh","KH",-1,11.56,104.92,1574,9,""],[170654,"Damascus","SY",-1,33.51,36.29,1569,9,""],[1526273,"Astana","KZ",-1,51.18,71.45,1544,9,"Nur-Sultan"],[890299,"Harare","ZW",-1,-17.83,31.05,1543,9,""],[2274895,"Monrovia","LR",-1,6.3,-10.8,1543,9,""],[2673730,"Stockholm","SE",-1,59.33,18.07,1515,9,""],[3439389,"Asunción","PY",-1,-25.29,-57.65,1482,9,""],[1735161,"Kuala Lumpur","MY",-1,3.14,101.69,1454,9,""],[1283240,"Kathmandu","NP",-1,27.7,85.32,1442,9,""],[2427123,"N'Djamena","TD",-1,12.11,15.04,1360,9,""],[1070940,"Antananarivo","MG",-1,-18.91,47.54,1350,9,""],[2440485,"Niamey","NE",-1,13.51,2.11,1324,9,""],[2210247,"Tripoli","LY",-1,32.89,13.19,1303,9,""],[2220957,"Yaoundé","CM",-1,3.87,11.52,1299,9,""],[250441,"Amman","JO",-1,31.96,35.95,1276,9,""],[792680,"Belgrade","RS",-1,44.8,20.47,1274,9,""],[3441575,"Montevideo","UY",-1,-34.9,-56.19,1271,9,""],[1040652,"Maputo","MZ",-1,-25.97,32.58,1255,9,""],[3718426,"Port-au-Prince","HT",-1,18.54,-72.34,1235,9,""],[2377450,"Nouakchott","MR",-1,18.09,-15.98,1185,9,""],[3067696,"Prague","CZ",-1,50.09,14.42,1166,9,""],[2618425,"Copenhagen","DK",-1,55.68,12.57,1154,9,""],[727011,"Sofia","BG",-1,42.7,23.32,1153,9,""],[616052,"Yerevan","AM",-1,40.18,44.51,1145,9,""],[202061,"Kigali","RW",-1,-1.95,30.06,1133,9,""],[927967,"Lilongwe","MW",-1,-13.97,33.79,1116,9,""],[3143244,"Oslo","NO",-1,59.91,10.75,1083,9,""],[611717,"Tbilisi","GE",-1,41.69,44.83,1049,9,""],[162183,"Ashgabat","TM",-1,37.95,58.38,1030,9,"Ashkhabad|Ashkabad"],[2964574,"Dublin","IE",-1,53.33,-6.25,1024,9,"Dublin city"],[2800866,"Brussels","BE",-1,50.85,4.35,1019,9,""],[6094817,"Ottawa","CA",-1,45.41,-75.7,1017,9,""],[3598132,"Guatemala City","GT",-1,14.64,-90.51,995,9,""],[3617763,"Managua","NI",-1,12.13,-86.25,973,9,""],[281184,"Jerusalem","IL",-1,31.77,35.22,972,13,""],[3489854,"Kingston","JM",-1,18,-76.79,938,9,""],[6611854,"Nay Pyi Taw","MM",-1,19.75,96.13,925,9,"Naypyitaw|Naypyidaw"],[1528675,"Bishkek","KG",-1,42.87,74.59,900,9,""],[3600949,"Tegucigalpa","HN",-1,14.08,-87.21,851,9,""],[2399697,"Libreville","GA",-1,0.39,9.45,846,9,""],[2028462,"Ulaanbaatar","MN",-1,47.91,106.88,845,9,"Ulan Bator|Ulaan Baatar"],[1651944,"Vientiane","LA",-1,17.97,102.6,841,9,""],[2389853,"Bangui","CF",-1,4.36,18.55,812,9,""],[2409306,"Freetown","SL",-1,8.49,-13.24,803,9,""],[287286,"Muscat","OM",-1,23.58,58.41,797,9,""],[160196,"Dodoma","TZ",-1,-6.17,35.74,765,9,""],[456172,"Riga","LV",-1,56.95,24.11,743,9,""],[2759794,"Amsterdam","NL",-1,52.37,4.89,742,9,""],[3191281,"Sarajevo","BA",-1,43.85,18.36,697,9,""],[2464470,"Tunis","TN",-1,36.82,10.17,693,9,""],[4140963,"Washington D.C.","US",-1,38.9,-77.04,690,9,"Washington|Washington DC"],[1221874,"Dushanbe","TJ",-1,38.54,68.78,679,9,""],[2394819,"Cotonou","BJ",-1,6.37,2.42,679,10,""],[264371,"Athens","GR",-1,37.98,23.73,664,9,""],[3186886,"Zagreb","HR",-1,45.81,15.98,664,9,""],[658225,"Helsinki","FI",-1,60.17,24.94,659,9,""],[1821274,"Macau","MO",-1,22.2,113.55,649,9,"Macao"],[1248991,"Colombo","LK",-1,6.94,79.85,648,10,""],[618426,"Chisinau","MD",-1,47.01,28.86,636,9,"Kishinev"],[223817,"Djibouti","DJ",-1,11.59,43.15,627,9,""],[1176615,"Islamabad","PK",-1,33.72,73.04,602,9,""],[343300,"Asmara","ER",-1,15.34,38.93,564,9,""],[1018725,"Bloemfontein","ZA",-1,-29.12,26.21,557,14,""],[786714,"Pristina","XK",-1,42.67,21.17,550,9,"Prishtina"],[593116,"Vilnius","LT",-1,54.69,25.28,542,9,""],[3583361,"San Salvador","SV",-1,13.69,-89.19,526,9,""],[2267057,"Lisbon","PT",-1,38.73,-9.15,518,9,""],[785842,"Skopje","MK",-1,42,21.43,475,9,""],[2747373,"The Hague","NL",-1,52.08,4.3,474,10,""],[373303,"Juba","SS",-1,4.85,31.58,450,9,""],[2374775,"Bissau","GW",-1,11.86,-15.6,440,9,""],[3060972,"Bratislava","SK",-1,48.15,17.11,424,9,""],[3183875,"Tirana","AL",-1,41.33,19.82,418,9,""],[4568127,"San Juan","PR",-1,18.47,-66.11,418,9,""],[3703443,"Panama City","PA",-1,8.99,-79.52,408,9,""],[588409,"Tallinn","EE",-1,59.44,24.75,394,9,""],[3352136,"Windhoek","NA",-1,-22.56,17.08,386,9,""],[2179537,"Wellington","NZ",-1,-41.29,174.78,382,9,""],[2172517,"Canberra","AU",-1,-35.28,149.13,368,9,""],[932505,"Maseru","LS",-1,-29.32,27.48,360,9,""],[290030,"Doha","QA",-1,25.29,51.53,345,9,""],[3621849,"San José","CR",-1,9.93,-84.08,335,9,""],[1261481,"New Delhi","IN",-1,28.62,77.21,318,9,""],[2088122,"Port Moresby","PG",-1,-9.48,147.15,284,9,""],[2279755,"Yamoussoukro","CI",-1,6.82,-5.28,276,9,""],[3196359,"Ljubljana","SI",-1,46.05,14.51,272,9,""],[2392087,"Porto-Novo","BJ",-1,6.5,2.6,264,9,""],[933773,"Gaborone","BW",-1,-24.65,25.91,246,9,""],[3193044,"Podgorica","ME",-1,42.44,19.26,237,9,""],[3378644,"Georgetown","GY",-1,6.8,-58.16,235,9,""],[3571824,"Nassau","BS",-1,25.06,-77.34,228,9,""],[3903987,"Sucre","BO",-1,-19.03,-65.26,225,9,""],[3383330,"Paramaribo","SR",-1,5.87,-55.17,224,9,""],[146268,"Nicosia","CY",-1,35.17,33.35,200,9,""],[934154,"Port Louis","MU",-1,-20.16,57.5,155,9,""],[1645457,"Dili","TL",-1,-8.56,125.57,150,9,""],[290340,"Manama","BH",-1,26.23,50.59,147,9,""],[3374333,"Praia","CV",-1,14.93,-23.51,138,9,""],[3513090,"Willemstad","CW",-1,12.12,-68.89,125,9,""],[2661552,"Bern","CH",-1,46.95,7.45,122,9,"Berne"],[3413829,"Reykjavik","IS",-1,64.14,-21.9,119,9,""],[1238992,"Sri Jayewardenepura Kotte","LK",-1,6.88,79.91,116,9,"Sri Jayawardenepura Kotte"],[1282027,"Male","MV",-1,4.18,73.51,104,9,""],[1252416,"Thimphu","BT",-1,27.47,89.64,99,9,""],[3374036,"Bridgetown","BB",-1,13.11,-59.62,99,9,""],[2139521,"Noumea","NC",-1,-22.27,166.45,93,9,""],[2198148,"Suva","FJ",-1,-18.14,178.43,77,9,""],[2960316,"Luxembourg","LU",-1,49.61,6.13,77,9,"Luxembourg City"],[934985,"Mbabane","SZ",-1,-26.32,31.13,76,9,""],[921772,"Moroni","KM",-1,-11.7,43.26,75,9,""],[426272,"Gitega","BI",-1,-3.43,29.92,65,9,""],[1820906,"Bandar Seri Begawan","BN",-1,4.89,114.94,64,9,""],[285787,"Kuwait City","KW",-1,29.37,47.97,60,9,"Kuwait"],[2108502,"Honiara","SB",-1,-9.43,159.95,56,9,""],[2410763,"São Tomé","ST",-1,0.34,6.73,53,9,""],[3576022,"St John's","AG",-1,17.12,-61.84,52,9,"Saint John’s|Saint John's"],[6697380,"Putrajaya","MY",-1,2.94,101.69,50,10,""],[3573890,"Port of Spain","TT",-1,10.67,-61.52,49,9,""],[0,"Saipan","MP",-1,15.21,145.75,48,1,""],[282239,"Ramallah","PS",-1,31.9,35.2,44,9,""],[4035413,"Apia","WS",-1,-13.83,-171.77,40,9,""],[0,"Tarawa","KI",-1,1.33,172.98,40,1,""],[2413876,"Banjul","GM",-1,13.45,-16.58,37,9,""],[2135171,"Port Vila","VU",-1,-17.74,168.31,36,9,"Port-Vila"],[0,"Monaco","MC",-1,43.74,7.42,33,1,""],[0,"Oranjestad","AW",-1,12.52,-70.03,30,1,""],[0,"George Town","KY",-1,19.29,-81.37,29,1,""],[0,"Saint Helier","JE",-1,49.19,-2.1,28,1,""],[4033936,"Papeete","PF",-1,-17.53,-149.57,26,9,""],[0,"Douglas","IM",-1,54.15,-4.48,26,1,""],[0,"Majuro","MH",-1,7.09,171.38,25,1,""],[0,"Kingstown","VC",-1,13.16,-61.23,25,1,""],[0,"Victoria","SC",-1,-4.62,55.46,23,1,""],[0,"Nuku‘alofa","TO",-1,-21.14,-175.2,22,1,"Nuku'alofa"],[0,"Andorra la Vella","AD",-1,42.51,1.52,20,1,""],[0,"Castries","LC",-1,14,-61.01,20,1,""],[0,"Charlotte Amalie","VI",-1,18.34,-64.93,20,1,""],[0,"Roseau","DM",-1,15.3,-61.39,17,1,""],[0,"Saint Peter Port","GG",-1,49.46,-2.54,16,1,""],[0,"Nuuk","GL",-1,64.18,-51.72,15,1,""],[3582672,"Belmopan","BZ",-1,17.25,-88.76,13,9,""],[0,"Avarua","CK",-1,-21.21,-159.78,13,1,""],[0,"Tórshavn","FO",-1,62.01,-6.77,13,1,""],[0,"Basseterre","KN",-1,17.3,-62.72,13,1,""],[0,"Pago Pago","AS",-1,-14.28,-170.7,12,1,""],[0,"Mariehamn","AX",-1,60.1,19.93,11,1,""],[0,"Road Town","VG",-1,18.43,-64.62,8,1,""],[0,"Saint George's","GD",-1,12.05,-61.75,8,1,""],[0,"Palikir","FM",-1,6.92,158.16,7,1,""],[2562305,"Valletta","MT",-1,35.9,14.51,7,9,""],[0,"Saint-Pierre","PM",-1,46.78,-56.18,6,1,""],[0,"Gustavia","BL",-1,17.9,-62.85,6,1,""],[0,"Marigot","MF",-1,18.07,-63.08,6,1,""],[0,"Vaduz","LI",-1,47.14,9.52,5,1,""],[0,"San Marino","SM",-1,43.94,12.45,5,1,""],[0,"Cockburn Town","TC",-1,21.46,-71.14,4,1,""],[0,"Stanley","FK",-1,-51.69,-57.86,2,1,""],[0,"The Valley","AI",-1,18.22,-63.06,2,1,""],[12226438,"Ciudad de la Paz","GQ",-1,1.59,10.82,2,9,""],[0,"Philipsburg","SX",-1,18.03,-63.05,1,1,""],[0,"Mata-Utu","WF",-1,-13.28,-176.17,1,1,""],[0,"Yaren","NR",-1,-0.55,166.93,1,1,"Yaren District"],[0,"Hagåtña","GU",-1,13.48,144.75,1,1,""],[0,"Hamilton","BM",-1,32.29,-64.78,1,1,""],[0,"Kingston","NF",-1,-29.05,167.97,1,1,""],[0,"Vatican City","VA",-1,41.9,12.45,1,1,"Vatican|Vatican City State"],[0,"Jamestown","SH",-1,-15.92,-5.72,1,1,""],[0,"Alofi","NU",-1,-19.05,-169.92,1,1,""],[0,"Adamstown","PN",-1,-25.07,-130.1,0,1,""],[0,"Port-aux-Français","TF",-1,-49.35,70.22,0,1,""],[0,"Grytviken","GS",-1,-54.28,-36.51,0,1,""],[0,"Plymouth","MS",-1,16.71,-62.21,0,1,""],[0,"Ngerulmud","PW",-1,7.5,134.62,0,1,""]]};
+const PLACES_URL = 'data/places.json';
+const LOCAL_ALT = 0.24, CITY_ALT = 0.13; // below these heights the news follows the state or province, then the nearest city
+let PLACES = null, placesP = null, placesFailT = 0, PLACE_IDX = null, PLACE_STOP = null;
+const GENERIC_NAME = /^(?:Capital|Central|Northern|Southern|Eastern|Western|North|South|East|West|Coast|Coastal|Upper|Lower|Greater|Middle|Inner|Outer|Islands?|Lakes?|River|Mountain|Federal|Special)$/;
+const GENERIC_PART = /^(?:Emirate|Canton|Principality|Province|Department|County|Region|State|Governorate|Municipality|Prefecture|District|Autonomous District|Special Region|Special Capital Region|Capital Region|Free Hanseatic City|Regional State|Autonomous Region|Autonomous Province|Voivodeship|Federal District|Metropolitan City|City)$/;
+const plainName = s => s.normalize('NFD').replace(/[\u0304\u0323\u032E]/g, '').replace(/([hHdDzZ])\u0327/g, '$1').replace(/[‘’ʿʾ]/g, '').normalize('NFC'); // Laḩij -> Lahij, Herāt -> Herat
+function shortName(name, aliases, kind) { // "Emirate of Ras Al Khaimah" -> "Ras Al Khaimah", "Valle del Cauca Department" -> "Valle del Cauca"
+  if (kind === 'city') return plainName(name.split(',')[0].trim());
+  const a = aliases.find(x => x.length >= 4 && name.includes(x) && GENERIC_PART.test(name.replace(x, '').replace(/\b(?:of|the)\b/g, '').replace(/\s+/g, ' ').trim())); if (a) return plainName(a);
+  const s = name.replace(/^(?:Emirate|Canton|Principality|Department|County|Region|Province|State|Governorate|Municipality|Prefecture|Special Region) of (?:the )?/, '')
+    .replace(/ (?:Province|Department|District|County|Region|Regional State|Governorate|Municipality|Prefecture|Autonomous District|Voivodeship)$/, '');
+  return plainName(s.length >= 4 && !GENERIC_NAME.test(s) ? s : name);
+}
+function cityOf(r, regions, cc2ne) {
+  const [id, name, cc, ri, lat, lon, popK, flags, al] = r, aliases = al ? al.split('|') : [];
+  return { kind: 'city', key: id ? String(id) : `${name}|${cc}`, name, label: shortName(name, aliases, 'city'), cc, country: cc2ne[cc] || null, region: regions?.[ri] || null,
+    lat, lon, pop: popK * 1000, cap: flags & 3, searched: !!(flags & 8), aliases, u: ll2v(lat, lon, 1) };
+}
+const CAPITAL_PLACES = CAPITALS.r.map(r => cityOf(r, null, CAPITALS.c));
+const CELL = 2; // degrees, for the spatial buckets below
+const wrapJ = j => ((j + 90) % 180 + 180) % 180 - 90;
+const cellKey = (lat, lon) => `${Math.floor(lat / CELL)},${wrapJ(Math.floor(lon / CELL))}`;
+function cellsAround(lat, lon, km) {
+  const dI = Math.ceil(km / 111 / CELL), dJ = Math.min(45, Math.ceil(km / (111 * Math.max(0.05, Math.cos(lat * DEG))) / CELL));
+  const i0 = Math.floor(lat / CELL), j0 = Math.floor(lon / CELL), out = [];
+  for (let i = i0 - dI; i <= i0 + dI; i++) for (let j = j0 - dJ; j <= j0 + dJ; j++) out.push(`${i},${wrapJ(j)}`);
+  return out;
+}
+function buildPlaces(P) {
+  const cc2ne = P.countries || {};
+  const regions = P.regions.map(([code, name, lat, lon, radius, q, al]) => {
+    const aliases = al ? al.split('|') : [];
+    return { kind: 'region', key: code, name, label: shortName(name, aliases, 'region'), cc: code.slice(0, 2), country: cc2ne[code.slice(0, 2)] || null,
+      lat, lon, radius, searched: !!q, aliases, u: ll2v(lat, lon, 1), cities: [] };
+  });
+  const cities = P.cities.map(r => cityOf(r, regions, cc2ne));
+  for (const c of cities) c.region?.cities.push(c);
+  const byKey = new Map(); for (const p of [...regions, ...cities]) byKey.set(p.key, p);
+  const bin = Uint8Array.from(atob(P.grid), ch => ch.charCodeAt(0)), dv = new DataView(bin.buffer), n = bin.length / 6;
+  const G = { lat: new Float32Array(n), lon: new Float32Array(n), ri: new Uint16Array(n), cells: new Map() };
+  for (let i = 0; i < n; i++) {
+    G.lat[i] = dv.getInt16(i * 6, true) / 100; G.lon[i] = dv.getInt16(i * 6 + 2, true) / 100; G.ri[i] = dv.getUint16(i * 6 + 4, true);
+    const k = cellKey(G.lat[i], G.lon[i]); (G.cells.get(k) || G.cells.set(k, []).get(k)).push(i);
+  }
+  const ccells = new Map(); for (const c of cities) { const k = cellKey(c.lat, c.lon); (ccells.get(k) || ccells.set(k, []).get(k)).push(c); }
+  for (const c of cities) { // districts and suburbs count as the big city next door: Brooklyn as New York, Pudong as Shanghai
+    if (c.cap) continue; let big = null;
+    for (const k of cellsAround(c.lat, c.lon, 20)) for (const o of ccells.get(k) || []) if (o.cc === c.cc && o.pop >= 3 * c.pop && (!big || o.pop > big.pop) && gcDist(c.lat, c.lon, o.lat, o.lon) <= 20) big = o;
+    if (big) c.part = big;
+  }
+  for (const c of cities) while (c.part?.part) c.part = c.part.part;
+  for (const c of cities) { // a city-state's city and state share a name (Berlin, Vienna, Moscow): news for one is news for the other
+    const r = c.region; if (r && !c.part && [r.name, r.label, ...r.aliases].some(n => tokKey(n) === tokKey(c.label))) c.twin = r;
+  }
+  return { regions, cities, caps: cities.filter(c => c.cap), byKey, G, ccells };
+}
+function getPlaces() {
+  return placesP || (placesP = (async () => {
+    let P;
+    try { P = await fetchJSON(PLACES_URL, {}, 30000); } // next to the page on GitHub Pages
+    catch { P = await fetchJSON(`https://raw.githubusercontent.com/${NEWS_HOME}/main/${PLACES_URL}`, {}, 30000); } // opened from a file, or a copy without the data folder
+    if (!Array.isArray(P?.cities) || !Array.isArray(P.regions) || typeof P.grid !== 'string') throw new Error('unexpected places.json format');
+    PLACES = buildPlaces(P); PLACE_IDX = null;
+    if (newsData) tagPlaces(newsData.items);
+    cityLabelsDirty = true; updateNews(true);
+    setStatus('places', 'ok', `${pl(P.cities.length, 'city', 'cities')} and ${pl(P.regions.length, 'state or province', 'states and provinces')}`);
+    return PLACES;
+  })().catch(e => { placesP = null; placesFailT = Date.now(); setStatus('places', 'error', e.message); throw e; }));
+}
+function wantPlaces() { if (!PLACES && !placesP && Date.now() - placesFailT > 60e3) getPlaces().catch(() => {}); }
+function regionAt(lat, lon, ne) { // the state or province at a point: the region of the nearest town, in the same country
+  if (!PLACES) return null; const G = PLACES.G; let best = -1, bd = 220;
+  for (const k of cellsAround(lat, lon, bd)) for (const i of G.cells.get(k) || []) {
+    if (ne && PLACES.regions[G.ri[i]].country !== ne) continue;
+    const d = gcDist(lat, lon, G.lat[i], G.lon[i]); if (d < bd) { bd = d; best = i; }
+  }
+  return best < 0 ? null : PLACES.regions[G.ri[best]];
+}
+function cityNear(lat, lon, km, ne) { // the city a spot belongs to: close, and bigger cities reach a little further
+  if (!PLACES) return null; let best = null, bs = Infinity;
+  for (const k of cellsAround(lat, lon, km)) for (const c of PLACES.ccells.get(k) || []) {
+    if (c.part || (ne && c.country !== ne)) continue;
+    const d = gcDist(lat, lon, c.lat, c.lon); if (d > km) continue;
+    const s = d / (1 + 0.5 * Math.log10(Math.max(c.pop, 5e4) / 5e4) + (c.cap ? 0.3 : 0));
+    if (s < bs) { bs = s; best = c; }
+  }
+  return best;
+}
+
+/* ---------- Which cities and regions a headline names ---------- */
+// Words that are also names of places: skipped, or (for names that are also people's names) only counted when the
+// headline is already about that country and the next word isn't a surname.
+const PLACE_SKIP = new Set(['Mobile', 'Reading', 'Orange', 'Aurora', 'Batman', 'Mary', 'Toyota', 'Mercedes', 'Gary', 'Independence', 'Normal', 'Van', 'Man', 'Bar', 'Split',
+  'Sale', 'Deal', 'Bath', 'Hope', 'Union', 'Unity', 'Liberty', 'Victory', 'Progress', 'Paradise', 'Enterprise', 'Concord', 'Providence', 'Sandy', 'Mission', 'Spring', 'Plano', 'Irvine',
+  'Federal', 'Capital', 'Centre', 'Center', 'Central', 'Est', 'Nord', 'Sud', 'Ouest', 'Lac', 'Bay', 'Mon', 'Littoral', 'Lakes', 'Coast', 'Islands', 'Western', 'Eastern', 'Northern', 'Southern',
+  'North West', 'North East', 'South West', 'South East', 'Upper East', 'Upper West', 'West Coast', 'FCT', 'Distrito Federal', 'Mexico', 'Washington state', 'Santa', 'San', 'Hollywood']);
+const PERSONISH = new Set(['Austin', 'Charlotte', 'Jackson', 'Madison', 'Lincoln', 'Florence', 'Victoria', 'Kingston', 'Hamilton', 'Columbus', 'Adelaide', 'Darwin', 'Wellington', 'Nelson',
+  'Salem', 'Phoenix', 'Houston', 'Denver', 'Dallas', 'Paris', 'Sydney', 'Regina', 'Chester', 'Eugene', 'Montgomery', 'Lafayette', 'Raleigh', 'Orlando', 'Santiago', 'Medina', 'Tyler',
+  'Douglas', 'Marion', 'Irving', 'Garland', 'Augusta', 'Savannah', 'Durham', 'Lancaster', 'Odessa', 'Nice', 'Male', 'Mesa', 'Arlington', 'Stanley', 'Preston', 'Hastings', 'Bristol',
+  'Washington', 'Vladimir', 'Elizabeth', 'Rosario', 'Salvador', 'Sofia', 'Monroe', 'Warren', 'Lawrence', 'Pierre', 'Helena', 'Olympia', 'Cheyenne', 'Bismarck', 'Kirov', 'Pushkin', 'Engels',
+  'Korolev', 'Gagarin', 'Alexandria', 'Isabela', 'Carmen', 'Dolores', 'Clinton', 'Jefferson', 'Kennedy', 'Bolivar', 'Morelos', 'Hidalgo', 'Juarez', 'Guerrero', 'Santander', 'Valencia']);
+const FIRST_WORD = /^(?:In|At|On|From|To|For|After|Before|Near|Across|Inside|Outside|Around|Over|Under|Why|How|What|When|Where|Who|The|A|An|As|Is|Are|Was|Did|Does|Do|Can|Will|Could|Would|Should|Breaking|Live|Watch|Update|Updated|Exclusive|Video|Photos|Opinion|Analysis|Explainer|Report|Downtown|Greater|Metro|Central|Northern|Southern|Eastern|Western|North|South|East|West|New|Old|Inside|Beyond|Across|Behind|Today|Tonight|Yesterday|Tomorrow|This|That|These|Those|Our|My|Your|Their|His|Her|Its|Mayor|Police|Officials|Residents|Fans|Rain|Snow|Storm|Floods|Fire|Heat|Cold)$/;
+const MEDIA_NEXT = /^(?:Times|Post|Journal|Herald|Tribune|Daily|Magazine|Review|Observer|Chronicle|Gazette|Examiner|Star|Sun|Mirror|Telegraph|Independent|Standard|Express|Courier|Inquirer|Globe|Mail|Bulletin|Register|Morning Herald|Free Press|Business Journal|Sun Times|Times Union)\b/; // the New York Times is not news about New York
+const SURNAME_OK = /^(?:D C|DC|City|Council|Mayor|Police|Airport|Port|University|Hospital|Court|Province|State|Region|County|District|Metro|FC|United|Fire|Zoo|Marathon|Pride|Station|Mall|Bay|River|Harbour|Harbor|Bridge|Prison|Jail|Cathedral|Opera|Festival|Summit|Agreement|Accord|Climate|Olympics|Games|Open|Masters|Grand|Book|Film|Fashion|Motor|Auto|Stock|Exchange|Area|Region's)\b/;
+const SHORT_OK = new Set(['Qom', 'Ufa', 'Jos', 'Fes', 'Osh', 'Goa', 'Gao', 'Kut', 'Ibb', 'Aba', 'Uyo', 'Oyo', 'Nis', 'Wau', 'Lae', 'Zug', 'Leh', 'Hue', 'Ica', 'Mie', 'Rome', 'Lima', 'Baku', 'Doha', 'Riga', 'Apia', 'Suva', 'Lome', 'Oslo', 'Bern', 'Kyiv', 'Kiev', 'Nuuk']);
+const tokKey = s => fold(s).replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+const titleKey = s => fold(s).toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim().slice(0, 80);
+function placeIndex() {
+  // Country names never count as places (the State of Mexico is not "Mexico"). Words the country tagger knows, such as
+  // Berlin, Texas or Gaza, count only for places in the country they stand for, so New Zealand's Zealand stays out of Denmark.
+  const idx = new Map(), countries = new Set(), stop = new Set(), gazTo = new Map();
+  for (const n of [...REGION_OF.keys(), ...Object.values(NICE)]) countries.add(tokKey(niceName(n))).add(tokKey(n));
+  if (GAZ) for (const [w, to] of GAZ) { const k = tokKey(w), cs = to.filter(x => x[0] !== '@'); stop.add(k); if (cs.length) gazTo.set(k, cs); }
+  for (const k of countries) stop.add(k);
+  const add = (name, p) => {
+    const k = tokKey(name); if (!k || PLACE_SKIP.has(k) || countries.has(k)) return;
+    const g = gazTo.get(k); if (stop.has(k) && !(g && g.includes(p.country))) return;
+    if (k.replace(/ /g, '').length < 4 && !SHORT_OK.has(k)) return;
+    const l = idx.get(k); if (!l) idx.set(k, [p]); else if (!l.includes(p)) l.push(p);
+  };
+  for (const c of PLACES.cities) { add(c.name, c); if (c.label !== c.name) add(c.label, c); c.aliases.forEach(a => add(a, c)); }
+  for (const r of PLACES.regions) { add(r.name, r); if (r.label !== r.name) add(r.label, r); r.aliases.forEach(a => add(a, r)); }
+  const wa = PLACES.byKey.get('US.WA'); if (wa) for (const k of ['Washington state', 'Washington State']) idx.set(k, [wa]);
+  PLACE_STOP = stop;
+  return idx;
+}
+function placesInText(text, cs) { // the cities and regions a headline names, read word by word (up to five-word names)
+  const toks = [...fold(text).matchAll(/[\p{L}\p{N}]+/gu)].map(m => m[0]), out = [];
+  const titleCase = toks.filter(t => /^\p{Lu}/u.test(t)).length >= toks.length * 0.7; // "Police Shooting In Houston Leaves Two Dead"
+  for (let i = 0; i < toks.length; i++) {
+    for (let n = Math.min(5, toks.length - i); n >= 1; n--) {
+      const key = toks.slice(i, i + n).join(' '), L = PLACE_IDX.get(key);
+      if (!L) { if (n > 1 && PLACE_STOP.has(key)) { i += n - 1; break; } continue; } // "New Zealand" is one name, not New + Zealand
+      let cand = L.filter(p => cs.has(p.country));
+      const next = toks.slice(i + n, i + n + 2).join(' '), prev = toks[i - 1] || '';
+      if (MEDIA_NEXT.test(next) || (prev === 'of' && /^(?:Prince|Princess|Duke|Duchess|Earl|Countess|Bank)$/.test(toks[i - 2] || ''))) { i += n - 1; break; } // Washington Post, Princess of Wales
+      if (PERSONISH.has(key)) {
+        if (!cand.length) break; // Hamilton wins in Abu Dhabi
+        if (!titleCase && ((/^\p{Lu}/u.test(next) && !SURNAME_OK.test(next)) || (i > 0 && /^\p{Lu}/u.test(prev) && !(i === 1 && FIRST_WORD.test(prev))))) break; // Austin Butler, Whitney Houston
+      }
+      if (!cand.length) { if (cs.size) break; cand = L; } // a place in a country the headline isn't about is another place with the same name
+      const rank = p => p.kind === 'city' && (p.cap || p.pop >= 1e6) ? 0 : p.kind === 'region' ? 1 : 2; // New York the city, Quebec the province
+      cand.sort((a, b) => rank(a) - rank(b) || (b.pop || 0) - (a.pop || 0));
+      const top = cand[0];
+      if (top.kind === 'city' && cand.some(p => p !== top && p.kind === 'city' && p.part !== top && top.part !== p && p.pop * 3 > top.pop)) break; // Springfield: too many to choose from
+      if (!out.includes(top)) out.push(top);
+      i += n - 1; break;
+    }
+  }
+  return out;
+}
+function tagPlaces(items) { // adds pl, the cities and regions each headline names
+  if (!PLACES || !GAZ) return; if (!PLACE_IDX) PLACE_IDX = placeIndex();
+  for (const it of items) {
+    if (it.local) continue;
+    const cs = new Set(it.cs || []);
+    let pl = placesInText(it.t, cs);
+    if (!pl.length && it.d) pl = placesInText(it.d, cs).slice(0, 2);
+    it.pl = pl;
+  }
+}
+
+/* ---------- Local news for cities and regions (local/<country>.json from the collector) ---------- */
+const localNews = new Map(); // country code -> { t, byKey, p }
+const localUrl = (repo, cc) => `https://raw.githubusercontent.com/${repo}/news-data/local/${cc}.json?t=${Math.floor(Date.now() / 600e3)}`;
+function wantLocal(cc) {
+  if (!PLACES || !/^[A-Z]{2}$/.test(cc)) return;
+  let e = localNews.get(cc);
+  if (e && (e.p || Date.now() - e.t < 10 * 60e3)) return;
+  if (!e) localNews.set(cc, e = { t: 0, byKey: new Map(), p: null });
+  e.p = (async () => {
+    let J = null;
+    try { J = await fetchJSON(localUrl(NEWS_REPO, cc), {}, 15000); }
+    catch { if (NEWS_REPO !== NEWS_HOME) try { J = await fetchJSON(localUrl(NEWS_HOME, cc), {}, 15000); } catch {} }
+    const byKey = new Map();
+    for (const [k, v] of Object.entries(J?.places || {})) {
+      const place = PLACES.byKey.get(k), list = Array.isArray(v?.[1]) ? v[1] : []; if (!place) continue;
+      byKey.set(k, list.filter(x => Array.isArray(x) && typeof x[0] === 'string').map(([t, u, src, p]) => ({ t, u, src: String(src || ''), p: +p || null, cs: place.country ? [place.country] : [], rg: [], pl: [place], ns: 1, k: +p || 0, local: true })));
+    }
+    Object.assign(e, { byKey, t: Date.now(), p: null });
+    if (newsScopeNow.place?.cc === cc) updateNews(true);
+  })().catch(() => { e.p = null; e.t = Date.now(); });
+}
+function placeItems(P) { // a city's or region's headlines, newest first: tagged news plus that place's own search
+  const out = [], seen = new Set(), add = it => { const k = titleKey(it.t); if (seen.has(k)) return; seen.add(k); out.push(it); };
+  const mine = p => p === P || p.part === P || (P.twin && p === P.twin) || (P.kind === 'region' && p.region === P);
+  for (const it of newsData.items) if (it.pl?.some(mine)) add(it);
+  const L = localNews.get(P.cc)?.byKey;
+  if (L) for (const k of P.kind === 'region' ? [P.key, ...P.cities.filter(c => c.searched).map(c => c.key)] : [P.key]) for (const it of L.get(k) || []) add(it);
+  return out.sort((a, b) => (b.p || 0) - (a.p || 0));
+}
+
+/* ---------- City, capital and region names on the globe ---------- */
+// One pass every quarter second or so picks which names fit (capitals first, then big cities, regions, smaller cities);
+// every frame then just moves the ones on screen.
+const cityLayer = $('#cityLabels'), cityEls = new Map(); // key -> { el, p, kind, w }
+let cityLabelsDirty = true, cityLabelT = 0, cityShown = [];
+const cityCam = new THREE.Vector3(), _lv = new THREE.Vector3();
+const measureCtx = document.createElement('canvas').getContext('2d');
+function textW(s, region) {
+  measureCtx.font = `600 ${region ? 9.5 : 11}px Inter, system-ui, -apple-system, Segoe UI, sans-serif`;
+  return measureCtx.measureText(region ? s.toUpperCase() : s).width + (region ? s.length * 1.4 : 0);
+}
+function minCityPop(a) { return a > 0.45 ? Infinity : a > 0.32 ? 1.5e6 : a > 0.22 ? 5e5 : a > 0.15 ? 2e5 : a > 0.11 ? 1e5 : 0; }
+function layoutCityLabels() {
+  cityLabelsDirty = false; cityShown = [];
+  const a = camera.position.length() - 1, W = innerWidth, H = innerHeight;
+  if (a <= 0.5) wantPlaces();
+  _c.copy(camera.position).normalize(); const horizon = 1 / camera.position.length() + 0.02;
+  const want = []; // [place, priority, kind]
+  if (S.layers.places && a < 2.7) {
+    const sp = newsScopeNow.place, focusKey = sp?.key, focusRegion = sp?.kind === 'city' ? sp.region?.key : null;
+    for (const c of PLACES ? PLACES.caps : CAPITAL_PLACES) want.push([c, c.key === focusKey ? 1e12 : 1e10 + c.pop, a <= 1.6 ? 'cap' : 'capdot']);
+    if (PLACES) {
+      const mp = minCityPop(a);
+      for (const c of PLACES.cities) if (!c.cap && !c.part && (c.pop >= mp || c.key === focusKey)) want.push([c, c.key === focusKey ? 1e12 : c.pop >= 1e6 ? 1e9 + c.pop : c.pop, 'city']);
+      if (a > 0.08 && a <= 0.42) { const minR = 4140 * a * 0.05; for (const r of PLACES.regions) if (r.radius >= minR || r.key === focusKey || r.key === focusRegion) want.push([r, r.key === focusKey || r.key === focusRegion ? 1e11 : 1e8 + r.radius, 'reg']); }
+    }
+  }
+  want.sort((p, q) => q[1] - p[1]);
+  const grid = new Map(), CW = 64, CH = 24;
+  const free = (x0, y0, x1, y1) => {
+    for (let gx = Math.floor(x0 / CW); gx <= Math.floor(x1 / CW); gx++) for (let gy = Math.floor(y0 / CH); gy <= Math.floor(y1 / CH); gy++)
+      for (const b of grid.get(gx * 1e4 + gy) || []) if (x0 < b[2] && x1 > b[0] && y0 < b[3] && y1 > b[1]) return false;
+    return true;
+  };
+  const take = (x0, y0, x1, y1) => { const b = [x0, y0, x1, y1]; for (let gx = Math.floor(x0 / CW); gx <= Math.floor(x1 / CW); gx++) for (let gy = Math.floor(y0 / CH); gy <= Math.floor(y1 / CH); gy++) { const k = gx * 1e4 + gy; (grid.get(k) || grid.set(k, []).get(k)).push(b); } };
+  for (const [p, , kind0] of want) {
+    if (cityShown.length >= 140) break;
+    if (p.u.dot(_c) < horizon) continue;
+    _lv.copy(p.u).multiplyScalar(R.points).project(camera);
+    const x = (_lv.x + 1) / 2 * W, y = (1 - _lv.y) / 2 * H; if (x < -20 || x > W + 20 || y < -10 || y > H + 10) continue;
+    let kind = kind0, w;
+    if (kind === 'reg') { w = p._w ?? (p._w = textW(p.label, true)); if (!free(x - w / 2 - 4, y - 8, x + w / 2 + 4, y + 8)) continue; take(x - w / 2 - 4, y - 8, x + w / 2 + 4, y + 8); }
+    else {
+      w = p._w ?? (p._w = textW(p.label, false));
+      if (kind !== 'capdot' && free(x - 6, y - 8, x + 12 + w, y + 8)) take(x - 6, y - 8, x + 12 + w, y + 8);
+      else if (kind !== 'city' && free(x - 6, y - 6, x + 6, y + 6)) { take(x - 6, y - 6, x + 6, y + 6); kind = 'capdot'; } // no room for the name: the star alone
+      else continue;
+    }
+    cityShown.push({ p, kind, w });
+  }
+  const keep = new Set();
+  for (const s of cityShown) {
+    const key = s.p.kind + ':' + s.p.key; keep.add(key);
+    let o = cityEls.get(key);
+    if (!o) {
+      const el = document.createElement('div'); el.innerHTML = `<i>${s.p.cap ? '★' : ''}</i><b>${esc(s.p.label)}</b>`;
+      cityLayer.append(el); o = { el }; cityEls.set(key, o);
+    }
+    s.o = o;
+    const on = s.p.key === newsScopeNow.place?.key || (s.p.kind === 'region' && s.p.key === newsScopeNow.place?.region?.key);
+    o.el.className = `cl${s.kind === 'reg' ? ' reg' : s.p.cap ? ' cap' : ''}${s.kind === 'capdot' ? ' dot' : ''}${on ? ' on' : ''}`;
+  }
+  for (const [k, o] of cityEls) if (!keep.has(k)) { o.el.remove(); cityEls.delete(k); }
+}
+function updateCityLabels(now) {
+  if (!S.layers.places) { if (cityEls.size) { for (const o of cityEls.values()) o.el.remove(); cityEls.clear(); cityShown = []; } return; }
+  const moved = camera.position.distanceToSquared(cityCam) > 1e-9;
+  if (cityLabelsDirty || (moved && now - cityLabelT > 220)) { cityLabelT = now; cityCam.copy(camera.position); layoutCityLabels(); }
+  const W = innerWidth, H = innerHeight; _c.copy(camera.position).normalize(); const horizon = 1 / camera.position.length();
+  for (const s of cityShown) {
+    const f = s.p.u.dot(_c); _lv.copy(s.p.u).multiplyScalar(R.points).project(camera);
+    s.x = (_lv.x + 1) / 2 * W; s.y = (1 - _lv.y) / 2 * H;
+    s.o.el.style.transform = `translate(${(s.x - (s.kind === 'reg' ? s.w / 2 : 4.5)).toFixed(1)}px,${(s.y - 7).toFixed(1)}px)`;
+    s.o.el.style.opacity = clamp((f - horizon) * 14, 0, 1);
+  }
+}
+function cityLabelAt(x, y) { // the name under a click, if any
+  for (let i = cityShown.length - 1; i >= 0; i--) {
+    const s = cityShown[i]; if (s.x == null) continue;
+    const box = s.kind === 'reg' ? [s.x - s.w / 2 - 3, s.y - 8, s.x + s.w / 2 + 3, s.y + 8] : s.kind === 'capdot' ? [s.x - 7, s.y - 7, s.x + 7, s.y + 7] : [s.x - 7, s.y - 8, s.x + 12 + s.w, s.y + 8];
+    if (x >= box[0] && x <= box[2] && y >= box[1] && y <= box[3]) return s.p;
+  }
+  return null;
+}
+function openPlaceNews(p) { // clicking a name: go there and show its news
+  flyTo(p.lat, p.lon, 1 + (p.kind === 'region' ? clamp(p.radius / 2500, 0.14, 0.2) : 0.1));
+  if (S.layers.headlines) toggleNews(true);
 }
 
 /* =====================================================================
@@ -2592,9 +2929,9 @@ controls.enableZoom = false; controls.touches.TWO = null; // wheel and two-finge
 function flyTo(lat, lon, dist = null, dur = 1100) {
   const from = camera.position.clone().normalize(), to = ll2v(lat, lon, 1), d0 = camera.position.length();
   fly = { t0: performance.now(), dur, q: new THREE.Quaternion().setFromUnitVectors(from, to), from, a0: d0 - 1, a1: clamp((dist ?? Math.min(d0, 2.6)) - 1, MIN_ALT, MAX_ALT), ang: from.angleTo(to) };
-  zoom.alt = null; zoom.p = null;
+  zoom.alt = null; zoom.p = null; focus.u = null;
 }
-controls.addEventListener('start', () => { fly = null; zoom.p = null; });
+controls.addEventListener('start', () => { fly = null; zoom.p = null; focus.u = null; });
 function stepFly(now) {
   if (!fly) return;
   const t = clamp((now - fly.t0) / fly.dur, 0, 1), e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -2634,6 +2971,7 @@ canvas.addEventListener('pointermove', e => {
   if (hoverRAF) return;
   hoverRAF = requestAnimationFrame(() => {
     hoverRAF = 0; const p = pickGlobe(...lastHover);
+    const overName = !!cityLabelAt(...lastHover); if (overName !== canvas.classList.contains('onname')) canvas.classList.toggle('onname', overName);
     if (!p) { readout.style.opacity = 0; return; }
     let s = `<b>${Math.abs(p.lat).toFixed(2)}°${p.lat >= 0 ? 'N' : 'S'} ${Math.abs(p.lon).toFixed(2)}°${p.lon >= 0 ? 'E' : 'W'}</b>`;
     if (grid) {
@@ -2653,6 +2991,8 @@ canvas.addEventListener('pointerup', e => {
   if (moved > 6 || dt > 600) return;
   const it = pickPoint(e.clientX, e.clientY);
   if (it) { showFeature(it); return; }
+  const place = cityLabelAt(e.clientX, e.clientY);
+  if (place) { openPlaceNews(place); return; }
   const p = pickGlobe(e.clientX, e.clientY); if (p) openWeather(p.lat, p.lon);
 });
 canvas.addEventListener('dblclick', e => { const p = pickGlobe(e.clientX, e.clientY); if (p) flyTo(p.lat, p.lon, 1 + (camera.position.length() - 1) * 0.35, 650); });
@@ -2671,6 +3011,7 @@ function zoomBy(f, x, y) { // multiply the height above the surface by f, toward
   fly = null;
   zoom.alt = clamp((zoom.alt ?? camera.position.length() - 1) * f, MIN_ALT, MAX_ALT);
   zoom.p = x == null ? null : hitGlobe(x, y); zoom.x = x; zoom.y = y;
+  if (f < 1) focus.u = zoom.p; // zooming in toward a place: its news, not the middle of the screen's
 }
 function stepZoom(dt) { // ease toward the target height, about 95% of the way in a quarter second
   if (zoom.alt == null) return;
@@ -2691,7 +3032,8 @@ function startPinch() {
   if (touches.size !== 2) return null;
   const [a, b] = [...touches.values()];
   fly = null; zoom.alt = null;
-  return { d: Math.max(20, Math.hypot(a[0] - b[0], a[1] - b[1])), a: camera.position.length() - 1, p: hitGlobe((a[0] + b[0]) / 2, (a[1] + b[1]) / 2) };
+  const p = hitGlobe((a[0] + b[0]) / 2, (a[1] + b[1]) / 2); focus.u = p;
+  return { d: Math.max(20, Math.hypot(a[0] - b[0], a[1] - b[1])), a: camera.position.length() - 1, p };
 }
 canvas.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') { touches.set(e.pointerId, [e.clientX, e.clientY]); pinch = startPinch(); } });
 canvas.addEventListener('pointermove', e => {
@@ -2833,6 +3175,7 @@ const LAYERS = [
     ['nightLights', 'City lights at night', 'NASA Black Marble', null, null],
     ['satbase', "Yesterday's satellite view", 'Swap base map for VIIRS imagery', null, 'satbase'],
     ['borders', 'Borders & coastlines', null, null, 'borders'],
+    ['places', 'Capitals & cities', '★ capitals; click a name for its news', null, 'places'],
     ['graticule', 'Lat / lon grid', 'Equator, tropics, polar circles', null, null],
     ['atmosphere', 'Atmosphere glow', null, null, null],
     ['stars', 'Stars & sun', null, null, null],
@@ -3003,6 +3346,7 @@ function applyVisibility() {
   earthMat.uniforms.nightLights.value = Ly.nightLights ? 1 : 0; earthMat.uniforms.showTerm.value = Ly.terminator ? 1 : 0;
   controls.autoRotate = S.autorotate; $('#btnRotate').classList.toggle('on', S.autorotate);
   newsBtn.hidden = !Ly.headlines; if (!Ly.headlines) toggleNews(false);
+  cityLabelsDirty = true;
 }
 function applyOpacity() {
   cloudMat.uniforms.opacity.value = S.opacity.clouds; earthMat.uniforms.cloudShadow.value = S.layers.clouds ? S.opacity.clouds : 0;
@@ -3046,7 +3390,7 @@ function updateLegend() {
 /* =====================================================================
    Top bar & time controls
    ===================================================================== */
-$('#btnPanel').onclick = () => { const p = $('#panel'); p.classList.toggle('hidden'); $('#btnPanel').classList.toggle('on', !p.classList.contains('hidden')); };
+$('#btnPanel').onclick = () => { const p = $('#panel'); p.classList.toggle('hidden'); $('#btnPanel').classList.toggle('on', !p.classList.contains('hidden')); if (!p.classList.contains('hidden') && innerWidth < 760) toggleNews(false); }; // phones have room for one sheet
 $('#btnRotate').onclick = () => { S.autorotate = !S.autorotate; saveSettings(); applyVisibility(); };
 $('#btnRefresh').onclick = () => { toast('Refreshing live data…'); refreshAll(true); };
 $('#threatBtn').onclick = () => { if ($('#panel').classList.contains('hidden')) $('#btnPanel').click(); currentTab = 'threats'; document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === 'threats')); renderPanel(); };
@@ -3115,7 +3459,7 @@ function frame(now) {
   flushStrikes(); lMat.uniforms.now.value = tS; lMat.uniforms.win.value = S.filters.lightningWindow * 60;
   auroraMat.uniforms.time.value = tS; for (const p of Object.values(pts)) p.material.uniforms.time.value = tS;
   renderer.render(scene, camera);
-  updateLabels();
+  updateLabels(); updateCityLabels(now);
 }
 
 /* =====================================================================
@@ -3136,7 +3480,9 @@ function frame(now) {
 })();
 window.__wg = { S, status, L, addStrike, get grid() { return grid; }, get threat() { return threat; }, get top() { return threatTop; },
   get data() { return { gdacsData, wikiEvents, whoData, whoPts, travel, launches, sigQuakes, spaceWx }; }, pts, flyTo, zoomBy, pick: pickGlobe, camPos: () => camera.position.toArray(),
-  get news() { return { data: newsData, scope: newsScopeNow, sel: newsSel }; } };
+  get news() { return { data: newsData, scope: newsScopeNow, sel: newsSel }; },
+  get places() { return PLACES; }, getPlaces, focus, localNews, placesInText: (t, cs = []) => (PLACES && GAZ ? (PLACE_IDX ||= placeIndex(), placesInText(t, new Set(cs))) : null),
+  get names() { return cityShown.map(s => ({ name: s.p.label, kind: s.kind, key: s.p.key, x: s.x, y: s.y })); } };
 </script>
 </body>
 </html>

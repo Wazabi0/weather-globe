@@ -1,5 +1,6 @@
 # Collects regional headlines every 15 minutes for the globe's breaking news ticker
-# and publishes them as news.json on the news-data branch (see scripts/build-news.mjs).
+# and publishes them as news.json, plus local news for cities and regions in local/,
+# on the news-data branch (see scripts/build-news.mjs).
 name: Breaking news feed
 
 on:
@@ -8,7 +9,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['scripts/build-news.mjs', '.github/workflows/news.yml']
+    paths: ['scripts/build-news.mjs', 'data/local-queries.json', '.github/workflows/news.yml']
 
 permissions:
   contents: write
@@ -24,10 +25,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: scripts
+          sparse-checkout: |
+            scripts
+            data
+
+      - name: Fetch the previous local news
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git clone -q --depth 1 --branch news-data --single-branch "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" prev || mkdir -p prev
 
       - name: Collect headlines
         run: node scripts/build-news.mjs out/news.json
+        env:
+          LOCAL_PREV: prev/local
 
       - name: Publish to the news-data branch
         env:
@@ -36,6 +46,6 @@ jobs:
           cd out
           git init -q
           git checkout -q -b news-data
-          git add news.json
+          git add -A
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -qm "Headlines $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -fq "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" news-data
