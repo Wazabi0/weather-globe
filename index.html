@@ -200,6 +200,51 @@ details.how p{margin:6px 0 0}
   .tbadge small{display:none}
   .search{order:4;flex:1 1 160px}
 }
+/* breaking news ticker and list */
+.nbadge{--nc:#5cc8ff;display:flex;align-items:center;gap:9px;flex:1 1 300px;min-width:0;max-width:640px;height:40px;padding:0 13px 0 9px;cursor:pointer;color:var(--text);text-align:left;overflow:hidden}
+.nbadge:hover,.nbadge:focus-visible,.nbadge[aria-expanded="true"]{border-color:var(--nc);outline:none}
+.nbadge[hidden]{display:none}
+.nbadge.brk{--nc:#ff4d6d}
+.nbadge.off{--nc:#55607a}
+.nb-tag{flex:none;font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:3px 7px;border-radius:6px;color:#0b0f1a;background:var(--nc)}
+.nbadge.brk .nb-tag{box-shadow:0 0 12px rgba(255,77,109,.55)}
+.nb-where{flex:none;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--nc);font-size:11.5px;font-weight:600}
+.nb-where:empty{display:none}
+.nb-txt{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;transition:opacity .25s,transform .25s}
+.nb-txt.out{opacity:0;transform:translateY(-5px)}
+.nb-age{flex:none;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#newsList{position:fixed;top:66px;left:50%;transform:translateX(-50%);width:min(580px,calc(100% - 24px));max-height:calc(100% - 150px);display:flex;flex-direction:column;overflow:hidden;z-index:7}
+#newsList[hidden]{display:none}
+.nl-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px 10px 14px;border-bottom:1px solid var(--line)}
+.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:5px;min-width:0}
+.crumbs button{padding:4px 11px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;font-size:12px}
+.crumbs button:hover{border-color:var(--accent)}
+.crumbs button.on{background:rgba(92,200,255,.18);border-color:var(--accent);font-weight:600}
+.crumbs i{color:var(--muted);font-style:normal}
+.nl-b{overflow-y:auto;padding:2px 14px 8px;scrollbar-width:thin;scrollbar-color:rgba(150,180,255,.25) transparent}
+.nl-b h5{margin:14px 0 2px;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.nl-b .note{margin:12px 0}
+.ni{display:block;padding:9px 0;border-bottom:1px solid rgba(150,180,255,.07);color:var(--text);text-decoration:none}
+a.ni:hover b,a.ni:focus-visible b{color:var(--accent)}
+a.ni:focus-visible{outline:none}
+.ni b{display:block;font-weight:600;line-height:1.38}
+.ni p{margin:3px 0 0;color:#b4bfd6;font-size:12px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ni small{display:block;margin-top:4px;color:var(--muted);font-size:11px}
+.ni em{font-style:normal;color:#ff4d6d;font-weight:700;font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;margin-right:7px;vertical-align:1px}
+.nl-f{padding:9px 14px 11px;border-top:1px solid var(--line)}
+#top .brand,#top .tbadge,#top .ibtn{flex-shrink:0}
+.search{min-width:140px}
+@media (min-width:761px) and (max-width:1300px){ /* too narrow to share the top row: the ticker gets a row of its own */
+  #top{flex-wrap:wrap}
+  .nbadge{order:5;flex:1 1 100%;max-width:none;height:36px}
+  .search{flex:1 1 160px}
+  #panel,#popup,#readout,#newsList{top:112px}
+}
+@media (max-width:760px){
+  .nbadge{order:5;flex:1 1 100%;max-width:none;height:36px}
+  .nb-age{display:none}
+  #newsList{top:auto;bottom:66px;left:8px;right:8px;width:auto;transform:none;max-height:62%}
+}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -212,6 +257,7 @@ details.how p{margin:6px 0 0}
 <header id="top">
   <div class="brand glass"><div class="livedot" title="Live"></div><div><b>Live Weather Globe</b><small id="clock">—</small></div></div>
   <button class="tbadge glass" id="threatBtn" title="Global threat assessment (T)"><i></i><span><small>Global threat</small><b>Loading…</b></span></button>
+  <button class="nbadge glass off" id="newsBtn" aria-controls="newsList" aria-expanded="false" title="Breaking news for the area in view (N)"><span class="nb-tag">News</span><span class="nb-where"></span><span class="nb-txt">Loading headlines…</span><span class="nb-age"></span></button>
   <div class="search"><input id="q" placeholder="Search a city or place…" autocomplete="off"><div id="qres" class="glass"></div></div>
   <button class="ibtn" id="btnRotate" title="Auto-rotate (R)">⟲</button>
   <button class="ibtn" id="btnRefresh" title="Refresh all live data">↻</button>
@@ -230,6 +276,7 @@ details.how p{margin:6px 0 0}
   <button class="ibtn" id="btnNow" style="height:32px">Now</button>
 </div>
 <div id="popup" class="glass" hidden></div>
+<div id="newsList" class="glass" hidden></div>
 <div id="toast" class="glass"></div>
 
 <script type="module">
@@ -258,7 +305,7 @@ const DEFAULTS = {
   layers: {
     clouds: true, radar: true, imerg: false, wind: true, isobars: false, lightning: true, stormcells: true,
     storms: true, alerts: true, aurora: true, sst: false, quakes: false, fires: false, volcanoes: false,
-    gdacs: true, conflict: true, news: false, outbreaks: true, travel: true, launches: true,
+    gdacs: true, conflict: true, news: false, outbreaks: true, travel: true, launches: true, headlines: true,
     terminator: true, nightLights: true, borders: true, graticule: false, atmosphere: true, stars: true, satbase: false,
   },
   field: 'none',
@@ -374,6 +421,7 @@ const SOURCES = {
   fcdo: ['Travel advice', 'UK Foreign, Commonwealth & Development Office via GOV.UK'],
   spacewx: ['Space weather', 'NOAA SWPC storm scales and Kp index'],
   launches: ['Rocket launches', 'The Space Devs Launch Library 2'],
+  headlines: ['Breaking news', 'BBC, Al Jazeera, The Guardian, NPR, DW, France 24, UN News and about 50 national and regional news sites, collected every 15 minutes by this site\'s GitHub Actions job'],
 };
 const status = {};
 function setStatus(k, state, msg = '') { status[k] = { state, msg, t: new Date() }; renderStatus(); }
@@ -1888,7 +1936,7 @@ shells.travel = makeShell(R.travel, 1, { nightDim: 0.15 });
 
 /* ---------- Feed scheduling ---------- */
 const TF = {}, TT = {};
-const MIN_GAP = { gdacs: 5, wiki: 10, who: 30, fcdo: 30, spacewx: 5, sigquakes: 5, launches: 25 }; // minutes between refreshes
+const MIN_GAP = { gdacs: 5, wiki: 10, who: 30, fcdo: 30, spacewx: 5, sigquakes: 5, launches: 25, headlines: 5 }; // minutes between refreshes
 function feed(key, fn, force = false) {
   const st = status[key]?.state;
   if (TF[key] && (st === 'loading' || !force || (st !== 'error' && Date.now() - (TT[key] || 0) < (MIN_GAP[key] || 0) * 60e3))) return TF[key];
@@ -1899,6 +1947,7 @@ const loadThreatFeed = { gdacs: loadGdacs, wiki: loadWiki, who: loadWho, fcdo: l
 function refreshThreats(force = false) {
   for (const k of ['gdacs', 'sigquakes', 'spacewx', 'who', 'wiki', 'fcdo']) feed(k, loadThreatFeed[k], force);
   if (S.layers.launches) feed('launches', loadLaunches, force);
+  if (S.layers.headlines) feed('headlines', loadHeadlines, force);
 }
 
 /* ---------- Threat assessment ---------- */
@@ -2113,20 +2162,445 @@ function buildGraticule() {
 graticule = buildGraticule();
 
 /* =====================================================================
-   Camera fly-to
+   Breaking news by region
+   Browsers can't read most news sites' feeds directly, so a scheduled GitHub
+   Actions job in this repository (scripts/build-news.mjs, every 15 minutes)
+   collects about 60 of them into news.json on the news-data branch. Each
+   headline is placed by the countries, cities and regions it names, and the
+   ticker follows the camera: world news when zoomed out, then the region in
+   view, then the country under the centre of the screen.
+   ===================================================================== */
+const NEWS_HOME = 'Wazabi0/weather-globe';
+const NEWS_REPO = (() => { // a copy published from another repository's Pages reads that repository's collector first
+  const h = /^([\w-]+)\.github\.io$/i.exec(location.hostname); if (!h) return NEWS_HOME;
+  const p = location.pathname.split('/')[1], r = p && !p.includes('.') ? `${h[1]}/${p}` : `${h[1]}/${h[1]}.github.io`;
+  return r.toLowerCase() === NEWS_HOME.toLowerCase() ? NEWS_HOME : r;
+})();
+const newsUrl = repo => `https://raw.githubusercontent.com/${repo}/news-data/news.json?t=${Math.floor(Date.now() / 300e3)}`;
+const REGION_NAMES = { AF: 'Africa', AS: 'Asia', EU: 'Europe', ME: 'Middle East', NA: 'North America', SA: 'South America', OC: 'Oceania' };
+const REGION_VIEW = { AF: [4, 20, 2.0], AS: [32, 92, 2.0], EU: [52, 14, 1.8], ME: [28, 44, 1.75], NA: [42, -98, 2.0], SA: [-18, -60, 2.0], OC: [-24, 145, 1.9] }; // lat, lon, camera distance
+const REGION_LIST = { // Natural Earth names; Egypt and Turkey count for two regions
+  AF: "Algeria|Angola|Benin|Botswana|Br. Indian Ocean Ter.|Burkina Faso|Burundi|Cabo Verde|Cameroon|Central African Rep.|Chad|Comoros|Congo|Côte d'Ivoire|Dem. Rep. Congo|Djibouti|Egypt|Eq. Guinea|Eritrea|eSwatini|Ethiopia|Gabon|Gambia|Ghana|Guinea|Guinea-Bissau|Kenya|Lesotho|Liberia|Libya|Madagascar|Malawi|Mali|Mauritania|Mauritius|Morocco|Mozambique|Namibia|Niger|Nigeria|Rwanda|S. Sudan|Saint Helena|São Tomé and Principe|Senegal|Seychelles|Sierra Leone|Somalia|Somaliland|South Africa|Sudan|Tanzania|Togo|Tunisia|Uganda|W. Sahara|Zambia|Zimbabwe",
+  ME: 'Bahrain|Egypt|Iran|Iraq|Israel|Jordan|Kuwait|Lebanon|Oman|Palestine|Qatar|Saudi Arabia|Syria|Turkey|United Arab Emirates|Yemen',
+  EU: 'Åland|Albania|Andorra|Armenia|Austria|Azerbaijan|Belarus|Belgium|Bosnia and Herz.|Bulgaria|Croatia|Cyprus|Czechia|Denmark|Estonia|Faeroe Is.|Finland|France|Georgia|Germany|Greece|Greenland|Guernsey|Hungary|Iceland|Ireland|Isle of Man|Italy|Jersey|Kosovo|Latvia|Liechtenstein|Lithuania|Luxembourg|Macedonia|Malta|Moldova|Monaco|Montenegro|N. Cyprus|Netherlands|Norway|Poland|Portugal|Romania|Russia|San Marino|Serbia|Slovakia|Slovenia|Spain|Sweden|Switzerland|Turkey|Ukraine|United Kingdom|Vatican',
+  AS: 'Afghanistan|Bangladesh|Bhutan|Brunei|Cambodia|China|Hong Kong|India|Indonesia|Japan|Kazakhstan|Kyrgyzstan|Laos|Macao|Malaysia|Maldives|Mongolia|Myanmar|Nepal|North Korea|Pakistan|Philippines|Siachen Glacier|Singapore|South Korea|Sri Lanka|Taiwan|Tajikistan|Thailand|Timor-Leste|Turkmenistan|Uzbekistan|Vietnam',
+  NA: 'Anguilla|Antigua and Barb.|Aruba|Bahamas|Barbados|Belize|Bermuda|British Virgin Is.|Canada|Cayman Is.|Costa Rica|Cuba|Curaçao|Dominica|Dominican Rep.|El Salvador|Grenada|Guatemala|Haiti|Honduras|Jamaica|Mexico|Montserrat|Nicaragua|Panama|Puerto Rico|Saint Lucia|Sint Maarten|St-Barthélemy|St-Martin|St. Kitts and Nevis|St. Pierre and Miquelon|St. Vin. and Gren.|Trinidad and Tobago|Turks and Caicos Is.|U.S. Virgin Is.|United States of America',
+  SA: 'Argentina|Bolivia|Brazil|Chile|Colombia|Ecuador|Falkland Is.|Guyana|Paraguay|Peru|S. Geo. and the Is.|Suriname|Uruguay|Venezuela',
+  OC: 'American Samoa|Ashmore and Cartier Is.|Australia|Cook Is.|Fiji|Fr. Polynesia|Guam|Indian Ocean Ter.|Kiribati|Marshall Is.|Micronesia|N. Mariana Is.|Nauru|New Caledonia|New Zealand|Niue|Norfolk Island|Palau|Papua New Guinea|Pitcairn Is.|Samoa|Solomon Is.|Tonga|Vanuatu|Wallis and Futuna Is.',
+};
+const REGION_OF = new Map();
+for (const [r, list] of Object.entries(REGION_LIST)) for (const n of list.split('|')) REGION_OF.set(n, [...(REGION_OF.get(n) || []), r]);
+const NICE = { 'United States of America': 'United States', 'Dem. Rep. Congo': 'DR Congo', 'Central African Rep.': 'Central African Republic', 'Bosnia and Herz.': 'Bosnia and Herzegovina', 'S. Sudan': 'South Sudan', 'Eq. Guinea': 'Equatorial Guinea', 'Dominican Rep.': 'Dominican Republic', 'W. Sahara': 'Western Sahara', Macedonia: 'North Macedonia', eSwatini: 'Eswatini', 'N. Cyprus': 'Northern Cyprus', 'Fr. Polynesia': 'French Polynesia', 'Antigua and Barb.': 'Antigua and Barbuda', 'St. Vin. and Gren.': 'St Vincent and the Grenadines', 'S. Geo. and the Is.': 'South Georgia', 'Br. Indian Ocean Ter.': 'Chagos Islands', 'Indian Ocean Ter.': 'Christmas Island', 'U.S. Virgin Is.': 'US Virgin Islands', 'N. Mariana Is.': 'Northern Mariana Islands' };
+const niceName = n => NICE[n] || n.replace(/ Is\.$/, ' Islands');
+// Words that place a headline, one line per target: "Target[,Target]: word|word". A target is a
+// Natural Earth country name, a @REGION, or - to ignore the phrase. Matching is case-sensitive
+// but ignores accents, a plural s is allowed, and country names themselves always count.
+const NEWS_WORDS = `
+@EU: Europe|European|EU|E.U.|European Union|Eurozone|Schengen|Balkans|Balkan|Baltic|Baltics|Nordic|Nordics|Scandinavia|Scandinavian|Caucasus|Black Sea|Brexit
+@AF: Africa|African|African Union|Sahel|Sahara|Horn of Africa|West Africa|East Africa|North Africa|Southern Africa|Central Africa|ECOWAS|Ecowas
+@ME: Middle East|Middle Eastern|Mideast|Gulf states|Persian Gulf|Levant|Arab|Arab League|Red Sea
+@AS: Asia|Asian|ASEAN|Asean|APEC|Apec|South Asia|Southeast Asia|South-East Asia|Central Asia|East Asia|South China Sea|East China Sea|Himalaya|Himalayas|Himalayan
+@AS,@OC: Asia-Pacific|Asia Pacific|Indo-Pacific
+@OC: Oceania|Pacific Islands|Pacific Island|Pacific island|Pacific Islanders|Pacific nations|Polynesia|Melanesia|Tuvalu|Tokelau
+@NA: North America|North American|Central America|Central American|Caribbean|West Indies
+@SA: South America|South American|Andes|Andean|Amazon rainforest|Mercosur
+@NA,@SA: Latin America|Latin American|Americas
+-: Indian Ocean|Jersey Shore
+United States of America: US|U.S.|USA|U.S.A.|United States|America|American|Washington|White House|Pentagon|Capitol Hill|Wall Street|Silicon Valley|Hollywood|FBI|CIA|ICE|NASA|GOP|Trump|Alabama|Alaska|Arizona|Arkansas|California|Californian|Colorado|Connecticut|Delaware|Florida|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New Hampshire|New Jersey|Jersey City|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Texan|Utah|Vermont|Virginia|West Virginia|Wisconsin|Wyoming|New England|Los Angeles|Chicago|San Francisco|Seattle|Boston|Miami|Atlanta|Houston|Dallas|Philadelphia|Detroit|Denver|Las Vegas|New Orleans|Minneapolis|Brooklyn|Manhattan|Baltimore|Pittsburgh|San Diego|Nashville
+Canada: Canadian|Ottawa|Toronto|Montreal|Vancouver|Calgary|Edmonton|Winnipeg|Quebec|Ontario|Alberta|British Columbia|Manitoba|Saskatchewan|Nova Scotia|N.S.|New Brunswick|Newfoundland|Yukon|Nunavut|Northwest Territories|Prince Edward Island|Carney|RCMP|Poilievre
+Mexico: Mexican|Mexico City|Guadalajara|Monterrey|Tijuana|Ciudad Juarez|Juarez|Sinaloa|Cancun|Oaxaca|Chiapas|Jalisco|Michoacan|Acapulco|Yucatan|Baja California|Sheinbaum
+Guatemala: Guatemalan
+Belize: Belizean
+Honduras: Honduran|Tegucigalpa
+El Salvador: Salvadoran|Salvadorean|San Salvador|Bukele
+Nicaragua: Nicaraguan|Managua
+Costa Rica: Costa Rican
+Panama: Panamanian|Panama Canal|Panama City
+Cuba: Cuban|Havana
+Haiti: Haitian|Port-au-Prince
+Dominican Rep.: Dominican Republic|Dominican|Santo Domingo|Punta Cana
+Jamaica: Jamaican
+Puerto Rico: Puerto Rican
+Bahamas: Bahamian|Nassau
+Trinidad and Tobago: Trinidad|Tobago|Trinidadian
+Barbados: Barbadian|Bajan
+Grenada: Grenadian
+Saint Lucia: St Lucia|St. Lucia
+St. Vin. and Gren.: St Vincent|St. Vincent|Saint Vincent
+St. Kitts and Nevis: St Kitts|St. Kitts|Saint Kitts
+Antigua and Barb.: Antigua|Barbuda
+Turks and Caicos Is.: Turks and Caicos
+Cayman Is.: Cayman Islands|Caymans
+British Virgin Is.: British Virgin Islands
+U.S. Virgin Is.: US Virgin Islands|U.S. Virgin Islands
+Brazil: Brazilian|Brasilia|Rio de Janeiro|Sao Paulo|Bahia|Recife|Manaus|Belem|Porto Alegre|Lula|Bolsonaro|Petrobras
+Argentina: Argentine|Argentinian|Buenos Aires|Mendoza|Rosario|Milei
+Argentina,Chile: Patagonia|Patagonian
+Chile: Chilean|Santiago|Valparaiso|Atacama
+Peru: Peruvian|Lima|Cusco|Machu Picchu
+Colombia: Colombian|Bogota|Medellin|Cartagena|Barranquilla
+Venezuela: Venezuelan|Caracas|Maracaibo
+Ecuador: Ecuadorian|Ecuadorean|Quito|Guayaquil|Galapagos|Noboa
+Bolivia: Bolivian|La Paz
+Paraguay: Paraguayan|Asuncion
+Uruguay: Uruguayan|Montevideo
+Guyana: Guyanese|Essequibo
+Suriname: Surinamese|Paramaribo
+Falkland Is.: Falklands|Falkland Islands|Malvinas
+United Kingdom: UK|U.K.|Britain|Great Britain|British|Brit|England|Scotland|Scottish|Scot|Wales|Welsh|Northern Ireland|Northern Irish|London|Manchester|Birmingham|Liverpool|Leeds|Glasgow|Edinburgh|Belfast|Cardiff|Bristol|Westminster|Downing Street|Whitehall|Home Office|NHS|Holyrood|Stormont|Tory|Tories|Met Office|Ofcom|Ofsted|Ofgem|Starmer
+Ireland: Irish|Dublin|Galway|Limerick|Taoiseach|Dail|Garda|Gardai|Oireachtas
+Ireland,United Kingdom: Sinn Fein
+France: French|Paris|Marseille|Lyon|Toulouse|Bordeaux|Strasbourg|Lille|Nantes|Corsica|Corsican|Normandy|Brittany|Elysee|French Guiana|Mayotte|Martinique|Guadeloupe|Macron|Le Pen|Bardella
+Germany: German|Berlin|Munich|Hamburg|Frankfurt|Cologne|Stuttgart|Dusseldorf|Dresden|Leipzig|Bavaria|Bavarian|Bundestag|Bundesbank|Bundeswehr|Merz
+Spain: Spanish|Spaniard|Madrid|Barcelona|Catalonia|Catalan|Valencia|Seville|Andalusia|Malaga|Mallorca|Majorca|Ibiza|Canary Islands|Canaries|Tenerife|Basque
+Portugal: Portuguese|Lisbon|Porto|Madeira|Azores|Algarve
+Italy: Italian|Rome|Milan|Naples|Venice|Florence|Turin|Bologna|Genoa|Sicily|Sicilian|Sardinia|Lampedusa|Meloni
+Vatican: Holy See
+Greece: Greek|Athens|Crete|Thessaloniki|Rhodes|Lesbos
+Cyprus: Cypriot|Nicosia
+N. Cyprus: Northern Cyprus|Turkish Cypriot
+Malta: Maltese|Valletta
+Netherlands: Dutch|Holland|Amsterdam|Rotterdam|The Hague|Utrecht|Eindhoven
+Belgium: Belgian|Antwerp|Flanders|Flemish|Wallonia|Ghent
+Belgium,@EU: Brussels
+Switzerland: Swiss|Geneva|Zurich|Bern|Basel|Lausanne|Davos
+Austria: Austrian|Vienna|Salzburg|Innsbruck|Graz
+Denmark: Danish|Dane|Copenhagen|Aarhus
+Faeroe Is.: Faroe Islands|Faroe|Faroese
+Greenland: Greenlandic|Nuuk
+Sweden: Swedish|Swede|Stockholm|Gothenburg|Malmo|Uppsala|Kiruna
+Norway: Norwegian|Oslo|Bergen|Trondheim|Stavanger|Svalbard|Tromsø
+Finland: Finnish|Helsinki|Tampere|Turku
+Iceland: Icelandic|Reykjavik
+Estonia: Estonian|Tallinn
+Latvia: Latvian|Riga
+Lithuania: Lithuanian|Vilnius|Kaunas
+Poland: Polish|Warsaw|Krakow|Gdansk|Wroclaw|Wrocław|Poznan|Łodz|Tusk|Nawrocki
+Czechia: Czech|Czech Republic|Prague|Brno
+Slovakia: Slovak|Slovakian|Bratislava|Fico
+Hungary: Hungarian|Budapest|Fidesz
+Romania: Romanian|Bucharest|Cluj|Transylvania
+Bulgaria: Bulgarian|Varna
+Moldova: Moldovan|Chisinau|Transnistria
+Ukraine: Ukrainian|Kyiv|Kiev|Kharkiv|Kharkov|Odesa|Odessa|Lviv|Dnipro|Zaporizhzhia|Kherson|Donbas|Donbass|Donetsk|Luhansk|Crimea|Crimean|Mariupol|Sumy|Pokrovsk|Kramatorsk|Chernihiv|Mykolaiv|Zelensky|Zelenskyy|Zelenskiy
+Russia: Russian|Moscow|Kremlin|St Petersburg|Saint Petersburg|Siberia|Siberian|Chechnya|Chechen|Dagestan|Kursk|Belgorod|Bryansk|Kaliningrad|Vladivostok|Duma|Putin|Gazprom|Rosneft
+Belarus: Belarusian|Minsk|Lukashenko
+Georgia: Georgian|Tbilisi
+Armenia: Armenian|Yerevan|Pashinyan
+Azerbaijan: Azerbaijani|Azeri|Baku|Nagorno-Karabakh|Karabakh|Aliyev
+Serbia: Serbian|Serb|Belgrade|Vucic
+Croatia: Croatian|Croat|Zagreb|Dubrovnik
+Slovenia: Slovenian|Slovene|Ljubljana
+Bosnia and Herz.: Bosnia|Bosnian|Bosnia and Herzegovina|Sarajevo|Republika Srpska|Srebrenica
+Montenegro: Montenegrin|Podgorica
+Albania: Albanian|Tirana
+Kosovo: Kosovan|Kosovar|Pristina
+Macedonia: North Macedonia|Macedonian|Skopje
+Turkey: Turkish|Turk|Turkiye|Ankara|Istanbul|Izmir|Antalya|Erdogan
+Monaco: Monegasque
+Israel: Israeli|Tel Aviv|Jerusalem|Knesset|IDF|Haifa|Eilat|Negev|Netanyahu
+Palestine: Palestinian|Gaza|Gazan|West Bank|Hamas|Ramallah|Rafah|Khan Younis|Jenin|Nablus|Hebron|UNRWA
+Lebanon: Lebanese|Beirut|Hezbollah|Sidon
+Syria: Syrian|Damascus|Aleppo|Idlib|Homs|Latakia|Raqqa|Sharaa|al-Sharaa
+Jordan: Jordanian|Amman
+Iraq: Iraqi|Baghdad|Mosul|Basra|Erbil|Kirkuk|Kurdistan
+Iran: Iranian|Tehran|Isfahan|Hormuz|Strait of Hormuz|IRGC|Khamenei|Pezeshkian
+Saudi Arabia: Saudi|Saudi Arabian|Riyadh|Jeddah|Mecca
+Yemen: Yemeni|Houthi|Sanaa|Aden|Hodeidah
+Oman: Omani|Muscat
+United Arab Emirates: UAE|Emirates|Emirati|Dubai|Abu Dhabi|Sharjah
+Qatar: Qatari|Doha
+Bahrain: Bahraini|Manama
+Kuwait: Kuwaiti
+Egypt: Egyptian|Cairo|Sinai|Suez|Sisi
+Libya: Libyan|Tripoli|Benghazi|Misrata
+Tunisia: Tunisian|Tunis
+Algeria: Algerian|Algiers
+Morocco: Moroccan|Rabat|Casablanca|Marrakesh|Marrakech|Tangier
+W. Sahara: Western Sahara|Sahrawi|Polisario
+Sudan: Sudanese|Khartoum|Darfur|El Fasher|El-Fasher|Port Sudan|Omdurman|Kordofan
+S. Sudan: South Sudan|South Sudanese|Juba
+Ethiopia: Ethiopian|Addis Ababa|Tigray|Tigrayan|Amhara|Oromia
+Eritrea: Eritrean|Asmara
+Somalia: Somali|Mogadishu|al-Shabab|al-Shabaab|Al-Shabab|Al-Shabaab|Puntland|Jubaland
+Somaliland: Hargeisa
+Djibouti: Djiboutian
+Kenya: Kenyan|Nairobi|Mombasa|Kisumu|Ruto
+Uganda: Ugandan|Kampala|Museveni
+Tanzania: Tanzanian|Dar es Salaam|Dodoma|Zanzibar|Kilimanjaro
+Rwanda: Rwandan|Kigali|Kagame
+Burundi: Burundian|Bujumbura|Gitega
+Dem. Rep. Congo: Congo|DR Congo|DRC|D.R. Congo|Democratic Republic of Congo|Democratic Republic of the Congo|Congo-Kinshasa|Congolese|Kinshasa|Goma|Bukavu|M23|Kivu|North Kivu|South Kivu|Ituri|Tshisekedi
+Congo: Republic of Congo|Republic of the Congo|Congo-Brazzaville|Brazzaville
+Central African Rep.: Central African Republic|Bangui
+Chad: Chadian|N'Djamena|Ndjamena
+Cameroon: Cameroonian|Yaounde|Douala
+Nigeria: Nigerian|Lagos|Abuja|Kano|Kaduna|Borno|Maiduguri|Port Harcourt|Ibadan|Boko Haram|Tinubu
+Niger: Nigerien|Niamey
+Mali: Malian|Bamako|Timbuktu
+Burkina Faso: Burkina|Burkinabe|Ouagadougou
+Ghana: Ghanaian|Accra|Kumasi
+Côte d'Ivoire: Ivory Coast|Ivorian|Abidjan|Yamoussoukro
+Senegal: Senegalese|Dakar
+Gambia: Gambian|Banjul
+Guinea: Guinean|Conakry
+Guinea-Bissau: Bissau
+Sierra Leone: Sierra Leonean|Freetown
+Liberia: Liberian|Monrovia
+Togo: Togolese|Lome
+Benin: Beninese|Cotonou|Porto-Novo
+Mauritania: Mauritanian|Nouakchott
+Gabon: Gabonese|Libreville
+Eq. Guinea: Equatorial Guinea|Malabo
+Angola: Angolan|Luanda
+Zambia: Zambian|Lusaka
+Zimbabwe: Zimbabwean|Harare|Bulawayo|Mnangagwa
+Malawi: Malawian|Lilongwe|Blantyre
+Mozambique: Mozambican|Maputo|Cabo Delgado
+Madagascar: Malagasy|Antananarivo
+South Africa: South African|Johannesburg|Cape Town|Pretoria|Durban|Soweto|Gauteng|KwaZulu-Natal|ANC|Ramaphosa
+Namibia: Namibian|Windhoek
+Botswana: Botswanan|Gaborone
+Lesotho: Maseru
+eSwatini: Eswatini|Swaziland|Mbabane
+Mauritius: Mauritian|Port Louis
+Seychelles: Seychellois
+Comoros: Comorian
+Cabo Verde: Cape Verde|Cape Verdean
+São Tomé and Principe: Sao Tome
+Saint Helena: St Helena
+China: Chinese|Beijing|Shanghai|Shenzhen|Guangzhou|Wuhan|Chongqing|Chengdu|Tianjin|Xinjiang|Uyghur|Uighur|Tibet|Tibetan|Inner Mongolia|PRC|CCP|Xi Jinping
+Hong Kong,China: Hong Kong
+Macao,China: Macau|Macao
+Taiwan: Taiwanese|Taipei|Kaohsiung|Lai Ching-te
+Japan: Japanese|Tokyo|Osaka|Kyoto|Yokohama|Hokkaido|Okinawa|Fukushima|Hiroshima|Nagasaki|Kyushu|Nikkei
+South Korea: Korea|Korean|South Korean|S. Korea|S. Korean|Seoul|Busan|Incheon|Daegu|Gwangju|ROK|Lee Jae-myung
+North Korea: North Korean|N. Korea|N. Korean|Pyongyang|DPRK|Kim Jong Un|Kim Jong-un
+Mongolia: Mongolian|Ulaanbaatar
+India: Indian|Delhi|New Delhi|Mumbai|Kolkata|Chennai|Bengaluru|Bangalore|Hyderabad|Ahmedabad|Pune|Kerala|Keralam|Manipur|Assam|Bihar|Gujarat|Maharashtra|Tamil Nadu|Uttar Pradesh|Uttarakhand|Karnataka|Rajasthan|Odisha|West Bengal|Telangana|Andhra Pradesh|Ladakh|Goa|BJP|Modi
+India,Pakistan: Kashmir|Kashmiri|Punjab|Punjabi
+Pakistan: Pakistani|Islamabad|Karachi|Lahore|Peshawar|Quetta|Rawalpindi|Balochistan|Baloch|Khyber Pakhtunkhwa|Sindh
+Afghanistan: Afghan|Kabul|Kandahar|Herat|Taliban
+Bangladesh: Bangladeshi|Dhaka|Chittagong|Cox's Bazar
+Myanmar,Bangladesh: Rohingya
+Sri Lanka: Sri Lankan|Colombo
+Nepal: Nepali|Nepalese|Kathmandu
+Bhutan: Bhutanese|Thimphu
+Maldives: Maldivian
+Myanmar: Burma|Burmese|Yangon|Rangoon|Naypyidaw|Mandalay|Rakhine
+Thailand: Thai|Bangkok|Phuket|Chiang Mai|Pattaya
+Cambodia: Cambodian|Phnom Penh|Siem Reap|Khmer
+Laos: Lao|Laotian|Vientiane
+Vietnam: Vietnamese|Viet Nam|Hanoi|Ho Chi Minh City|Saigon|Da Nang
+Malaysia: Malaysian|Kuala Lumpur|Sabah|Sarawak|Penang|Johor
+Singapore: Singaporean
+Indonesia: Indonesian|Jakarta|Bali|Balinese|Java|Javanese|Sumatra|Sulawesi|Lombok|Aceh|Prabowo
+Philippines: Philippine|Filipino|Filipina|Manila|Mindanao|Luzon|Cebu|Davao|Visayas
+Brunei: Bruneian
+Timor-Leste: East Timor|Timorese|Dili
+Kazakhstan: Kazakh|Astana|Almaty
+Uzbekistan: Uzbek|Tashkent|Samarkand
+Kyrgyzstan: Kyrgyz|Bishkek
+Tajikistan: Tajik|Dushanbe
+Turkmenistan: Turkmen|Ashgabat
+Australia: Australian|Aussie|Sydney|Melbourne|Brisbane|Perth|Adelaide|Canberra|Hobart|Queensland|New South Wales|NSW|Tasmania|Tasmanian|Western Australia|South Australia|Northern Territory|Gold Coast|Albanese
+New Zealand: NZ|Auckland|Wellington|Christchurch|Aotearoa|Maori|Waitangi|Luxon
+Papua New Guinea: PNG|Port Moresby|Bougainville
+Papua New Guinea,Indonesia: New Guinea
+Fiji: Fijian|Suva
+Samoa: Samoan|Apia
+Tonga: Tongan|Nuku'alofa
+Vanuatu: Port Vila
+Solomon Is.: Solomon Islands|Honiara
+Marshall Is.: Marshall Islands
+New Caledonia: Noumea|Kanak
+Fr. Polynesia: French Polynesia|Tahiti
+Cook Is.: Cook Islands
+N. Mariana Is.: Northern Mariana Islands|Saipan
+`;
+const fold = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’‘ʼ`´]/g, "'").replace(/\s+/g, ' ');
+let GAZ = null, GAZ_RE = null;
+function gazetteer() {
+  GAZ = new Map();
+  for (const n of REGION_OF.keys()) if (!n.includes('.')) GAZ.set(fold(n), [n]);
+  for (const line of NEWS_WORDS.trim().split('\n')) {
+    const i = line.indexOf(':'), to = line.slice(0, i).trim();
+    for (const w of line.slice(i + 1).split('|')) if (w.trim()) GAZ.set(fold(w.trim()), to === '-' ? [] : to.split(','));
+  }
+  const keys = [...GAZ.keys()].sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  GAZ_RE = new RegExp(`(^|[^\\p{L}\\p{N}])(${keys.join('|')})s?(?![\\p{L}\\p{N}])`, 'gu'); // no lookbehind, for older Safari
+}
+const NOT_A_NAME = /^ (?:President|King|Kingdom|Government|Army|Military|Junta|Rebels|Election|Border|Valley|River|Lake|Basin|Says|Is|Has|Will)\b/;
+function placesIn(text, usDesk) { // countries (Natural Earth names) and regions a piece of text names
+  const t = fold(text), cs = new Set(), rg = new Set(); let georgia = false;
+  for (const m of t.matchAll(GAZ_RE)) {
+    const w = m[2], after = t.slice(m.index + m[0].length, m.index + m[0].length + 24);
+    if ((w === 'Chad' || w === 'Jordan') && /^ [A-Z][a-z]/.test(after) && !NOT_A_NAME.test(after)) continue; // Chad Daybell, Jordan Bardella
+    if (w === 'Turkey' && /thanksgiving|turkeys\b|roast/i.test(t)) continue;
+    if ((w === 'US' && after[0] === '$') || (/^-based/.test(after) && GAZ.get(w).every(x => x[0] === '@'))) continue; // US$5m, a Europe-based firm
+    if (w === 'Georgia') { georgia = true; continue; }
+    for (const x of GAZ.get(w)) x[0] === '@' ? rg.add(x.slice(1)) : cs.add(x);
+  }
+  if (georgia && !cs.has('Georgia')) cs.add(usDesk || /Atlanta/.test(t) ? 'United States of America' : 'Georgia'); // the US state in US news
+  return { cs, rg };
+}
+function tagHeadlines(D) { // adds cs (countries), rg (regions), w (from a world desk), src (outlet), ns (outlets) to each item
+  if (!GAZ) gazetteer();
+  for (const it of D.items) {
+    const srcs = (it.s || []).map(i => D.sources[i]).filter(Boolean), usDesk = srcs.some(s => s.regions.join() === 'NA');
+    const { cs, rg } = placesIn(it.t, usDesk);
+    if (!cs.size && it.d) { const b = placesIn(it.d, usDesk); [...b.cs].slice(0, 2).forEach(c => cs.add(c)); if (!rg.size) b.rg.forEach(r => rg.add(r)); }
+    if (!cs.size) for (const s of srcs) if (s.country) cs.add(s.country); // a national outlet's story names no country: it is about home
+    for (const c of cs) for (const r of REGION_OF.get(c) || []) rg.add(r);
+    for (const s of srcs) { const rs = s.regions.filter(r => r !== 'WORLD'); if (!s.country && rs.length && !rs.some(r => rg.has(r))) rs.forEach(r => rg.add(r)); } // a regional desk's story concerns its region
+    it.cs = [...cs]; it.rg = [...rg]; it.w = srcs.some(s => s.regions.includes('WORLD'));
+    it.src = srcs[0]?.name || ''; it.ns = new Set(srcs.map(s => s.name)).size;
+    it.k = (it.p || 0) + 3600 * (Math.min(it.ns - 1, 2) + (srcs.some(s => !s.country) ? 1.5 : 0)); // world and region lists lead with stories that several outlets or the international desks carry
+  }
+}
+function diversify(list, per = 3, top = 15) { // at most `per` headlines from one outlet among the first `top`
+  const out = [], rest = [], n = new Map();
+  for (const it of list) { const c = n.get(it.src) || 0; if (out.length < top && c < per) { out.push(it); n.set(it.src, c + 1); } else rest.push(it); }
+  return out.concat(rest);
+}
+function newsFor(sc, D) { // a country's news newest first; a country with little news borrows from its region
+  const pick = (f, max, top) => { const l = D.items.filter(f); l.sort(top ? (a, b) => b.k - a.k : (a, b) => (b.p || 0) - (a.p || 0)); return diversify(l).slice(0, max); };
+  if (sc.country) {
+    const n = sc.country.name, items = pick(it => it.cs.includes(n), 20);
+    return { label: niceName(n), items, more: items.length < 6 ? pick(it => it.rg.includes(sc.region) && !it.cs.includes(n), 10, true) : [], moreLabel: REGION_NAMES[sc.region] };
+  }
+  if (sc.region) return { label: REGION_NAMES[sc.region], items: pick(it => it.rg.includes(sc.region), 25, true), more: [] };
+  return { label: 'World', items: pick(it => it.w, 25, true), more: [] };
+}
+
+/* ---------- Breaking news: ticker and list ---------- */
+const newsBtn = $('#newsBtn'), newsList = $('#newsList');
+let newsData = null, newsErr = false, newsScopeNow = { k: '' }, newsSel = { label: 'World', items: [], more: [] };
+let tickIdx = 0, tickT = 0, tickHold = false, listT = 0, camStill = 0, scopeT = 0;
+const lastCam = new THREE.Vector3(), scopeCam = new THREE.Vector3();
+async function loadHeadlines() {
+  setStatus('headlines', 'loading');
+  let D;
+  try {
+    try { D = await fetchJSON(newsUrl(NEWS_REPO), {}, 20000); }
+    catch (e) { if (NEWS_REPO === NEWS_HOME) throw e; D = await fetchJSON(newsUrl(NEWS_HOME), {}, 20000); }
+    if (!Array.isArray(D?.items) || !Array.isArray(D.sources)) throw new Error('unexpected news.json format');
+  } catch (e) { newsErr = true; if (!newsData) showTicker(); throw e; }
+  tagHeadlines(D); newsData = D; newsErr = false;
+  setStatus('headlines', 'ok', `${pl(D.items.length, 'headline')} from ${D.sources.filter(s => s.ok).length} of ${D.sources.length} news sites, collected ${ago(Date.parse(D.generated))}`);
+  getCountries().then(() => scopeCam.set(1e9, 0, 0)).catch(() => {}); // country shapes decide the scope; the world list shows meanwhile
+  updateNews(true);
+}
+function regionFor(c, lat, lon) {
+  if (c.name === 'Russia') return lon > 60 ? 'AS' : 'EU'; // Russian headlines count for Europe, but Siberia is in Asia's view
+  const rs = REGION_OF.get(c.name) || []; if (rs.length < 2) return rs[0] || null;
+  let best = rs[0], bd = Infinity;
+  for (const r of rs) { const v = REGION_VIEW[r], dd = gcDist(lat, lon, v[0], v[1]); if (dd < bd) { bd = dd; best = r; } }
+  return best;
+}
+function newsScope() { // what the camera looks at: the world, a region, or (zoomed in over land) a country
+  const a = camera.position.length() - 1;
+  if (a > 1.3 || !COUNTRIES) return { k: 'world' };
+  const { lat, lon } = v2ll(camera.position);
+  let c = countryAt(COUNTRIES, lat, lon); const over = !!c;
+  if (!c) { let bd = 2500; for (const x of COUNTRIES.list) { const dd = gcDist(lat, lon, x.c.lat, x.c.lon); if (dd < bd) { bd = dd; c = x; } } }
+  const region = c && regionFor(c, lat, lon); if (!region) return { k: 'world' };
+  return over && a <= 0.45 && REGION_OF.has(c.name) ? { k: 'c:' + c.name, country: c, region } : { k: 'r:' + region, region };
+}
+function updateNews(force) {
+  if (!newsData) return;
+  const sc = newsScope(); if (!force && sc.k === newsScopeNow.k) return;
+  newsScopeNow = sc; newsSel = newsFor(sc, newsData); tickIdx = 0; tickT = performance.now(); showTicker();
+  if (!newsList.hidden) renderNewsList();
+}
+const tickList = () => (newsSel.items.length ? newsSel.items : newsSel.more).slice(0, 10);
+const isFresh = it => !!(it?.p && Date.now() / 1e3 - it.p < 3600);
+function showTicker() {
+  const q = s => newsBtn.querySelector(s), L = newsData ? tickList() : [], it = L[tickIdx % (L.length || 1)], fresh = isFresh(it);
+  newsBtn.classList.toggle('brk', fresh); newsBtn.classList.toggle('off', !newsData);
+  q('.nb-tag').textContent = !newsData ? 'News' : fresh ? 'Breaking' : 'Latest';
+  q('.nb-where').textContent = !newsData ? '' : newsSel.items.length || !newsSel.more.length ? newsSel.label : newsSel.moreLabel;
+  q('.nb-txt').textContent = !newsData ? (newsErr ? 'Headlines unavailable right now' : 'Loading headlines…') : it ? it.t : `No headlines for ${newsSel.label} in the last 3 days`;
+  q('.nb-age').textContent = it?.p ? ago(it.p * 1000) : '';
+  newsBtn.title = `${it ? `${it.t}\n${it.src}${it.p ? ' · ' + ago(it.p * 1000) : ''}\n\n` : ''}Breaking news for the area in view. Click for the full list (N).`;
+}
+function nextHeadline() {
+  const txt = newsBtn.querySelector('.nb-txt'); txt.classList.add('out');
+  setTimeout(() => { tickIdx++; showTicker(); txt.classList.remove('out'); }, 250);
+}
+function newsRow(it) {
+  const u = /^https?:\/\/[^\s"'<>]+$/i.test(it.u || '') ? it.u : null;
+  const meta = [it.src + (it.ns > 1 ? ` +${it.ns - 1}` : ''), it.p ? ago(it.p * 1000) : '', it.cs.slice(0, 3).map(niceName).join(', ')].filter(Boolean).join(' · ');
+  const body = `<b>${isFresh(it) ? '<em>Breaking</em>' : ''}${esc(it.t)}</b>${it.d ? `<p>${esc(it.d)}</p>` : ''}<small>${esc(meta)}</small>`;
+  return u ? `<a class="ni" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${body}</a>` : `<div class="ni">${body}</div>`;
+}
+function renderNewsList() {
+  listT = performance.now();
+  const close = '<button class="x" data-nclose aria-label="Close">✕</button>';
+  if (!newsData) {
+    newsList.innerHTML = `<div class="nl-h"><b>Breaking news</b>${close}</div><div class="nl-b"><p class="note">${newsErr ? 'The headlines could not be loaded right now. The globe tries again every 10 minutes, and the Sources tab shows what failed.' : 'Loading headlines…'}</p></div>`;
+    return;
+  }
+  const sc = newsScopeNow, N = newsSel, D = newsData;
+  let h = `<div class="nl-h"><div class="crumbs"><button data-nscope="world" class="${sc.region ? '' : 'on'}">World</button>`;
+  if (sc.region) h += `<i>›</i><button data-nscope="r:${sc.region}" class="${sc.country ? '' : 'on'}">${REGION_NAMES[sc.region]}</button>`;
+  if (sc.country) h += `<i>›</i><button data-nscope="c" class="on">${esc(N.label)}</button>`;
+  h += `</div>${close}</div><div class="nl-b">`;
+  h += N.items.length ? N.items.map(newsRow).join('') : `<p class="note">No headlines from the last three days mention ${esc(N.label)}.</p>`;
+  if (N.more.length) h += `<h5>More from ${N.moreLabel}</h5>${N.more.map(newsRow).join('')}`;
+  h += `</div><div class="nl-f note">${sc.region ? '' : 'Zoom in on a region, then a country, to follow its news. '}Headlines from ${D.sources.filter(s => s.ok).length} news sites, collected ${ago(Date.parse(D.generated))}. Each is placed by the places it names, so a few may land in the wrong country.</div>`;
+  newsList.innerHTML = h;
+}
+function toggleNews(open = newsList.hidden) {
+  if (open && !S.layers.headlines) return;
+  newsList.hidden = !open; newsBtn.setAttribute('aria-expanded', String(open));
+  if (open) { if (innerWidth < 760) { popup.hidden = true; sheetAway(); } renderNewsList(); }
+}
+newsBtn.onclick = () => toggleNews();
+newsBtn.addEventListener('mouseenter', () => { tickHold = true; });
+newsBtn.addEventListener('mouseleave', () => { tickHold = false; });
+newsList.addEventListener('click', e => {
+  const t = e.target.closest('[data-nclose],[data-nscope]'); if (!t) return;
+  if (t.hasAttribute('data-nclose')) { toggleNews(false); return; }
+  const s = t.dataset.nscope;
+  if (s === 'world') { const p = v2ll(camera.position); flyTo(p.lat, p.lon, Math.max(3.1, camera.position.length())); }
+  else if (s.startsWith('r:')) { const v = REGION_VIEW[s.slice(2)]; if (v) flyTo(v[0], v[1], v[2]); }
+  else if (newsScopeNow.country) { const c = newsScopeNow.country.c; flyTo(c.lat, c.lon, Math.min(camera.position.length(), 1.4)); }
+});
+function newsTick(now) { // called every frame: follow the camera once it settles, and rotate the ticker
+  if (!newsData || !S.layers.headlines) return;
+  const p = camera.position;
+  if (p.distanceToSquared(lastCam) > 1e-10) { lastCam.copy(p); camStill = now; }
+  if (p.distanceToSquared(scopeCam) > 1e-10 && (now - camStill > 450 || now - scopeT > 2000)) { scopeT = now; scopeCam.copy(p); updateNews(false); }
+  if (!tickHold && now - tickT > 7000) { tickT = now; if (tickList().length > 1) nextHeadline(); }
+  if (!newsList.hidden && now - listT > 60000) renderNewsList();
+}
+
+/* =====================================================================
+   Camera fly-to and zoom
+   OrbitControls' own zoom scales the distance from the Earth's centre, and it
+   was slowed further near the surface and on high-DPI screens, so zooming in
+   took dozens of wheel turns. Here each wheel notch changes the height above
+   the surface by about a quarter, eased over a tenth of a second and aimed at
+   the point under the cursor. A pinch keeps the spot between the fingers in
+   place, double-click goes about three times closer, and + and - also zoom.
    ===================================================================== */
 let fly = null;
-function flyTo(lat, lon, dist = null, dur = 1600) {
+const MIN_ALT = controls.minDistance - 1, MAX_ALT = controls.maxDistance - 1;
+const zoom = { alt: null, p: null, x: 0, y: 0 }; // target height, and the globe point to keep under screen position x, y
+controls.enableZoom = false; controls.touches.TWO = null; // wheel and two-finger gestures are handled in "Zoom" below
+function flyTo(lat, lon, dist = null, dur = 1100) {
   const from = camera.position.clone().normalize(), to = ll2v(lat, lon, 1), d0 = camera.position.length();
-  fly = { t0: performance.now(), dur, q: new THREE.Quaternion().setFromUnitVectors(from, to), from, d0, d1: dist ?? Math.min(d0, 2.6), ang: from.angleTo(to) };
+  fly = { t0: performance.now(), dur, q: new THREE.Quaternion().setFromUnitVectors(from, to), from, a0: d0 - 1, a1: clamp((dist ?? Math.min(d0, 2.6)) - 1, MIN_ALT, MAX_ALT), ang: from.angleTo(to) };
+  zoom.alt = null; zoom.p = null;
 }
-controls.addEventListener('start', () => { fly = null; });
+controls.addEventListener('start', () => { fly = null; zoom.p = null; });
 function stepFly(now) {
   if (!fly) return;
   const t = clamp((now - fly.t0) / fly.dur, 0, 1), e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   const q = new THREE.Quaternion().slerp(fly.q, e);
-  const d = fly.d0 + (fly.d1 - fly.d0) * e + Math.sin(Math.PI * e) * fly.ang * 0.35;
-  camera.position.copy(fly.from).applyQuaternion(q).multiplyScalar(d);
+  const a = fly.a0 * Math.pow(fly.a1 / fly.a0, e) + Math.sin(Math.PI * e) * fly.ang * 0.35; // height changes by the same ratio throughout, so deep zooms don't rush the end
+  camera.position.copy(fly.from).applyQuaternion(q).multiplyScalar(1 + a);
   camera.lookAt(0, 0, 0);
   if (t >= 1) fly = null;
 }
@@ -2135,12 +2609,13 @@ function stepFly(now) {
    Picking, hover readout, popups
    ===================================================================== */
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
-function pickGlobe(cx, cy) {
+function hitGlobe(cx, cy) { // unit vector to the globe point under a screen position, or null
   ndc.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
   const o = ray.ray.origin, d = ray.ray.direction, b = o.dot(d), c = o.lengthSq() - 1, disc = b * b - c;
   if (disc < 0) return null; const t = -b - Math.sqrt(disc); if (t < 0) return null;
-  return v2ll(o.clone().addScaledVector(d, t));
+  return o.clone().addScaledVector(d, t).normalize();
 }
+function pickGlobe(cx, cy) { const h = hitGlobe(cx, cy); return h && v2ll(h); }
 function pickPoint(cx, cy) {
   let best = null, bd = 14 * 14; _c.copy(camera.position).normalize(); const horizon = 1 / camera.position.length();
   for (const k of Object.keys(pts)) {
@@ -2180,10 +2655,61 @@ canvas.addEventListener('pointerup', e => {
   if (it) { showFeature(it); return; }
   const p = pickGlobe(e.clientX, e.clientY); if (p) openWeather(p.lat, p.lon);
 });
-canvas.addEventListener('dblclick', e => { const p = pickGlobe(e.clientX, e.clientY); if (p) flyTo(p.lat, p.lon, Math.max(1.25, camera.position.length() * 0.55), 900); });
+canvas.addEventListener('dblclick', e => { const p = pickGlobe(e.clientX, e.clientY); if (p) flyTo(p.lat, p.lon, 1 + (camera.position.length() - 1) * 0.35, 650); });
+
+/* ---------- Zoom: wheel and trackpad, pinch, Safari gestures (keys are in the keyboard handler) ---------- */
+const _zq = new THREE.Quaternion();
+function keepUnder(p, x, y) { // turn the camera about the globe so that globe point p is under screen position x, y again
+  camera.lookAt(0, 0, 0); camera.updateMatrixWorld();
+  for (let i = 0; i < 2; i++) { // a second pass removes most of the error from keeping the camera upright
+    const h = hitGlobe(x, y); if (!h) return false;
+    camera.position.applyQuaternion(_zq.setFromUnitVectors(h, p)); camera.lookAt(0, 0, 0); camera.updateMatrixWorld();
+  }
+  return true;
+}
+function zoomBy(f, x, y) { // multiply the height above the surface by f, toward screen position x, y when given
+  fly = null;
+  zoom.alt = clamp((zoom.alt ?? camera.position.length() - 1) * f, MIN_ALT, MAX_ALT);
+  zoom.p = x == null ? null : hitGlobe(x, y); zoom.x = x; zoom.y = y;
+}
+function stepZoom(dt) { // ease toward the target height, about 95% of the way in a quarter second
+  if (zoom.alt == null) return;
+  const a = camera.position.length() - 1;
+  let n = a * Math.pow(zoom.alt / a, 1 - Math.exp(-dt / 0.08));
+  if (Math.abs(Math.log(zoom.alt / n)) < 0.002) { n = zoom.alt; zoom.alt = null; }
+  camera.position.setLength(1 + n);
+  if (zoom.p && !keepUnder(zoom.p, zoom.x, zoom.y)) zoom.p = null;
+  if (zoom.alt == null) zoom.p = null;
+}
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const dy = e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? innerHeight : 1) * (e.ctrlKey ? 3.5 : 1); // ctrl + wheel is a trackpad pinch
+  zoomBy(Math.exp(clamp(dy, -250, 250) * 0.003), e.clientX, e.clientY); // a 100 px wheel notch: about 26% closer
+}, { passive: false });
+const touches = new Map(); let pinch = null;
+function startPinch() {
+  if (touches.size !== 2) return null;
+  const [a, b] = [...touches.values()];
+  fly = null; zoom.alt = null;
+  return { d: Math.max(20, Math.hypot(a[0] - b[0], a[1] - b[1])), a: camera.position.length() - 1, p: hitGlobe((a[0] + b[0]) / 2, (a[1] + b[1]) / 2) };
+}
+canvas.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') { touches.set(e.pointerId, [e.clientX, e.clientY]); pinch = startPinch(); } });
+canvas.addEventListener('pointermove', e => {
+  if (!touches.has(e.pointerId)) return;
+  touches.set(e.pointerId, [e.clientX, e.clientY]);
+  if (!pinch) return;
+  const [a, b] = [...touches.values()], d = Math.max(20, Math.hypot(a[0] - b[0], a[1] - b[1]));
+  camera.position.setLength(1 + clamp(pinch.a * Math.pow(pinch.d / d, 1.5), MIN_ALT, MAX_ALT)); // a little faster than the fingers
+  if (pinch.p) keepUnder(pinch.p, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); // the spot between the fingers follows them
+});
+const endTouch = e => { if (touches.delete(e.pointerId)) pinch = startPinch(); };
+canvas.addEventListener('pointerup', endTouch); canvas.addEventListener('pointercancel', endTouch);
+let gScale = 1; // Safari on a Mac reports trackpad pinches as gesture events
+canvas.addEventListener('gesturestart', e => { e.preventDefault(); gScale = 1; });
+canvas.addEventListener('gesturechange', e => { e.preventDefault(); if (!touches.size) zoomBy(Math.pow(gScale / e.scale, 1.5), e.clientX, e.clientY); gScale = e.scale; });
 
 const popup = $('#popup');
-function openPopup(html) { popup.innerHTML = html; popup.hidden = false; }
+function openPopup(html) { popup.innerHTML = html; popup.hidden = false; if (innerWidth < 760) toggleNews(false); } // phones have room for one bottom sheet
 popup.addEventListener('click', e => {
   if (e.target.closest('[data-close]')) { popup.hidden = true; removeLabels('pin'); }
   const wx = e.target.closest('[data-wx]'); if (wx) { const [a, b] = wx.dataset.wx.split(',').map(Number); openWeather(a, b); }
@@ -2295,6 +2821,7 @@ const LAYERS = [
     ['outbreaks', 'Disease outbreaks', 'WHO reports, last 45 days', null, 'who'],
     ['travel', 'Travel advice', 'UK government risk rating by country', 'travel', 'fcdo'],
     ['launches', 'Rocket launches', 'Next 7 days worldwide', null, 'launches'],
+    ['headlines', 'Breaking news ticker', 'Follows the region you zoom into (N)', null, 'headlines'],
   ] },
   { title: 'Hazards', items: [
     ['quakes', 'Earthquakes', 'USGS, M2.5+', null, 'quakes'],
@@ -2442,7 +2969,7 @@ panelBody.addEventListener('click', e => {
 const lazy = { radar: () => loadRadar(), imerg: () => loadIMERG(), sst: () => loadSST(), aurora: () => loadAurora(), storms: () => loadStorms(), alerts: () => loadAlerts(), quakes: () => loadQuakes(), fires: () => loadEonet(), volcanoes: () => loadEonet(), borders: () => loadBorders(), clouds: () => loadClouds() };
 const loaded = new Set();
 const srcKey = { fires: 'eonet', volcanoes: 'eonet' };
-Object.assign(lazy, { gdacs: () => feed('gdacs', loadGdacs), conflict: () => feed('wiki', loadWiki), news: () => feed('wiki', loadWiki), outbreaks: () => feed('who', loadWho), travel: () => feed('fcdo', loadTravel), launches: () => feed('launches', loadLaunches) });
+Object.assign(lazy, { gdacs: () => feed('gdacs', loadGdacs), conflict: () => feed('wiki', loadWiki), news: () => feed('wiki', loadWiki), outbreaks: () => feed('who', loadWho), travel: () => feed('fcdo', loadTravel), launches: () => feed('launches', loadLaunches), headlines: () => feed('headlines', loadHeadlines) });
 Object.assign(srcKey, { conflict: 'wiki', news: 'wiki', outbreaks: 'who', travel: 'fcdo' });
 async function safe(fn, key) { try { await fn(); } catch (e) { setStatus(key, 'error', e.message); console.warn(key, e); scheduleThreat(); } }
 function ensure(key) {
@@ -2475,6 +3002,7 @@ function applyVisibility() {
   atmo.visible = Ly.atmosphere; stars.visible = Ly.stars; sunSprite.visible = Ly.stars;
   earthMat.uniforms.nightLights.value = Ly.nightLights ? 1 : 0; earthMat.uniforms.showTerm.value = Ly.terminator ? 1 : 0;
   controls.autoRotate = S.autorotate; $('#btnRotate').classList.toggle('on', S.autorotate);
+  newsBtn.hidden = !Ly.headlines; if (!Ly.headlines) toggleNews(false);
 }
 function applyOpacity() {
   cloudMat.uniforms.opacity.value = S.opacity.clouds; earthMat.uniforms.cloudShadow.value = S.layers.clouds ? S.opacity.clouds : 0;
@@ -2527,12 +3055,15 @@ tslider.oninput = () => { sunOffsetH = +tslider.value; };
 $('#btnNow').onclick = () => { sunOffsetH = 0; tslider.value = 0; playing = false; $('#btnPlay').textContent = '▶'; };
 $('#btnPlay').onclick = () => { playing = !playing; $('#btnPlay').textContent = playing ? '❚❚' : '▶'; };
 addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.ctrlKey || e.metaKey || e.altKey) return; // leave browser shortcuts such as Ctrl + and Ctrl R alone
   if (e.key === 'r' || e.key === 'R') $('#btnRotate').click();
   if (e.key === 'l' || e.key === 'L') $('#btnPanel').click();
   if (e.key === 't' || e.key === 'T') $('#threatBtn').click();
+  if (e.key === 'n' || e.key === 'N') toggleNews();
+  if (e.key === '+' || e.key === '=') zoomBy(1 / 1.6);
+  if (e.key === '-' || e.key === '_') zoomBy(1.6);
   if (e.key === ' ') { e.preventDefault(); $('#btnPlay').click(); }
-  if (e.key === 'Escape') { popup.hidden = true; removeLabels('pin'); }
+  if (e.key === 'Escape') { popup.hidden = true; removeLabels('pin'); toggleNews(false); }
 });
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 if (innerWidth < 760) { $('#panel').classList.add('hidden'); $('#btnPanel').classList.remove('on'); }
@@ -2574,10 +3105,11 @@ function frame(now) {
     if (L.recent.length > 20000) L.recent = L.recent.filter(t => t > Date.now() - 60e3);
   }
   if ((currentTab === 'events' && now - lastEvents > 5000) || (currentTab === 'threats' && now - lastEvents > 60000)) { lastEvents = now; renderPanel(); }
+  stepFly(now); if (!fly) { controls.update(); stepZoom(dt); }
   const d = camera.position.length();
-  controls.rotateSpeed = clamp((d - 1) * 0.45, 0.02, 1); controls.zoomSpeed = clamp((d - 1) * 0.6, 0.15, 1);
+  controls.rotateSpeed = clamp((d - 1) * 0.45, 0.02, 1); // dragging moves the ground at about the speed of the pointer
   camera.near = clamp((d - 1) * 0.3, 0.0008, 0.1); camera.updateProjectionMatrix();
-  stepFly(now); if (!fly) controls.update();
+  newsTick(now);
   stepWind(dt);
   const tS = (Date.now() - T0) / 1000;
   flushStrikes(); lMat.uniforms.now.value = tS; lMat.uniforms.win.value = S.filters.lightningWindow * 60;
@@ -2603,7 +3135,8 @@ function frame(now) {
   gridPromise.then(() => { updateLegend(); renderPanel(); }).catch(() => {});
 })();
 window.__wg = { S, status, L, addStrike, get grid() { return grid; }, get threat() { return threat; }, get top() { return threatTop; },
-  get data() { return { gdacsData, wikiEvents, whoData, whoPts, travel, launches, sigQuakes, spaceWx }; }, pts, flyTo };
+  get data() { return { gdacsData, wikiEvents, whoData, whoPts, travel, launches, sigQuakes, spaceWx }; }, pts, flyTo, zoomBy, pick: pickGlobe, camPos: () => camera.position.toArray(),
+  get news() { return { data: newsData, scope: newsScopeNow, sel: newsSel }; } };
 </script>
 </body>
 </html>
