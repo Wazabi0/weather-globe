@@ -232,14 +232,17 @@ a.ni:focus-visible{outline:none}
 .ni small{display:block;margin-top:4px;color:var(--muted);font-size:11px}
 .ni em{font-style:normal;color:#ff4d6d;font-weight:700;font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;margin-right:7px;vertical-align:1px}
 .nl-f{padding:9px 14px 11px;border-top:1px solid var(--line)}
-@media (max-width:1180px){.nb-age{display:none}}
-@media (min-width:761px) and (max-width:1020px){
+#top .brand,#top .tbadge,#top .ibtn{flex-shrink:0}
+.search{min-width:140px}
+@media (min-width:761px) and (max-width:1300px){ /* too narrow to share the top row: the ticker gets a row of its own */
   #top{flex-wrap:wrap}
   .nbadge{order:5;flex:1 1 100%;max-width:none;height:36px}
+  .search{flex:1 1 160px}
   #panel,#popup,#readout,#newsList{top:112px}
 }
 @media (max-width:760px){
   .nbadge{order:5;flex:1 1 100%;max-width:none;height:36px}
+  .nb-age{display:none}
   #newsList{top:auto;bottom:66px;left:8px;right:8px;width:auto;transform:none;max-height:62%}
 }
 </style>
@@ -3052,7 +3055,7 @@ tslider.oninput = () => { sunOffsetH = +tslider.value; };
 $('#btnNow').onclick = () => { sunOffsetH = 0; tslider.value = 0; playing = false; $('#btnPlay').textContent = '▶'; };
 $('#btnPlay').onclick = () => { playing = !playing; $('#btnPlay').textContent = playing ? '❚❚' : '▶'; };
 addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.ctrlKey || e.metaKey || e.altKey) return; // leave browser shortcuts such as Ctrl + and Ctrl R alone
   if (e.key === 'r' || e.key === 'R') $('#btnRotate').click();
   if (e.key === 'l' || e.key === 'L') $('#btnPanel').click();
   if (e.key === 't' || e.key === 'T') $('#threatBtn').click();
