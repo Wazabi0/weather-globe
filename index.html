@@ -136,6 +136,54 @@ select{background:#141c2e;border:1px solid var(--line);border-radius:8px;padding
 #toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);padding:9px 14px;opacity:0;transition:opacity .3s;z-index:8;pointer-events:none}
 #toast.show{opacity:1}
 kbd{font:inherit;font-size:10.5px;padding:1px 5px;border:1px solid var(--line);border-radius:4px;color:var(--muted)}
+/* threat badge */
+.tbadge{--lv:#55607a;display:flex;align-items:center;gap:9px;padding:6px 13px 6px 12px;cursor:pointer;color:var(--text);text-align:left}
+.tbadge:hover,.tbadge:focus-visible{border-color:var(--lv);outline:none}
+.tbadge>i{width:9px;height:9px;border-radius:2px;background:var(--lv);transform:rotate(45deg);box-shadow:0 0 10px var(--lv);flex:none}
+.tbadge small{display:block;color:var(--muted);font-size:9.5px;letter-spacing:.9px;text-transform:uppercase;line-height:1.25}
+.tbadge b{display:block;font-size:13px;color:var(--lv);line-height:1.25;font-weight:700}
+.tbadge.hot>i{animation:blink 1.1s infinite}
+/* threats tab */
+.tcard{--lv:#55607a;margin-top:12px;padding:12px 13px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.035)}
+.tcard .tk{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tcard .trow{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:2px}
+.tcard .lvl{font-size:27px;font-weight:700;letter-spacing:.3px;color:var(--lv)}
+.tcard .score{color:var(--muted);font-variant-numeric:tabular-nums}
+.tcard .score b{color:var(--text);font-size:15px}
+.tcard .note{display:block;margin-top:7px}
+.gauge{position:relative;height:7px;border-radius:5px;margin:9px 0 5px;background:linear-gradient(90deg,#3ddc97 0 15%,#5cc8ff 15% 35%,#ffd25c 35% 60%,#ff9f43 60% 80%,#ff4d6d 80%)}
+.gauge i{position:absolute;top:-4px;width:4px;height:15px;border-radius:2px;background:#fff;box-shadow:0 0 0 2px rgba(3,5,11,.75);transform:translateX(-50%)}
+.gticks{display:grid;grid-template-columns:15fr 20fr 25fr 20fr 20fr;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.dom{--lv:#55607a;display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(150,180,255,.07)}
+.dom .dn{font-weight:600}
+.pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;color:#0b0f1a;background:var(--lv);text-transform:uppercase;letter-spacing:.6px}
+.pill.na{background:#2a3348;color:var(--muted)}
+.dom .mb{grid-column:1/-1;height:4px;border-radius:3px;background:#1c2438;overflow:hidden}
+.dom .mb i{display:block;height:100%;background:var(--lv);border-radius:3px}
+.dom small{grid-column:1/-1;color:var(--muted);font-size:11px;line-height:1.45}
+.swx{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px}
+.swx span{text-align:center;padding:6px 2px;border-radius:8px;border:1px solid var(--line);font-size:10px;color:var(--muted);background:rgba(255,255,255,.03)}
+.swx b{display:block;font-size:15px;color:var(--text);font-variant-numeric:tabular-nums}
+.evl button{--c:#55607a;display:grid;grid-template-columns:4px minmax(0,1fr) auto;gap:3px 10px;width:100%;text-align:left;padding:8px 10px 8px 0;margin:5px 0;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;overflow:hidden}
+.evl button:hover,.evl button:focus-visible{border-color:var(--c);outline:none}
+.evl button:before{content:"";grid-row:1/3;background:var(--c);border-radius:0 3px 3px 0}
+.evl .t{font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.evl .sv{font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c);align-self:start;padding-top:2px}
+.evl small{grid-column:2/4;color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.how{margin-top:14px}
+details.how summary{cursor:pointer;color:var(--accent)}
+details.how p{margin:6px 0 0}
+/* event markers & popups */
+.gd{--c:#ff9f1a;display:flex;align-items:center;gap:5px;margin-top:-22px;pointer-events:auto;cursor:pointer;font-size:10.5px;font-weight:600;color:#fff;background:rgba(6,10,20,.8);border:1px solid var(--c);padding:2px 7px 2px 6px;border-radius:7px}
+.gd i{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:8px solid var(--c)}
+.pp-text{line-height:1.55;margin:10px 0 8px}
+.pp-tag{display:inline-block;margin-right:7px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:999px;color:#0b0f1a;background:var(--c,#a0a8bd);vertical-align:2px}
+#legend{max-height:calc(100% - 170px);overflow-y:auto;scrollbar-width:none}
+.lg .keys i.tri{width:0;height:0;border-radius:0;background:none;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid var(--c)}
+.lg .keys i.dia{border-radius:1px;transform:rotate(45deg) scale(.85)}
+.lg .keys i.ring{background:none!important;border:2px solid var(--c)}
+.lg .keys i.sq{border-radius:1px}
+.lg .keys i.hatch{border-radius:2px;background:repeating-linear-gradient(45deg,var(--c) 0 2px,transparent 2px 4px)!important;box-shadow:inset 0 0 0 1px var(--c)}
 @media (max-width:760px){
   #top{top:8px;left:8px;right:8px;flex-wrap:wrap}
   .brand small{display:none}
@@ -146,6 +194,11 @@ kbd{font:inherit;font-size:10.5px;padding:1px 5px;border:1px solid var(--line);b
   #popup{left:8px;right:8px;width:auto;top:auto;bottom:66px;max-height:60%}
   #readout{top:auto;bottom:66px}
   #tlabel{min-width:100px;font-size:11px}
+}
+@media (max-width:760px){
+  .tbadge{order:3;padding:5px 11px}
+  .tbadge small{display:none}
+  .search{order:4;flex:1 1 160px}
 }
 </style>
 <script type="importmap">
@@ -158,13 +211,14 @@ kbd{font:inherit;font-size:10.5px;padding:1px 5px;border:1px solid var(--line);b
 <div id="labels"></div>
 <header id="top">
   <div class="brand glass"><div class="livedot" title="Live"></div><div><b>Live Weather Globe</b><small id="clock">—</small></div></div>
+  <button class="tbadge glass" id="threatBtn" title="Global threat assessment (T)"><i></i><span><small>Global threat</small><b>Loading…</b></span></button>
   <div class="search"><input id="q" placeholder="Search a city or place…" autocomplete="off"><div id="qres" class="glass"></div></div>
   <button class="ibtn" id="btnRotate" title="Auto-rotate (R)">⟲</button>
   <button class="ibtn" id="btnRefresh" title="Refresh all live data">↻</button>
   <button class="ibtn on" id="btnPanel" title="Show/hide layers (L)">☰ Layers</button>
 </header>
 <aside id="panel" class="glass">
-  <div class="tabs"><button data-tab="layers" class="on">Layers</button><button data-tab="filters">Filters</button><button data-tab="events">Events</button><button data-tab="sources">Sources</button></div>
+  <div class="tabs"><button data-tab="layers" class="on">Layers</button><button data-tab="threats">Threats</button><button data-tab="events">Events</button><button data-tab="filters">Filters</button><button data-tab="sources">Sources</button></div>
   <div id="panelBody"></div>
 </aside>
 <section id="legend"></section>
@@ -196,7 +250,7 @@ const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t
 
 const R = { // shell radii (Earth = 1)
   sst: 1.0010, field: 1.0018, imerg: 1.0026, radar: 1.0032, alertFill: 1.0036, borders: 1.0009, graticule: 1.0012,
-  isobars: 1.0045, alerts: 1.0048, clouds: 1.0085, tracks: 1.0095, wind: 1.0105, lightning: 1.012, points: 1.011, aurora: 1.018,
+  isobars: 1.0045, alerts: 1.0048, clouds: 1.0085, tracks: 1.0095, wind: 1.0105, lightning: 1.012, points: 1.011, aurora: 1.018, travel: 1.0015,
 };
 
 const DEFAULTS = {
@@ -204,14 +258,17 @@ const DEFAULTS = {
   layers: {
     clouds: true, radar: true, imerg: false, wind: true, isobars: false, lightning: true, stormcells: true,
     storms: true, alerts: true, aurora: true, sst: false, quakes: false, fires: false, volcanoes: false,
+    gdacs: true, conflict: true, news: false, outbreaks: true, travel: true, launches: true,
     terminator: true, nightLights: true, borders: true, graticule: false, atmosphere: true, stars: true, satbase: false,
   },
   field: 'none',
-  opacity: { clouds: 0.95, radar: 0.85, imerg: 0.85, field: 0.55, sst: 0.75 },
+  opacity: { clouds: 0.95, radar: 0.85, imerg: 0.85, field: 0.55, sst: 0.75, travel: 0.7 },
   filters: {
     cloudSource: 'auto', cloudThreshold: 0.5, windMin: 0, windCount: 7000, windSpeed: 1, windTrail: 10,
     lightningWindow: 30, quakeMin: 4.5, quakePeriod: 'day', stormMin: 0,
     alertTypes: { tornado: true, tstorm: true, flood: true, tropical: true, winter: true, heat: true, fire: true, other: false },
+    gdacsMin: 'Green', eventDays: 3,
+    newsCats: { disaster: true, intl: true, politics: true, crime: true, health: true, economy: false, science: false, culture: false, sports: false, other: false },
   },
   autorotate: false,
 };
@@ -310,6 +367,13 @@ const SOURCES = {
   eonet: ['Wildfires & volcanoes', 'NASA EONET'],
   borders: ['Borders', 'Natural Earth via world-atlas'],
   satbase: ['Satellite base map', 'NASA VIIRS true color, yesterday'],
+  gdacs: ['Disaster alerts', 'GDACS, the UN and European Commission disaster alert system'],
+  sigquakes: ['Significant earthquakes', 'USGS significant events, past week'],
+  wiki: ['World events', 'Wikipedia current events portal, last 3 days'],
+  who: ['Disease outbreaks', 'WHO Disease Outbreak News'],
+  fcdo: ['Travel advice', 'UK Foreign, Commonwealth & Development Office via GOV.UK'],
+  spacewx: ['Space weather', 'NOAA SWPC storm scales and Kp index'],
+  launches: ['Rocket launches', 'The Space Devs Launch Library 2'],
 };
 const status = {};
 function setStatus(k, state, msg = '') { status[k] = { state, msg, t: new Date() }; renderStatus(); }
@@ -1216,8 +1280,8 @@ async function loadStorms() {
   } catch (e) { src = 'EONET failed (' + e.message + ')'; }
   if (!list.length) {
     try {
-      const js = await fetchJSON('https://www.gdacs.org/gdacsapi/api/events/geteventlist/MAP?eventlist=TC');
-      list = (js.features || []).filter(f => f.geometry?.type === 'Point' && f.properties?.iscurrent !== 'false').map(f => {
+      const js = await fetchJSON('https://www.gdacs.org/gdacsapi/api/events/geteventlist/EVENTS4APP');
+      list = (js.features || []).filter(f => f.properties?.eventtype === 'TC' && f.geometry?.type === 'Point' && String(f.properties?.iscurrent) !== 'false').map(f => {
         const p = f.properties; const kts = p.severitydata?.severity ? p.severitydata.severity / 1.852 : null;
         return { name: p.eventname || p.name, title: p.name || p.eventname, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1], kts, t: new Date(p.todate || p.fromdate), track: [], link: p.url?.report };
       });
@@ -1245,6 +1309,7 @@ function drawStorms() {
   }
   if (pos.length) { stormLines = lineMesh(pos, col, { opacity: 0.9, order: 8 }); stormLines.visible = S.layers.storms; }
   if (currentTab === 'events') renderPanel();
+  scheduleThreat();
 }
 function showStorm(s) {
   const c = catOf(s.kts);
@@ -1310,6 +1375,7 @@ function drawAlerts() {
   if (pos.length) { alertLines = lineMesh(pos, col, { opacity: 0.95, order: 6 }); alertLines.visible = S.layers.alerts; }
   shells.alertFill.visible = S.layers.alerts && shown.length > 0;
   updateLegend(); if (currentTab === 'events') renderPanel();
+  scheduleThreat();
 }
 function pointInRing(lat, lon, ring) {
   let inside = false;
@@ -1329,25 +1395,31 @@ function makePoints(order) {
   const m = new THREE.ShaderMaterial({
     uniforms: { time: { value: 0 }, px: { value: renderer.getPixelRatio() } },
     vertexShader: /* glsl */`
-attribute vec3 color; attribute float size; attribute float pulse; uniform float time, px; varying vec3 vC; varying float vP;
-void main(){ vC = color; vP = pulse; vec4 mv = modelViewMatrix * vec4(position,1.); gl_Position = projectionMatrix * mv;
+attribute vec3 color; attribute float size; attribute float pulse; attribute float shape; uniform float time, px; varying vec3 vC; varying float vP; varying float vS;
+void main(){ vC = color; vP = pulse; vS = shape; vec4 mv = modelViewMatrix * vec4(position,1.); gl_Position = projectionMatrix * mv;
   float zoom = clamp(3.0 / -mv.z, 0.8, 2.6); gl_PointSize = px * size * zoom * (1. + pulse * 0.9 * fract(time * 0.6)); }`,
     fragmentShader: /* glsl */`
-varying vec3 vC; varying float vP; uniform float time;
-void main(){ float d = length(gl_PointCoord - .5) * 2.; if (d > 1.) discard;
+varying vec3 vC; varying float vP; varying float vS; uniform float time;
+void main(){ vec2 p = (gl_PointCoord - .5) * 2.; float d = length(p); // shapes: 0 disc, 1 diamond, 2 square, 3 triangle, 4 ring
+  if (vS > .5 && vS < 1.5) d = (abs(p.x) + abs(p.y)) * 0.92;
+  else if (vS > 1.5 && vS < 2.5) d = max(abs(p.x), abs(p.y)) * 1.08;
+  else if (vS > 2.5 && vS < 3.5) d = max(abs(p.x) * 0.866 - p.y * 0.5, p.y) * 2.;
+  if (d > 1.) discard;
   float core = 1. - smoothstep(0.32, 0.45, d);
   float ring = smoothstep(0.55, 0.75, d) * (1. - smoothstep(0.85, 1., d));
-  float a = vP > .5 ? max(core, ring * (1. - fract(time * 0.6))) : (1. - smoothstep(0.55, 1., d));
-  gl_FragColor = vec4(vC, a * 0.95);
+  float body = vS < .5 ? 1. - smoothstep(0.55, 1., d) : vS > 3.5 ? smoothstep(0.42, 0.56, d) * (1. - smoothstep(0.8, 0.98, d)) : 1. - smoothstep(0.8, 0.98, d);
+  float a = vP > .5 ? max(vS > .5 ? body * 0.9 : core, ring * (1. - fract(time * 0.6))) : body;
+  float rim = (vS > .5 && vS < 3.5) ? mix(0.55, 1., smoothstep(0.62, 0.78, 1. - d + 0.4)) : 1.;
+  gl_FragColor = vec4(vC * rim, a * 0.95);
   #include <colorspace_fragment> }`,
     transparent: true, depthWrite: false, toneMapped: false,
   });
   const p = new THREE.Points(g, m); p.renderOrder = order; p.frustumCulled = false; p.visible = false; scene.add(p);
   p.setData = items => {
-    const pos = [], col = [], size = [], pulse = [];
-    for (const it of items) { const v = ll2v(it.lat, it.lon, R.points); pos.push(v.x, v.y, v.z); const c = hex(it.color); col.push(c[0] / 255, c[1] / 255, c[2] / 255); size.push(it.size); pulse.push(it.pulse ? 1 : 0); }
+    const pos = [], col = [], size = [], pulse = [], shape = [];
+    for (const it of items) { const v = ll2v(it.lat, it.lon, R.points); pos.push(v.x, v.y, v.z); const c = hex(it.color); col.push(c[0] / 255, c[1] / 255, c[2] / 255); size.push(it.size); pulse.push(it.pulse ? 1 : 0); shape.push(it.shape || 0); }
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-    g.setAttribute('size', new THREE.Float32BufferAttribute(size, 1)); g.setAttribute('pulse', new THREE.Float32BufferAttribute(pulse, 1));
+    g.setAttribute('size', new THREE.Float32BufferAttribute(size, 1)); g.setAttribute('pulse', new THREE.Float32BufferAttribute(pulse, 1)); g.setAttribute('shape', new THREE.Float32BufferAttribute(shape, 1));
     p.items = items;
   };
   p.items = []; return p;
@@ -1386,12 +1458,636 @@ async function loadEonet() {
 }
 
 /* =====================================================================
+   Global threats & events of interest
+   Every feed below is keyless and CORS-enabled. Each one loads on its own,
+   so a feed that fails only blanks its own layer and threat domain.
+   ===================================================================== */
+const pl = (n, one, many = one + 's') => `${n.toLocaleString()} ${n === 1 ? one : many}`;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const safeUrl = u => (typeof u === 'string' && /^https:\/\/[^\s"'<>]+$/i.test(u)) ? u : null;
+const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim();
+const DAY = 864e5;
+const utcDate = s => { if (!s) return null; const d = new Date(/[zZ]$|[+-]\d\d:?\d\d$/.test(s) ? s : s + 'Z'); return isNaN(d) ? null : d; };
+const fmtDate = d => d.toLocaleDateString([], { day: 'numeric', month: 'short' });
+const fmtDT = d => d.toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const LEVELS = [[0, 'Low', '#3ddc97'], [15, 'Guarded', '#5cc8ff'], [35, 'Elevated', '#ffd25c'], [60, 'High', '#ff9f43'], [80, 'Severe', '#ff4d6d']];
+const levelOf = s => { let l = LEVELS[0]; for (const x of LEVELS) if (s >= x[0]) l = x; return l; };
+const dim = (h, f = 0.55) => '#' + hex(h).map(v => Math.round(v * f + 40 * (1 - f)).toString(16).padStart(2, '0')).join('');
+const shortPlace = s => { const p = String(s || '').split(/\s*,\s*/).filter(Boolean); return p.length > 2 ? `${p[0]} +${p.length - 1}` : (p.join(', ') || 'Open sea'); };
+const clip = (s, n) => (s = String(s || '')).length > n ? s.slice(0, n - 1).trimEnd() + '…' : s;
+function countdown(d) {
+  const ms = d - Date.now(); if (ms < -2 * 3600e3) return 'launched'; if (ms <= 0) return 'now';
+  const h = ms / 3600e3; if (h < 1) return `in ${Math.max(1, Math.round(ms / 60e3))} min`;
+  if (h < 48) return `in ${Math.floor(h)} h ${String(Math.floor((h % 1) * 60)).padStart(2, '0')} min`; return `in ${Math.round(h / 24)} days`;
+}
+function jitter(items) { // spread markers that share a spot (e.g. several reports placed at one capital)
+  const seen = new Map();
+  for (const it of items) {
+    const k = it.lat.toFixed(2) + ',' + it.lon.toFixed(2), n = seen.get(k) || 0; seen.set(k, n + 1);
+    if (n) { const a = n * 2.39996, r = 0.45 * Math.sqrt(n); it.lat = clamp(it.lat + r * Math.sin(a), -89, 89); it.lon = wrapLon(it.lon + r * Math.cos(a) / Math.max(0.25, Math.cos(it.lat * DEG))); }
+  }
+}
+
+/* ---------- Countries (Natural Earth 1:50m via world-atlas) ---------- */
+let topoP = null, countriesP = null, COUNTRIES = null;
+const getTopo = () => topoP || (topoP = fetchJSON(BORDERS_URL, {}, 45000).catch(e => { topoP = null; throw e; }));
+const getCountries = () => countriesP || (countriesP = getTopo().then(t => (COUNTRIES = buildCountries(t))).catch(e => { countriesP = null; throw e; }));
+function unwrapRing(r) { const o = [r[0].slice()]; for (let i = 1; i < r.length; i++) { let x = r[i][0]; const px = o[i - 1][0]; while (x - px > 180) x -= 360; while (x - px < -180) x += 360; o.push([x, r[i][1]]); } return o; }
+function buildCountries(topo) {
+  const { scale: [sx, sy], translate: [tx, ty] } = topo.transform;
+  const arcs = topo.arcs.map(a => { let x = 0, y = 0; return a.map(([dx, dy]) => { x += dx; y += dy; return [x * sx + tx, y * sy + ty]; }); });
+  const ring = ids => { const out = []; for (const i of ids) { const a = i < 0 ? arcs[~i].slice().reverse() : arcs[i]; for (let k = out.length ? 1 : 0; k < a.length; k++) out.push(a[k]); } return out; };
+  const list = [];
+  for (const g of topo.objects.countries.geometries) {
+    const polys = (g.type === 'Polygon' ? [g.arcs] : g.type === 'MultiPolygon' ? g.arcs : []).map(p => p.map(ring)).filter(p => p[0]?.length > 2);
+    if (!polys.length) continue;
+    let best = null, bestA = 0; const b = [180, 90, -180, -90];
+    for (const p of polys) {
+      const o = unwrapRing(p[0]); let a = 0, cx = 0, cy = 0;
+      for (let i = 0, j = o.length - 1; i < o.length; j = i++) { const f = o[j][0] * o[i][1] - o[i][0] * o[j][1]; a += f; cx += (o[j][0] + o[i][0]) * f; cy += (o[j][1] + o[i][1]) * f; }
+      if (a && Math.abs(a) > bestA) { bestA = Math.abs(a); best = { lon: wrapLon(cx / (3 * a)), lat: cy / (3 * a) }; }
+      for (const [x, y] of p[0]) { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); }
+    }
+    if (!best) best = { lon: polys[0][0][0][0], lat: polys[0][0][0][1] };
+    list.push({ id: g.id ?? g.properties?.name, name: g.properties?.name || '', polys, bbox: b, c: best });
+  }
+  return { list, byName: new Map(list.map(c => [norm(c.name), c])) };
+}
+function countryAt(C, lat, lon) {
+  for (const c of C.list) {
+    const b = c.bbox; if (lat < b[1] || lat > b[3] || lon < b[0] || lon > b[2]) continue;
+    for (const p of c.polys) if (pointInRing(lat, lon, p[0]) && !p.slice(1).some(h => pointInRing(lat, lon, h))) return c;
+  }
+  return null;
+}
+// names used by GOV.UK / WHO that differ from Natural Earth's
+const ALIAS = {
+  'usa': ['United States of America'], 'united states': ['United States of America'], 'the gambia': ['Gambia'], 'solomon islands': ['Solomon Is.'],
+  'democratic republic of the congo': ['Dem. Rep. Congo'], 'dr congo': ['Dem. Rep. Congo'], 'republic of the congo': ['Congo'], 'republic of congo': ['Congo'],
+  'north macedonia': ['Macedonia'], 'bosnia and herzegovina': ['Bosnia and Herz.'], 'wallis and futuna': ['Wallis and Futuna Is.'], 'pitcairn island': ['Pitcairn Is.'],
+  'myanmar burma': ['Myanmar'], 'burma': ['Myanmar'], 'federated states of micronesia': ['Micronesia'], 'micronesia federated states of': ['Micronesia'],
+  'marshall islands': ['Marshall Is.'], 'western sahara': ['W. Sahara'], 'antigua and barbuda': ['Antigua and Barb.'], 'british virgin islands': ['British Virgin Is.'],
+  'cayman islands': ['Cayman Is.'], 'dominican republic': ['Dominican Rep.'], 'st lucia': ['Saint Lucia'], 'st maarten': ['Sint Maarten'],
+  'st martin and st barthelemy': ['St-Martin', 'St-Barthélemy'], 'st vincent and the grenadines': ['St. Vin. and Gren.'], 'saint vincent and the grenadines': ['St. Vin. and Gren.'],
+  'turks and caicos islands': ['Turks and Caicos Is.'], 'falkland islands': ['Falkland Is.'], 'french polynesia': ['Fr. Polynesia'],
+  'south georgia and the south sandwich islands': ['S. Geo. and the Is.'], 'st helena ascension and tristan da cunha': ['Saint Helena'],
+  'cook islands tokelau and niue': ['Cook Is.', 'Niue'], 'cape verde': ['Cabo Verde'], 'central african republic': ['Central African Rep.'],
+  'equatorial guinea': ['Eq. Guinea'], 'british indian ocean territory': ['Br. Indian Ocean Ter.'], 'south sudan': ['S. Sudan'],
+  'kingdom of saudi arabia': ['Saudi Arabia'], 'russian federation': ['Russia'], 'united republic of tanzania': ['Tanzania'],
+  'islamic republic of iran': ['Iran'], 'iran islamic republic of': ['Iran'], 'republic of korea': ['South Korea'], 'democratic people s republic of korea': ['North Korea'],
+  'lao people s democratic republic': ['Laos'], 'viet nam': ['Vietnam'], 'turkiye': ['Turkey'], 'syrian arab republic': ['Syria'],
+  'bolivia plurinational state of': ['Bolivia'], 'venezuela bolivarian republic of': ['Venezuela'], 'united kingdom of great britain and northern ireland': ['United Kingdom'],
+  'czech republic': ['Czechia'], 'republic of moldova': ['Moldova'], 'occupied palestinian territory': ['Palestine'], 'gaza strip': ['Palestine'], 'west bank': ['Palestine'],
+  'brunei darussalam': ['Brunei'], 'east timor': ['Timor-Leste'], 'swaziland': ['eSwatini'], 'ivory coast': ["Côte d'Ivoire"], 'hong kong sar': ['Hong Kong'],
+};
+const FCDO_EXTRA = { 'somalia': ['Somalia', 'Somaliland'], 'cyprus': ['Cyprus', 'N. Cyprus'] };
+const atlasFor = (C, name, extra = {}) => { const k = norm(name); return (extra[k] || ALIAS[k] || [name]).map(n => C.byName.get(norm(n))).filter(Boolean); };
+let gazRe = null, gazMap = null;
+function findCountries(C, text) { // country names mentioned in free text, longest name first
+  if (!gazRe) {
+    gazMap = new Map();
+    const skip = new Set(['jersey', 'guernsey', 'isle of man', 'aland', 'niue', 'siachen glacier', 'indian ocean ter', 'antarctica']);
+    for (const c of C.list) { const k = norm(c.name); if (k.length > 3 && !skip.has(k)) gazMap.set(k, [c]); }
+    for (const [k, v] of Object.entries(ALIAS)) { const cs = v.map(n => C.byName.get(norm(n))).filter(Boolean); if (cs.length && k.length > 3) gazMap.set(k, cs); }
+    gazRe = new RegExp(`\\b(${[...gazMap.keys()].sort((a, b) => b.length - a.length).join('|')})\\b`, 'g');
+  }
+  const out = []; for (const m of norm(text).matchAll(gazRe)) for (const c of gazMap.get(m[1])) if (!out.includes(c)) out.push(c);
+  return out;
+}
+
+/* ---------- GDACS disaster alerts ---------- */
+const GD_COL = { Red: '#ff3b4f', Orange: '#ff9f1a', Green: '#45d483' };
+const GD_RANK = { Green: 0, Orange: 1, Red: 2 };
+const GD_TYPE = { EQ: 'Earthquake', TC: 'Tropical cyclone', FL: 'Flood', VO: 'Volcano', DR: 'Drought', WF: 'Wildfire', TS: 'Tsunami' };
+const GDACS_API = 'https://www.gdacs.org/gdacsapi/api/events/geteventlist/';
+let gdacsData = [];
+function gdItem(f) {
+  const p = f.properties || {}, c = f.geometry?.coordinates;
+  if (!Array.isArray(c) || !isFinite(c[0]) || !isFinite(c[1])) return null;
+  const start = utcDate(p.fromdate), end = utcDate(p.todate) || start;
+  return {
+    kind: 'gdacs', id: p.eventtype + p.eventid, type: p.eventtype, level: GD_COL[p.alertlevel] ? p.alertlevel : 'Green',
+    title: p.name || p.eventname || GD_TYPE[p.eventtype] || 'Disaster', eventname: p.eventname || '', country: String(p.country || '').replace(/[,\s]+$/, ''),
+    current: String(p.iscurrent) === 'true', start, end, t: utcDate(p.datemodified) || end || start || new Date(),
+    sevText: String(p.severitydata?.severitytext || '').trim(), link: safeUrl(p.url?.report), lat: +c[1], lon: wrapLon(+c[0]),
+  };
+}
+async function loadGdacs() {
+  setStatus('gdacs', 'loading');
+  const [cur, big] = await Promise.allSettled([
+    fetchJSON(GDACS_API + 'EVENTS4APP', {}, 30000),
+    fetchJSON(GDACS_API + 'SEARCH?eventlist=EQ;TC;FL;VO;DR;WF&alertlevel=Orange;Red&pagesize=100', {}, 30000),
+  ]);
+  if (cur.status === 'rejected' && big.status === 'rejected') throw new Error(cur.reason.message);
+  const map = new Map();
+  for (const r of [big, cur]) if (r.status === 'fulfilled') for (const f of r.value?.features || []) { const it = gdItem(f); if (it) map.set(it.id, it); }
+  const now = Date.now();
+  gdacsData = [...map.values()].filter(e => e.current || (e.end && now - e.end < 7 * DAY)).sort((a, b) => GD_RANK[a.level] - GD_RANK[b.level]);
+  drawGdacs();
+  const n = l => gdacsData.filter(e => e.current && e.level === l).length;
+  setStatus('gdacs', 'ok', `${n('Red')} red, ${n('Orange')} orange and ${n('Green')} green alerts active${cur.status === 'rejected' ? ' (current-events list failed: ' + cur.reason.message + ')' : ''}`);
+}
+function drawGdacs() {
+  const min = GD_RANK[S.filters.gdacsMin] || 0, list = gdacsData.filter(e => GD_RANK[e.level] >= min);
+  pts.gdacs.setData(list.map(e => ({ ...e, ref: e, shape: 3, size: e.level === 'Red' ? 17 : e.level === 'Orange' ? 14 : 9, color: e.current ? GD_COL[e.level] : dim(GD_COL[e.level]), pulse: e.current && e.level !== 'Green' })));
+  removeLabels('gdacs');
+  for (const e of list) {
+    if (!e.current || e.level === 'Green') continue;
+    const el = document.createElement('div'); el.className = 'gd'; el.style.setProperty('--c', GD_COL[e.level]); el.title = e.title;
+    el.innerHTML = `<i></i>${esc(GD_TYPE[e.type] || e.type)} · ${esc(shortPlace(e.country))}`;
+    el.onclick = ev => { ev.stopPropagation(); flyTo(e.lat, e.lon, 2.2); openEvent(e); };
+    addLabel(el, e.lat, e.lon, 'gdacs', R.points);
+  }
+}
+
+/* ---------- World events: Wikipedia current events portal ---------- */
+const NEWS = {
+  conflict: ['Armed conflict & attacks', '#ff3d6e', 'Conflict'], disaster: ['Disasters & accidents', '#ff9f1a', 'Disasters'],
+  health: ['Health & environment', '#2ee6a8', 'Health'], intl: ['International relations', '#5cc8ff', 'Diplomacy'],
+  politics: ['Politics & elections', '#b18cff', 'Politics'], crime: ['Law & crime', '#ffd25c', 'Crime'],
+  economy: ['Business & economy', '#7fd1c7', 'Economy'], science: ['Science & technology', '#9fb4ff', 'Science'],
+  culture: ['Arts & culture', '#ff8ad8', 'Culture'], sports: ['Sports', '#c8d36b', 'Sports'], other: ['Other', '#a0a8bd', 'Other'],
+};
+const WIKI_CATS = { 'armed conflicts and attacks': 'conflict', 'disasters and accidents': 'disaster', 'health and environment': 'health', 'international relations': 'intl', 'politics and elections': 'politics', 'law and crime': 'crime', 'business and economy': 'economy', 'science and technology': 'science', 'arts and culture': 'culture', 'sports': 'sports' };
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const wikiPage = d => `Portal:Current_events/${d.getUTCFullYear()}_${MONTHS[d.getUTCMonth()]}_${d.getUTCDate()}`;
+const WIKI_API = 'https://en.wikipedia.org/w/api.php?format=json&formatversion=2&origin=*&';
+const dayLabel = e => e.day === 0 ? 'Today' : e.day === 1 ? 'Yesterday' : fmtDate(e.date);
+let wikiEvents = [];
+function parseWikiDay(html, date, day) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const root = doc.querySelector('.current-events-content') || doc.body, out = [];
+  const titles = as => { const t = []; for (const a of as) { const href = a.getAttribute('href') || ''; if (!href.startsWith('/wiki/')) continue; let ti = a.getAttribute('title'); if (!ti) try { ti = decodeURIComponent(href.slice(6).split('#')[0]).replace(/_/g, ' '); } catch { continue; } if (/^(File|Help|Wikipedia|Portal|Category|Template|Special|Talk|Wiktionary):/i.test(ti) || t.includes(ti)) continue; t.push(ti); } return t; };
+  let cat = 'other';
+  const walk = (ul, chain) => {
+    for (const li of ul.children) {
+      if (li.tagName !== 'LI') continue;
+      const subs = [...li.children].filter(c => c.tagName === 'UL');
+      const own = [...li.childNodes].filter(n => !(n.nodeType === 1 && n.tagName === 'UL'));
+      const ownLinks = titles(own.flatMap(n => n.nodeType !== 1 ? [] : n.tagName === 'A' ? [n] : [...n.querySelectorAll('a')]));
+      if (subs.length) { const label = own.map(n => n.textContent).join('').replace(/\s+/g, ' ').trim(); subs.forEach(u => walk(u, [...chain, { label, links: ownLinks }])); continue; }
+      const src = [...li.querySelectorAll('a.external')].map(a => ({ href: safeUrl(a.getAttribute('href')), name: a.textContent.replace(/[()]/g, '').trim() })).find(s => s.href);
+      const c = li.cloneNode(true); c.querySelectorAll('a.external, sup, style, link').forEach(n => n.remove());
+      const text = c.textContent.replace(/\s+/g, ' ').replace(/\s+([.,;:])/g, '$1').trim();
+      if (text.length < 15) continue;
+      out.push({ kind: 'wiki', id: `${date.toISOString().slice(0, 10)}-${out.length}`, cat, text, links: ownLinks, chain, src: src || null, day, date });
+    }
+  };
+  for (const el of root.children) {
+    if (el.tagName === 'UL') { walk(el, []); continue; }
+    const h = el.textContent.trim().toLowerCase();
+    if (h.length < 40 && (el.tagName === 'P' || el.getAttribute('role') === 'heading' || /^H\d$/.test(el.tagName))) cat = WIKI_CATS[h] || 'other';
+  }
+  return out;
+}
+async function wikiCoords(titles) {
+  const map = new Map(), batches = [];
+  for (let i = 0; i < titles.length; i += 40) batches.push(titles.slice(i, i + 40));
+  let bi = 0;
+  const worker = async () => {
+    while (bi < batches.length) {
+      const batch = batches[bi++];
+      try {
+        const js = await fetchJSON(WIKI_API + 'action=query&redirects=1&prop=coordinates&coprop=type|globe&colimit=max&titles=' + encodeURIComponent(batch.join('|')), {}, 30000);
+        const q = js.query || {}, fwd = new Map();
+        for (const n of [...(q.normalized || []), ...(q.redirects || [])]) fwd.set(n.from, n.to);
+        const pages = new Map((q.pages || []).map(p => [p.title, p.coordinates?.[0]]));
+        for (const t of batch) {
+          let k = t; for (let g = 0; g < 3 && fwd.has(k); g++) k = fwd.get(k);
+          const c = pages.get(k);
+          if (c && isFinite(c.lat) && isFinite(c.lon) && (!c.globe || c.globe === 'earth')) map.set(t, { lat: +c.lat, lon: +c.lon, type: String(c.type || '').split('(')[0].toLowerCase() });
+        }
+      } catch (e) { console.warn('wikipedia coordinates', e); }
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  return map;
+}
+// how specific a Wikipedia coordinate is (lower = more precise place)
+const CO_RANK = { event: 0, landmark: 1, city: 1, airport: 1, railwaystation: 1, edu: 1.2, mountain: 1.2, waterbody: 1.5, river: 1.5, isle: 1.5, glacier: 1.5, forest: 1.5, pass: 1.5, adm3rd: 2, adm2nd: 2.2, '': 2.5, adm1st: 3, country: 4, continent: 9, ocean: 9, sea: 6 };
+const coRank = t => t in CO_RANK ? CO_RANK[t] : 2.5;
+function placeEvent(e, coords) {
+  let best = null, br = 99;
+  const consider = (title, pen) => { const c = coords.get(title); if (!c) return; const r0 = coRank(c.type); if (r0 >= 6) return; if (r0 + pen < br) { br = r0 + pen; best = { ...c, title }; } };
+  e.links.forEach((t, i) => consider(t, i * 0.01));
+  [...e.chain].reverse().forEach((c, d) => c.links.forEach((t, i) => consider(t, 0.6 + d * 0.1 + i * 0.01)));
+  return best;
+}
+const NUMW = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90, hundred: 100, dozen: 12, dozens: 24, several: 3, scores: 40, hundreds: 200, thousands: 2000 };
+const NUM_RE = `(\\d{1,3}(?:,\\d{3})+|\\d+|${Object.keys(NUMW).join('|')})`;
+const RE_PRE = new RegExp(`\\b${NUM_RE}\\s+(?:[a-z'-]+\\s+){0,4}?(?:(?:are|were|is|was|have been|has been|being)\\s+)?(killed|dead|died|die|deaths|injured|wounded|hurt)\\b`, 'g');
+const RE_POST = new RegExp(`\\b(killing|kills|killed|injuring|wounding)\\s+(?:at least\\s+|more than\\s+|over\\s+|about\\s+|around\\s+|nearly\\s+)?${NUM_RE}\\b`, 'g');
+const RE_TOLL = new RegExp(`death toll[^.]{0,40}?\\b(?:to|at|reaches|of)\\s+(?:at least\\s+)?${NUM_RE}`, 'g');
+function casualties(text) {
+  const t = String(text).toLowerCase();
+  const val = w => { if (w in NUMW) return NUMW[w]; if (/^\d{4}$/.test(w) && +w >= 1900 && +w <= 2100) return 0; return Math.min(+w.replace(/,/g, '') || 0, 1e6); };
+  let killed = 0, injured = 0;
+  for (const m of t.matchAll(RE_PRE)) { const v = val(m[1]); if (/kill|dead|die|death/.test(m[2])) killed = Math.max(killed, v); else injured = Math.max(injured, v); }
+  for (const m of t.matchAll(RE_POST)) { const v = val(m[2]); if (/kill/.test(m[1])) killed = Math.max(killed, v); else injured = Math.max(injured, v); }
+  for (const m of t.matchAll(RE_TOLL)) killed = Math.max(killed, val(m[1]));
+  return { killed, injured };
+}
+const CAT_BASE = { conflict: 30, disaster: 24, health: 16, crime: 12, intl: 10, politics: 8, economy: 6, science: 3, culture: 2, sports: 1, other: 4 };
+const KW_RE = /\b(nuclear|ballistic|missiles?|air ?strikes?|drone strikes?|drones?|shelling|bombings?|explosions?|massacres?|coup|martial law|state of emergency|invasion|invades?|terroris[mt]s?|hostages?|assassinat\w+|genocide|mobili[sz]ation|evacuat\w+|epidemic|pandemic|tsunami|famine|chemical weapons?)\b/i;
+const wikiSev = e => clamp((CAT_BASE[e.cat] ?? 4) + Math.min(45, 14 * Math.log10(1 + e.killed)) + Math.min(12, 5 * Math.log10(1 + e.injured)) + (KW_RE.test(e.text) ? 8 : 0), 0, 100);
+async function loadWiki() {
+  setStatus('wiki', 'loading');
+  const days = [0, 1, 2].map(i => new Date(Date.now() - i * DAY));
+  const pages = await Promise.allSettled(days.map(d => fetchJSON(WIKI_API + 'action=parse&prop=text&redirects=1&page=' + encodeURIComponent(wikiPage(d)), {}, 30000)));
+  const evs = [];
+  pages.forEach((r, i) => { const html = r.status === 'fulfilled' && r.value?.parse?.text; if (typeof html === 'string') evs.push(...parseWikiDay(html, days[i], i)); });
+  if (!evs.length) { const bad = pages.find(r => r.status === 'rejected'); throw new Error(bad ? bad.reason.message : 'no current-events pages found'); }
+  const titles = new Set(); for (const e of evs) { e.links.forEach(t => titles.add(t)); e.chain.forEach(c => c.links.forEach(t => titles.add(t))); }
+  const coords = await wikiCoords([...titles]);
+  const now = Date.now();
+  for (const e of evs) {
+    const p = placeEvent(e, coords), cas = casualties(e.text);
+    Object.assign(e, { lat: p ? p.lat : null, lon: p ? wrapLon(p.lon) : null, place: p?.title || null, ptype: p?.type || '', killed: cas.killed, injured: cas.injured,
+      t: new Date(Math.min(now, Date.UTC(e.date.getUTCFullYear(), e.date.getUTCMonth(), e.date.getUTCDate(), 12))) });
+    e.sev = wikiSev(e);
+  }
+  jitter(evs.filter(e => e.lat != null));
+  wikiEvents = evs;
+  drawWiki();
+  const placed = evs.filter(e => e.lat != null).length, nc = evs.filter(e => e.cat === 'conflict').length;
+  setStatus('wiki', 'ok', `${pl(evs.length, 'event')} in 3 days (${nc} conflict), ${placed} placed on the map${coords.size ? '' : '; place lookup failed'}`);
+}
+function drawWiki() {
+  const F = S.filters, inDays = e => e.lat != null && e.day < F.eventDays;
+  pts.conflict.setData(wikiEvents.filter(e => e.cat === 'conflict' && inDays(e)).map(e => ({ ...e, ref: e, shape: 1, size: 9 + Math.min(8, 3.2 * Math.log10(1 + e.killed)), color: NEWS.conflict[1], pulse: e.day === 0 })));
+  pts.news.setData(wikiEvents.filter(e => e.cat !== 'conflict' && F.newsCats[e.cat] && inDays(e)).map(e => ({ ...e, ref: e, shape: 0, size: 7, color: (NEWS[e.cat] || NEWS.other)[1] })));
+}
+
+/* ---------- WHO Disease Outbreak News ---------- */
+const HC_RE = /ebola|marburg|nipah|\bmers\b|middle east respiratory|h5n1|h7n9|h5n6|h10n3|avian influenza|influenza a\s*\(h|novel influenza|plague|lassa|crimean-congo|smallpox|mpox|monkeypox|anthrax|undetermined|unknown (?:a?etiology|cause|origin)|unexplained/i;
+const WHO_REGIONS = [[/african region/i, 2, 20], [/region of the americas|americas region/i, 5, -70], [/european region/i, 50, 15], [/eastern mediterranean/i, 27, 42], [/south-?east asia region/i, 18, 88], [/western pacific/i, 15, 125]];
+let whoData = [], whoPts = [];
+async function loadWho() {
+  setStatus('who', 'loading');
+  const js = await fetchJSON('https://www.who.int/api/news/diseaseoutbreaknews?$orderby=PublicationDate%20desc&$top=30&$select=Title,OverrideTitle,PublicationDate,UrlName,DonId', {}, 30000);
+  let C = null; try { C = await getCountries(); } catch (e) { console.warn('countries', e); }
+  const now = Date.now();
+  whoData = (js.value || []).map(v => {
+    const title = String(v.OverrideTitle || v.Title || '').replace(/\s+/g, ' ').trim(), t = new Date(v.PublicationDate);
+    if (!title || isNaN(t)) return null;
+    const m = title.match(/^(.*?)\s*[-–—]\s+(.+)$/);
+    const disease = (m ? m[1] : title.split(',')[0]).replace(/[\s,–-]+$/, '').trim();
+    const where = m ? m[2] : title.slice(disease.length).replace(/^[\s,–-]+/, '');
+    const cs = C ? findCountries(C, where || title) : [];
+    const places = cs.map(c => ({ lat: c.c.lat, lon: c.c.lon, name: c.name, cid: c.id }));
+    if (!places.length) for (const [re, lat, lon] of WHO_REGIONS) if (re.test(title)) { places.push({ lat, lon, name: title.match(re)[0], cid: null }); break; }
+    const link = /^[\w-]+$/.test(v.UrlName || '') ? `https://www.who.int/emergencies/disease-outbreak-news/item/${v.UrlName}` : 'https://www.who.int/emergencies/disease-outbreak-news';
+    return { kind: 'who', id: v.DonId || v.UrlName || title, title, disease, where, t, places, hc: HC_RE.test(title), link };
+  }).filter(d => d && now - d.t < 60 * DAY);
+  drawWho();
+  const g = whoGroups().filter(x => now - x.t < 30 * DAY);
+  setStatus('who', 'ok', `${pl(g.length, 'outbreak')} reported in 30 days${g.some(x => x.hc) ? ', incl. ' + g.filter(x => x.hc).map(x => clip(x.disease, 28)).slice(0, 3).join(', ') : ''}`);
+}
+function whoGroups() { // one entry per disease, latest report first, places merged
+  const g = new Map();
+  for (const d of [...whoData].sort((a, b) => b.t - a.t)) {
+    const key = norm(d.disease).split(' ').slice(0, 3).join(' ');
+    const x = g.get(key);
+    if (!x) { g.set(key, { ...d, kind: 'who', places: [...d.places], n: 1 }); continue; }
+    x.n++; x.hc = x.hc || d.hc;
+    for (const p of d.places) if (!x.places.some(q => q.name === p.name)) x.places.push(p);
+  }
+  return [...g.values()];
+}
+const whoSev = g => 35 + (g.hc ? 30 : 0) + (g.places.length > 1 ? 10 : 0) + Math.min(10, (g.n - 1) * 3);
+function drawWho() {
+  const now = Date.now();
+  whoPts = [];
+  for (const g of whoGroups()) if (now - g.t < 45 * DAY) for (const p of g.places) whoPts.push({ ...g, ref: g, lat: p.lat, lon: p.lon, placeName: p.name, cid: p.cid, sev: whoSev(g), shape: 4, size: g.hc ? 15 : 12, color: '#46f0c0', pulse: g.hc && now - g.t < 14 * DAY });
+  jitter(whoPts);
+  pts.outbreaks.setData(whoPts);
+}
+
+/* ---------- UK FCDO travel advice (country risk ratings) ---------- */
+const ADV = {
+  all: { l: 'Advises against all travel', s: 'No travel', c: '#ff3b4f' },
+  essential: { l: 'Advises against all but essential travel', s: 'Essential only', c: '#ff9f1a' },
+  allParts: { l: 'Advises against all travel to parts of the country', s: 'No travel to parts', c: '#ff3b4f', hatch: true },
+  essentialParts: { l: 'Advises against all but essential travel to parts of the country', s: 'Essential only to parts', c: '#ff9f1a', hatch: true },
+  none: { l: 'No advice against travel', s: 'No warnings', c: '#3ddc97' },
+};
+function advCode(st) {
+  if (!Array.isArray(st)) return null;
+  if (st.includes('avoid_all_travel_to_whole_country')) return 'all';
+  if (st.includes('avoid_all_but_essential_travel_to_whole_country')) return 'essential';
+  if (st.includes('avoid_all_travel_to_parts')) return 'allParts';
+  if (st.includes('avoid_all_but_essential_travel_to_parts')) return 'essentialParts';
+  return 'none';
+}
+let travel = [], travelByCountry = new Map(), travelReady = false;
+const FCDO_CACHE = 'wg-fcdo-v1';
+async function loadTravel() {
+  setStatus('fcdo', 'loading', 'reading the GOV.UK index');
+  const idx = await fetchJSON('https://www.gov.uk/api/content/foreign-travel-advice', {}, 30000);
+  const kids = (idx.links?.children || []).map(k => ({
+    slug: k.details?.country?.slug || '', name: k.details?.country?.name || String(k.title || '').replace(/ travel advice$/i, ''),
+    api: safeUrl(k.api_url) || (k.api_path ? 'https://www.gov.uk' + k.api_path : null), web: safeUrl(k.web_url), upd: k.public_updated_at || '', change: k.details?.change_description || '',
+  })).filter(k => k.slug && k.api && k.api.startsWith('https://www.gov.uk/'));
+  if (!kids.length) throw new Error('travel advice index was empty');
+  let cache = {}; try { cache = JSON.parse(localStorage.getItem(FCDO_CACHE) || '{}') || {}; } catch {}
+  const todo = kids.filter(k => !cache[k.slug] || cache[k.slug].upd !== k.upd); // only pages changed since last visit
+  let i = 0, done = 0, fails = 0;
+  const worker = async () => {
+    while (i < todo.length) {
+      const k = todo[i++];
+      try { const js = await fetchJSON(k.api, {}, 30000); cache[k.slug] = { upd: k.upd, st: Array.isArray(js.details?.alert_status) ? js.details.alert_status : [] }; } catch { fails++; }
+      if (++done % 25 === 0) setStatus('fcdo', 'loading', `checked ${done} of ${todo.length} countries`);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(6, todo.length) }, worker));
+  try { localStorage.setItem(FCDO_CACHE, JSON.stringify(cache)); } catch {}
+  travel = kids.map(k => ({ ...k, kind: 'travel', code: cache[k.slug] ? advCode(cache[k.slug].st) : null }));
+  if (!travel.some(t => t.code)) throw new Error('country advice pages failed to load');
+  await drawTravel();
+  const n = c => travel.filter(t => t.code === c).length;
+  setStatus('fcdo', 'ok', `${pl(n('all'), 'country', 'countries')} no travel, ${n('essential')} essential only, ${n('allParts') + n('essentialParts')} with no-go areas${fails ? ` (${fails} pages failed)` : ''}`);
+}
+function fillCountry(x, c, W, H) {
+  for (const p of c.polys) {
+    const rings = p.map(unwrapRing), xs = rings[0].map(q => q[0]), offs = [0];
+    if (Math.min(...xs) < -180) offs.push(360); if (Math.max(...xs) > 180) offs.push(-360);
+    for (const o of offs) {
+      x.beginPath();
+      for (const r of rings) r.forEach(([lo, la], k) => { const px = (lo + o + 180) / 360 * W, py = (90 - la) / 180 * H; k ? x.lineTo(px, py) : x.moveTo(px, py); });
+      x.fill('evenodd'); x.stroke();
+    }
+  }
+}
+async function drawTravel() {
+  const C = await getCountries();
+  travelByCountry = new Map();
+  for (const a of travel) for (const c of atlasFor(C, a.name, FCDO_EXTRA)) travelByCountry.set(c, a);
+  const W = 4096, H = 2048, cv = mkCanvas(W, H), x = cv.getContext('2d');
+  const hatch = col => { const p = mkCanvas(16, 16), q = p.getContext('2d'); q.strokeStyle = col; q.lineWidth = 1.6; q.beginPath(); for (let k = -16; k <= 32; k += 8) { q.moveTo(k, 16); q.lineTo(k + 16, 0); } q.stroke(); return x.createPattern(p, 'repeat'); };
+  const style = {
+    all: ['rgba(255,59,79,.42)', 'rgba(255,59,79,.95)'], essential: ['rgba(255,159,26,.36)', 'rgba(255,159,26,.9)'],
+    allParts: [hatch('rgba(255,59,79,.7)'), 'rgba(255,59,79,.6)'], essentialParts: [hatch('rgba(255,159,26,.6)'), 'rgba(255,159,26,.5)'],
+  };
+  x.lineWidth = 2; x.lineJoin = 'round';
+  for (const [c, a] of travelByCountry) { const st = style[a.code]; if (!st) continue; x.fillStyle = st[0]; x.strokeStyle = st[1]; fillCountry(x, c, W, H); }
+  shells.travel.setTexture(canvasTex(cv)); travelReady = true;
+  applyVisibility(); updateLegend();
+}
+
+/* ---------- Space weather, significant quakes, rocket launches ---------- */
+let spaceWx = null, sigQuakes = [], launches = [];
+async function loadSpaceWx() {
+  setStatus('spacewx', 'loading');
+  const [sc, kp] = await Promise.allSettled([fetchJSON('https://services.swpc.noaa.gov/products/noaa-scales.json'), fetchJSON('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json')]);
+  if (sc.status === 'rejected') throw new Error(sc.reason.message);
+  const cur = sc.value['0'] || {}, sc0 = k => +(cur[k]?.Scale) || 0;
+  const fG = Math.max(...['1', '2', '3'].map(d => +(sc.value[d]?.G?.Scale) || 0));
+  let kpNow = null, kpT = null;
+  if (kp.status === 'fulfilled' && Array.isArray(kp.value) && kp.value.length) {
+    const last = kp.value.at(-1);
+    if (Array.isArray(last)) { kpNow = parseFloat(last[1]); kpT = utcDate(String(last[0]).replace(' ', 'T')); } else { kpNow = parseFloat(last.Kp ?? last.kp_index); kpT = utcDate(last.time_tag); }
+    if (!isFinite(kpNow)) kpNow = null;
+  }
+  spaceWx = { G: sc0('G'), S: sc0('S'), R: sc0('R'), Gt: cur.G?.Text || '', St: cur.S?.Text || '', Rt: cur.R?.Text || '', fG, kp: kpNow, kpT, t: utcDate(`${cur.DateStamp}T${cur.TimeStamp}`) || new Date() };
+  setStatus('spacewx', 'ok', `G${spaceWx.G} S${spaceWx.S} R${spaceWx.R}${kpNow != null ? ', Kp ' + kpNow.toFixed(1) : ''}`);
+}
+async function loadSigQuakes() {
+  setStatus('sigquakes', 'loading');
+  const js = await fetchJSON('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson');
+  sigQuakes = (js.features || []).map(f => ({ kind: 'quake', lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1], depth: f.geometry.coordinates[2] || 0, mag: +f.properties.mag || 0, place: f.properties.place, t: new Date(f.properties.time), url: safeUrl(f.properties.url), tsunami: f.properties.tsunami, alert: f.properties.alert || null, sig: f.properties.sig }));
+  setStatus('sigquakes', 'ok', `${pl(sigQuakes.length, 'significant earthquake')} in the past week`);
+}
+const slimLaunch = l => l.slim ? l : {
+  slim: 1, name: l.name || 'Launch', net: l.net, status: l.status?.abbrev || '', statusName: l.status?.name || '', provider: l.launch_service_provider?.name || '',
+  pad: l.pad?.name || '', loc: l.pad?.location?.name || '', lat: parseFloat(l.pad?.latitude), lon: parseFloat(l.pad?.longitude),
+  orbit: l.mission?.orbit?.name || '', mission: l.mission?.description || '',
+};
+async function loadLaunches() {
+  setStatus('launches', 'loading');
+  let res = null; // Launch Library allows 15 calls an hour, so reuse a recent copy
+  try { const c = JSON.parse(localStorage.getItem('wg-launches') || 'null'); if (c && Date.now() - c.at < 25 * 60e3 && Array.isArray(c.res)) res = c.res; } catch {}
+  if (!res) {
+    const until = new Date(Date.now() + 8 * DAY).toISOString();
+    const js = await fetchJSON(`https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=30&hide_recent_previous=true&net__lte=${encodeURIComponent(until)}`, {}, 30000);
+    res = (js.results || []).map(slimLaunch);
+    try { localStorage.setItem('wg-launches', JSON.stringify({ at: Date.now(), res })); } catch {}
+  }
+  const now = Date.now();
+  launches = res.map(slimLaunch).map(l => ({ ...l, kind: 'launch', net: new Date(l.net), lat: isFinite(l.lat) ? l.lat : null, lon: isFinite(l.lon) ? l.lon : null }))
+    .filter(l => !isNaN(l.net) && l.net > now - 3 * 3600e3).sort((a, b) => a.net - b.net);
+  drawLaunches();
+  setStatus('launches', 'ok', `${pl(launches.length, 'launch', 'launches')} in the coming week`);
+}
+function drawLaunches() {
+  const now = Date.now(), list = launches.filter(l => l.lat != null).map(l => ({ ...l, ref: l, shape: 2, size: 10, color: '#c9b6ff', pulse: l.net - now < DAY && l.net > now - 3600e3 }));
+  jitter(list); pts.launches.setData(list);
+}
+
+pts.gdacs = makePoints(10); pts.conflict = makePoints(10); pts.news = makePoints(10); pts.outbreaks = makePoints(10); pts.launches = makePoints(10);
+shells.travel = makeShell(R.travel, 1, { nightDim: 0.15 });
+
+/* ---------- Feed scheduling ---------- */
+const TF = {}, TT = {};
+const MIN_GAP = { gdacs: 5, wiki: 10, who: 30, fcdo: 30, spacewx: 5, sigquakes: 5, launches: 25 }; // minutes between refreshes
+function feed(key, fn, force = false) {
+  const st = status[key]?.state;
+  if (TF[key] && (st === 'loading' || !force || (st !== 'error' && Date.now() - (TT[key] || 0) < (MIN_GAP[key] || 0) * 60e3))) return TF[key];
+  TT[key] = Date.now();
+  return (TF[key] = safe(fn, key).then(scheduleThreat));
+}
+const loadThreatFeed = { gdacs: loadGdacs, wiki: loadWiki, who: loadWho, fcdo: loadTravel, spacewx: loadSpaceWx, sigquakes: loadSigQuakes, launches: loadLaunches };
+function refreshThreats(force = false) {
+  for (const k of ['gdacs', 'sigquakes', 'spacewx', 'who', 'wiki', 'fcdo']) feed(k, loadThreatFeed[k], force);
+  if (S.layers.launches) feed('launches', loadLaunches, force);
+}
+
+/* ---------- Threat assessment ---------- */
+const THREAT_FEEDS = ['gdacs', 'sigquakes', 'storms', 'alerts', 'wiki', 'fcdo', 'who', 'spacewx'];
+let threat = null, threatTop = [], threatTimer = 0, lastNear = [];
+function scheduleThreat() { clearTimeout(threatTimer); threatTimer = setTimeout(() => { computeThreat(); updateBadge(); if (currentTab === 'threats') renderPanel(); updateLegend(); }, 300); }
+const quakeSev = q => clamp(15 + (q.mag - 5) * 12 + ({ yellow: 20, orange: 40, red: 60 }[q.alert] || 0), 5, 98);
+const gdSev = e => (({ Red: 85, Orange: 60, Green: 18 })[e.level] + (e.type === 'EQ' && e.level === 'Green' && parseFloat((/(\d+(?:\.\d+)?)\s*M/.exec(e.sevText) || [])[1]) >= 6 ? 15 : 0)) * (e.current ? 1 : 0.7);
+const STORM_SEV = { TD: 15, TS: 25, 'Cat 1': 40, 'Cat 2': 50, 'Cat 3': 65, 'Cat 4': 80, 'Cat 5': 90 };
+function eventPool() {
+  const pool = [], now = Date.now();
+  const push = (ref, kind, sev, t, title, meta, lat, lon) => pool.push({ ref, kind, sev: clamp(sev, 0, 100), t, title, meta, lat, lon });
+  for (const e of gdacsData) if (e.current || now - e.end < 3 * DAY) push(e, 'gdacs', gdSev(e), e.current ? new Date() : e.end, e.title, `GDACS ${e.level.toLowerCase()} alert · ${shortPlace(e.country)}${e.current ? '' : ' · ended'}`, e.lat, e.lon);
+  for (const q of sigQuakes) if (!pool.some(p => p.kind === 'gdacs' && p.ref.type === 'EQ' && gcDist(p.lat, p.lon, q.lat, q.lon) < 150 && Math.abs(p.ref.start - q.t) < 3 * 3600e3 && p.sev >= quakeSev(q)))
+    push(q, 'quake', quakeSev(q), q.t, `M${q.mag.toFixed(1)} earthquake${q.place ? ', ' + q.place : ''}`, `USGS · ${ago(q.t)}${q.alert ? ' · PAGER ' + q.alert : ''}`, q.lat, q.lon);
+  for (const s of storms) push(s, 'storm', STORM_SEV[catOf(s.kts)[1]] || 15, s.t, s.title, `Tropical cyclone · ${catOf(s.kts)[1]}${s.kts ? ' · ' + Math.round(s.kts) + ' kt' : ''}`, s.lat, s.lon);
+  for (const a of alerts) if (/tornado warning/i.test(a.event) || a.severity === 'Extreme') {
+    const ring = a.polys[0]?.[0] || []; if (!ring.length) continue;
+    const lat = ring.reduce((s, p) => s + p[1], 0) / ring.length, lon = ring.reduce((s, p) => s + p[0], 0) / ring.length;
+    push({ ...a, kind: 'nws', lat, lon }, 'nws', /tornado/i.test(a.event) ? 48 : 45, new Date(), a.event, `US National Weather Service · ${clip(a.area, 60)}`, lat, lon);
+  }
+  for (const e of wikiEvents) if (e.sev >= 20) push(e, 'wiki', e.sev, e.t, clip(e.text, 140), `${NEWS[e.cat]?.[2] || 'News'} · ${dayLabel(e)}${e.place ? ' · ' + e.place : ''}`, e.lat, e.lon);
+  for (const g of whoGroups()) if (now - g.t < 30 * DAY) push(g, 'who', whoSev(g), g.t, `${g.disease}${g.where ? ' · ' + g.where : ''}`, `WHO outbreak news · ${fmtDate(g.t)}${g.n > 1 ? ` · ${g.n} reports` : ''}`, g.places[0]?.lat ?? null, g.places[0]?.lon ?? null);
+  const w = spaceWx; if (w && Math.max(w.G, w.S, w.R) >= 2) push({ kind: 'space' }, 'space', 20 * Math.max(w.G, w.S, w.R), w.t, `Space weather: G${w.G} ${w.Gt}, S${w.S}, R${w.R}`.replace(/ none/g, ''), 'NOAA Space Weather Prediction Center', null, null);
+  const decay = t => { const h = (now - t) / 3600e3; return h < 24 ? 1 : h < 48 ? 0.85 : h < 72 ? 0.7 : h < 168 ? 0.5 : 0.3; };
+  for (const p of pool) p.rank = p.sev * decay(p.t);
+  return pool.sort((a, b) => b.rank - a.rank);
+}
+function computeThreat() {
+  const now = Date.now(), dom = [], ok = (...ks) => ks.some(k => status[k]?.state === 'ok');
+  { // conflict & security
+    const c2 = wikiEvents.filter(e => e.cat === 'conflict' && e.day <= 1), n = c2.length, k = c2.reduce((a, e) => a + e.killed, 0);
+    const cnt = c => travel.filter(t => t.code === c).length, nAll = cnt('all'), nEss = cnt('essential'), nP = cnt('allParts'), nEP = cnt('essentialParts');
+    const bits = [];
+    if (ok('wiki')) bits.push(`${pl(n, 'conflict or attack report')} in the last 2 days${k ? `, mentioning at least ${k.toLocaleString()} deaths` : ''}`);
+    if (ok('fcdo')) bits.push(`UK advises against all travel to ${pl(nAll, 'country', 'countries')} and to parts of ${nP} more`);
+    dom.push({ key: 'conflict', name: 'Conflict & security', have: ok('wiki', 'fcdo'), text: bits.join('. '), score: clamp(n + 6 * Math.log10(1 + k) + nAll + 0.5 * nEss + 0.15 * nP + 0.05 * nEP, 0, 100) });
+  }
+  { // natural hazards
+    let s = 0, green = 0, mx = 0, ended = 0; const cnt = { Red: 0, Orange: 0, Green: 0 };
+    for (const e of gdacsData) {
+      if (e.type === 'TC' || !(e.current || now - e.end < 3 * DAY)) continue;
+      const w = (e.current ? 1 : 0.5) * (e.type === 'DR' ? 0.5 : 1); if (e.current) cnt[e.level]++; else if (e.level !== 'Green') ended++;
+      if (e.level === 'Red') s += 28 * w; else if (e.level === 'Orange') s += 9 * w; else green += 0.25 * w;
+    }
+    s += Math.min(12, green);
+    for (const q of sigQuakes) { const w = Math.max(0.3, 1 - (now - q.t) / (7 * DAY)); s += w * (2 + ({ yellow: 4, orange: 10, red: 20 }[q.alert] || 0)); mx = Math.max(mx, q.mag); }
+    const bits = [];
+    if (ok('gdacs')) bits.push(`${cnt.Red || cnt.Orange ? `${cnt.Red} red and ${cnt.Orange} orange disaster alerts active` : 'No red or orange disaster alerts active'}${ended ? ` (${ended} more ended in the last 3 days)` : ''}, ${pl(cnt.Green, 'lower-impact event')} tracked`);
+    if (ok('sigquakes')) bits.push(sigQuakes.length ? `${pl(sigQuakes.length, 'significant earthquake')} this week, ${sigQuakes.length > 1 ? 'largest ' : ''}M${mx.toFixed(1)}` : 'no significant earthquakes this week');
+    dom.push({ key: 'natural', name: 'Natural hazards', have: ok('gdacs', 'sigquakes'), text: bits.join('. '), score: clamp(s, 0, 100) });
+  }
+  { // storms & severe weather
+    let s = 0; const names = [], strongest = [];
+    for (const st of storms) { const c = catOf(st.kts); s += { TD: 3, TS: 6, 'Cat 1': 12, 'Cat 2': 18, 'Cat 3': 28, 'Cat 4': 38, 'Cat 5': 48 }[c[1]] || 3; names.push(norm(st.name).split(' ')[0]); strongest.push([st.kts || 0, `${st.name} (${c[1]})`]); }
+    for (const e of gdacsData) if (e.type === 'TC' && e.current && !names.includes(norm(e.eventname.split('-')[0]))) { s += { Green: 6, Orange: 20, Red: 40 }[e.level]; names.push(norm(e.eventname)); strongest.push([0, `${e.eventname || e.title} (GDACS ${e.level.toLowerCase()})`]); }
+    const tor = alerts.filter(a => /tornado warning/i.test(a.event)).length, ext = alerts.filter(a => a.severity === 'Extreme').length, sev = alerts.filter(a => a.severity === 'Severe').length;
+    s += Math.min(25, ext * 5) + Math.min(18, tor * 3) + Math.min(12, sev * 0.25);
+    const bits = [];
+    strongest.sort((a, b) => b[0] - a[0]);
+    bits.push(names.length > 1 ? `${names.length} active tropical cyclones, strongest ${strongest[0][1]}` : names.length ? `1 active tropical cyclone, ${strongest[0][1]}` : 'No active tropical cyclones');
+    if (ok('alerts')) bits.push(`${pl(tor, 'tornado warning')} and ${pl(ext, 'extreme alert')} in the US`);
+    dom.push({ key: 'storms', name: 'Storms & severe weather', have: ok('storms', 'alerts', 'gdacs'), text: bits.join('. '), score: clamp(s, 0, 100) });
+  }
+  { // health
+    const gs = whoGroups().filter(g => now - g.t < 30 * DAY); let s = 0;
+    for (const g of gs) s += ((now - g.t) / DAY <= 14 ? 1 : 0.5) * (5 + (g.hc ? 8 : 0) + (g.places.length > 1 ? 5 : 0) + Math.min(4, g.n - 1));
+    const hc = gs.filter(g => g.hc).map(g => clip(g.disease, 40));
+    dom.push({ key: 'health', name: 'Disease outbreaks', have: ok('who'), score: clamp(s, 0, 100),
+      text: ok('who') ? `${pl(gs.length, 'outbreak')} reported by WHO in 30 days${hc.length ? `, incl. ${hc.slice(0, 3).join('; ')}` : ''}` : '' });
+  }
+  { // space weather
+    const w = spaceWx, mxs = w ? Math.max(w.G, w.S, w.R) : 0;
+    dom.push({ key: 'space', name: 'Space weather', have: ok('spacewx') && !!w, score: w ? clamp(Math.max(20 * mxs, w.kp >= 5 ? (w.kp - 4) * 20 : (w.kp || 0) * 2), 0, 100) : 0,
+      text: w ? `Geomagnetic storms G${w.G}, radiation S${w.S}, radio blackouts R${w.R}${w.kp != null ? `, Kp index ${w.kp.toFixed(1)}` : ''}${w.fG > w.G ? `. G${w.fG} storm forecast in the next 3 days` : ''}` : '' });
+  }
+  const av = dom.filter(d => d.have);
+  threatTop = eventPool().slice(0, 14);
+  if (av.length < 2) { threat = av.length ? { partial: true, dom, at: new Date() } : null; return; }
+  const mx = Math.max(...av.map(d => d.score)), mean = av.reduce((a, d) => a + d.score, 0) / av.length;
+  threat = { score: clamp(0.6 * mx + 0.4 * mean, 0, 100), dom, at: new Date(), live: THREAT_FEEDS.filter(k => status[k]?.state === 'ok').length, feeds: THREAT_FEEDS.length, pending: THREAT_FEEDS.filter(k => status[k]?.state === 'loading').length };
+}
+// true once every threat feed has answered (ok or error), so "Loading…" can't hang forever
+const threatSettled = () => ['gdacs', 'sigquakes', 'spacewx', 'who', 'wiki', 'fcdo'].every(k => status[k] && status[k].state !== 'loading');
+function updateBadge() {
+  const b = $('#threatBtn'), lab = b.querySelector('b');
+  if (!threat || threat.partial) {
+    const done = threatSettled();
+    lab.textContent = done ? 'Unavailable' : 'Loading…'; b.style.setProperty('--lv', '#55607a'); b.classList.remove('hot');
+    b.title = done ? 'Too few threat feeds answered to score the global picture. Click for details (T).' : 'Loading threat feeds… (T)'; return;
+  }
+  const lv = levelOf(threat.score);
+  b.style.setProperty('--lv', lv[2]); lab.textContent = lv[1]; b.classList.toggle('hot', threat.score >= 60);
+  b.title = `Global threat level: ${lv[1]}, ${Math.round(threat.score)} of 100. Click for the breakdown (T).`;
+}
+function renderThreats() {
+  const T = threat;
+  if (!T || T.partial) return `<div class="tcard"><div class="tk">Global threat picture</div><p class="note">${threatSettled() ? 'Too few threat feeds could be reached to give an overall score right now. Whatever did load is still on the globe and listed below, and the Sources tab shows what failed. The globe tries again every 10 minutes, or use the refresh button.' : 'Loading threat feeds… The score appears once at least two kinds of data have arrived.'}</p></div>${topList()}`;
+  const lv = levelOf(T.score);
+  let h = `<div class="tcard" style="--lv:${lv[2]}"><div class="tk">Global threat picture</div>
+    <div class="trow"><span class="lvl">${lv[1]}</span><span class="score"><b>${Math.round(T.score)}</b> / 100</span></div>
+    <div class="gauge" role="img" aria-label="Threat score ${Math.round(T.score)} out of 100"><i style="left:${clamp(T.score, 1, 99).toFixed(1)}%"></i></div>
+    <div class="gticks"><span>Low</span><span>Guarded</span><span>Elevated</span><span>High</span><span>Severe</span></div>
+    <span class="note">Updated ${fmtTime(T.at)} from ${T.live} of ${T.feeds} live feeds${T.pending ? `, ${T.pending} still loading` : ''}</span></div>`;
+  h += '<h4>By domain</h4>' + T.dom.map(d => { const l = levelOf(d.score); return `<div class="dom" style="--lv:${d.have ? l[2] : '#55607a'}"><div class="dn">${d.name}</div><span class="pill${d.have ? '' : ' na'}">${d.have ? l[1] : 'No data'}</span><div class="mb"><i style="width:${d.have ? Math.max(2, d.score).toFixed(0) : 0}%"></i></div><small>${esc(d.have ? d.text : 'Feed unavailable right now.')}</small></div>`; }).join('');
+  if (spaceWx) { const w = spaceWx; h += `<div class="swx" title="NOAA space weather scales, 0 to 5"><span><b>G${w.G}</b>Geomagnetic</span><span><b>S${w.S}</b>Radiation</span><span><b>R${w.R}</b>Radio</span><span><b>${w.kp != null ? w.kp.toFixed(1) : '—'}</b>Kp index</span></div>`; }
+  h += topList();
+  h += `<details class="note how"><summary>How this is worked out</summary><p>Each domain gets a score from 0 to 100, worked out in your browser from the live feeds. Conflict counts Wikipedia's conflict and attack reports from the last two days, the deaths they mention, and UK travel advice levels. Natural hazards weight GDACS alerts (red 28 points, orange 9, droughts half that) and USGS significant earthquakes by their PAGER impact level. Storms count active tropical cyclones by strength plus US tornado and extreme warnings. Outbreaks count WHO reports from the last 30 days, with extra weight for diseases such as Ebola, Marburg and MERS. Space weather follows NOAA's G, S and R scales.</p><p>The overall score is 60% the worst domain and 40% the average. It is a rough guide to how much is happening, not an official assessment, and Wikipedia entries are written by volunteers.</p></details>`;
+  return h;
+}
+function topList() {
+  return '<h4>Top events of interest</h4>' + (threatTop.length ? `<div class="evl">${threatTop.map((e, i) => { const l = levelOf(e.sev); return `<button data-ev="${i}" style="--c:${l[2]}"><span class="t">${esc(e.title)}</span><span class="sv">${l[1]}</span><small>${esc(e.meta)}</small></button>`; }).join('')}</div>` : '<div class="note">No events loaded yet.</div>');
+}
+function openEvent(e) {
+  if (!e) return;
+  if (e.kind === 'storm') { showStorm(e.ref || e); return; }
+  showFeature(e.ref ? { ...e.ref, kind: e.ref.kind || e.kind } : e);
+}
+function evTitle(e) { return e.kind === 'wiki' ? clip(e.text, 90) : e.kind === 'who' ? `${e.disease} · ${e.placeName || e.where}` : e.kind === 'launch' ? e.name : e.title; }
+function threatNearHTML(lat, lon) {
+  let h = '';
+  const ct = COUNTRIES ? countryAt(COUNTRIES, lat, lon) : null, adv = ct && travelByCountry.get(ct);
+  if (adv && adv.code && S.layers.travel) {
+    const A = ADV[adv.code];
+    h += `<div class="pp-sec"><h5>UK travel advice · ${esc(adv.name)}</h5><div class="alert" style="border-color:${A.c};background:${A.c}1a"><b>${esc(A.l)}</b><br><span class="note">Updated ${adv.upd ? fmtDate(new Date(adv.upd)) : 'recently'}${adv.change ? '. ' + esc(clip(adv.change, 220)) : ''}</span></div>${adv.web ? `<a class="note" href="${esc(adv.web)}" target="_blank" rel="noopener">Full advice on GOV.UK ↗</a>` : ''}</div>`;
+  }
+  const near = [], now = Date.now();
+  if (S.layers.gdacs) for (const e of gdacsData) if (e.current || now - e.end < 3 * DAY) { const km = gcDist(lat, lon, e.lat, e.lon); if (km < 600) near.push([e, km, gdSev(e)]); }
+  for (const e of wikiEvents) if (e.lat != null && e.day < S.filters.eventDays && ((e.cat === 'conflict' && S.layers.conflict) || (e.cat !== 'conflict' && S.layers.news && S.filters.newsCats[e.cat]))) { const km = gcDist(lat, lon, e.lat, e.lon); if (km < 400) near.push([e, km, e.sev]); }
+  if (ct && S.layers.outbreaks) for (const p of whoPts) if (p.cid === ct.id) near.push([p, 0, p.sev]);
+  near.sort((a, b) => b[2] - a[2] || a[1] - b[1]);
+  lastNear = near.slice(0, 5).map(n => n[0]);
+  if (lastNear.length) h += `<div class="pp-sec"><h5>Events nearby</h5><div class="list">${near.slice(0, 5).map((n, i) => `<button data-near="${i}"><span>${esc(evTitle(n[0]))}</span><small>${n[1] ? Math.round(n[1]) + ' km' : 'this country'}</small></button>`).join('')}</div></div>`;
+  return h;
+}
+function showThreatFeature(it) {
+  const head = (h, sub) => `<div class="pp-h"><div><h3>${h}</h3><small>${sub}</small></div><button class="x" data-close>✕</button></div>`;
+  const wx = it.lat != null ? `<button class="mini" data-wx="${(+it.lat).toFixed(3)},${(+it.lon).toFixed(3)}" style="margin-top:8px">Weather here</button>` : '';
+  const link = (u, t) => safeUrl(u) ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)} ↗</a>` : '';
+  switch (it.kind) {
+    case 'gdacs':
+      openPopup(`${head(esc(it.title), `${esc(GD_TYPE[it.type] || it.type)} · ${it.current ? 'active' : 'ended'} · updated ${ago(it.t)}`)}
+      <div class="pp-grid" style="margin-top:12px"><div><small>Alert level</small><span style="color:${GD_COL[it.level]}">${it.level}</span></div><div><small>Country</small><span>${esc(shortPlace(it.country))}</span></div>
+      <div><small>Started</small><span>${it.start ? fmtDate(it.start) : '—'}</span></div><div><small>${it.current ? 'Latest update' : 'Ended'}</small><span>${it.end ? fmtDate(it.end) : '—'}</span></div></div>
+      ${it.sevText && !/^Magnitude 0\b/.test(it.sevText) ? `<p class="pp-text">${esc(it.sevText)}</p>` : ''}${it.country.includes(',') ? `<p class="note">Affected: ${esc(it.country)}</p>` : ''}
+      <p class="note" style="margin-top:8px">GDACS levels rate the likely humanitarian impact: red high, orange medium, green low. ${link(it.link, 'GDACS report')}</p>${wx}`);
+      return true;
+    case 'wiki': {
+      const C = NEWS[it.cat] || NEWS.other, topic = it.chain.map(c => c.label).filter(Boolean).join(' › ');
+      openPopup(`${head(`<span class="pp-tag" style="--c:${C[1]}">${esc(C[2])}</span>${esc(dayLabel(it))}`, 'Wikipedia current events')}
+      <p class="pp-text">${esc(it.text)}</p>${topic ? `<div class="note"><b>Topic:</b> ${esc(clip(topic, 200))}</div>` : ''}
+      ${it.killed || it.injured ? `<div class="pp-grid" style="margin-top:10px">${it.killed ? `<div><small>Deaths mentioned</small><span>${it.killed.toLocaleString()}</span></div>` : ''}${it.injured ? `<div><small>Injuries mentioned</small><span>${it.injured.toLocaleString()}</span></div>` : ''}</div>` : ''}
+      ${it.place ? `<div class="note" style="margin-top:8px"><b>On the map at:</b> ${esc(it.place)}${it.ptype ? ` (${esc(it.ptype)})` : ''}, an approximate position taken from the article's links.</div>` : '<div class="note" style="margin-top:8px">No map position found for this report.</div>'}
+      <p class="note" style="margin-top:8px">${it.src?.href ? link(it.src.href, it.src.name || 'Source') + ' · ' : ''}${link('https://en.wikipedia.org/wiki/' + encodeURI(wikiPage(it.date)), 'Wikipedia day page')}</p>${wx}`);
+      return true;
+    }
+    case 'who':
+      openPopup(`${head(esc(it.disease || it.title), `WHO Disease Outbreak News · ${fmtDate(it.t)}`)}
+      <p class="pp-text">${esc(it.title)}</p><div class="pp-grid"><div><small>Latest report</small><span>${ago(it.t)}</span></div><div><small>Reports, 60 days</small><span>${it.n || 1}</span></div></div>
+      ${it.hc ? '<p class="note" style="margin-top:10px"><span class="pp-tag" style="--c:#ff9f43">High consequence</span>A pathogen with high fatality or pandemic potential.</p>' : ''}
+      <p class="note" style="margin-top:8px">${it.placeName ? `The marker sits at the middle of ${esc(it.placeName)}; cases may be anywhere in it. ` : ''}${link(it.link, 'WHO report')}</p>${wx}`);
+      return true;
+    case 'launch':
+      openPopup(`${head(esc(it.name), `${esc(it.provider)}${it.statusName ? ' · ' + esc(it.statusName) : ''}`)}
+      <div class="pp-grid" style="margin-top:12px"><div><small>Launch time</small><span>${fmtDT(it.net)}</span></div><div><small>Countdown</small><span>${countdown(it.net)}</span></div>
+      <div><small>Pad</small><span>${esc(it.pad || '—')}</span></div><div><small>Orbit</small><span>${esc(it.orbit || '—')}</span></div></div>
+      ${it.mission ? `<p class="pp-text">${esc(clip(it.mission, 420))}</p>` : ''}<p class="note">${esc(it.loc)}${it.loc ? '. ' : ''}Launch times are "no earlier than" and often slip. Data: The Space Devs.</p>${wx}`);
+      return true;
+    case 'nws':
+      openPopup(`${head(esc(it.event), esc(clip(it.area, 120)))}<p class="pp-text">${esc(it.headline || '')}</p>
+      <div class="pp-grid"><div><small>Severity</small><span>${esc(it.severity || '—')}</span></div><div><small>Expires</small><span>${it.expires ? fmtTime(it.expires) : '—'}</span></div></div>${wx}`);
+      return true;
+    case 'space': {
+      const w = spaceWx || {};
+      openPopup(`${head('Space weather', 'NOAA Space Weather Prediction Center')}<div class="pp-grid" style="margin-top:12px"><div><small>Geomagnetic</small><span>G${w.G} ${esc(w.Gt || '')}</span></div><div><small>Solar radiation</small><span>S${w.S} ${esc(w.St || '')}</span></div><div><small>Radio blackout</small><span>R${w.R} ${esc(w.Rt || '')}</span></div><div><small>Kp index</small><span>${w.kp != null ? w.kp.toFixed(1) : '—'}</span></div></div>
+      <p class="note" style="margin-top:8px">${link('https://www.swpc.noaa.gov/', 'SWPC')}</p>`);
+      return true;
+    }
+  }
+  return false;
+}
+
+/* =====================================================================
    Borders & graticule
    ===================================================================== */
 let borders = null, graticule = null;
 async function loadBorders() {
   setStatus('borders', 'loading');
-  const topo = await fetchJSON(BORDERS_URL);
+  const topo = await getTopo();
   const { scale: [sx, sy], translate: [tx, ty] } = topo.transform;
   const pos = [];
   for (const arc of topo.arcs) {
@@ -1447,7 +2143,7 @@ function pickGlobe(cx, cy) {
 }
 function pickPoint(cx, cy) {
   let best = null, bd = 14 * 14; _c.copy(camera.position).normalize(); const horizon = 1 / camera.position.length();
-  for (const k of ['quakes', 'fires', 'volcanoes']) {
+  for (const k of Object.keys(pts)) {
     if (!S.layers[k]) continue;
     for (const it of pts[k].items) {
       const v = ll2v(it.lat, it.lon, R.points); if (v.clone().normalize().dot(_c) < horizon) continue;
@@ -1491,9 +2187,11 @@ function openPopup(html) { popup.innerHTML = html; popup.hidden = false; }
 popup.addEventListener('click', e => {
   if (e.target.closest('[data-close]')) { popup.hidden = true; removeLabels('pin'); }
   const wx = e.target.closest('[data-wx]'); if (wx) { const [a, b] = wx.dataset.wx.split(',').map(Number); openWeather(a, b); }
+  const nb = e.target.closest('[data-near]'); if (nb) { const it = lastNear[+nb.dataset.near]; if (it) { if (it.lat != null) flyTo(it.lat, it.lon, Math.min(camera.position.length(), 2.2)); openEvent(it); } }
 });
 function showFeature(it) {
-  setPin(it.lat, it.lon);
+  if (it.lat != null) setPin(it.lat, it.lon); else removeLabels('pin');
+  if (showThreatFeature(it)) return;
   if (it.kind === 'quake') openPopup(`<div class="pp-h"><div><h3>M${it.mag.toFixed(1)} earthquake</h3><small>${it.place || ''}</small></div><button class="x" data-close>✕</button></div>
     <div class="pp-grid" style="margin-top:12px"><div><small>Time</small><span>${ago(it.t)}</span></div><div><small>Depth</small><span>${it.depth.toFixed(0)} km</span></div>
     <div><small>Magnitude</small><span>${it.mag.toFixed(1)}</span></div><div><small>Tsunami flag</small><span>${it.tsunami ? 'Yes' : 'No'}</span></div></div>
@@ -1514,7 +2212,7 @@ async function openWeather(lat, lon, name = null) {
   if (id !== wxReq) return;
   let place = name;
   if (!place && g.value) { const v = g.value; place = [v.city || v.locality, v.principalSubdivision, v.countryName].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).slice(0, 2).join(', '); }
-  if (!place) place = Math.abs(lat) > 60 ? 'Polar region' : 'Open water / remote area';
+  if (!place) { const ct = COUNTRIES && countryAt(COUNTRIES, lat, lon); place = ct ? ct.name : Math.abs(lat) > 60 ? 'Polar region' : 'Open water / remote area'; }
   const ln = strikesNear(lat, lon, 100, 30), al = alertsAt(lat, lon), sunEl = sunElevation(lat, lon);
   let body;
   if (f.status === 'fulfilled') {
@@ -1535,7 +2233,7 @@ async function openWeather(lat, lon, name = null) {
   } else body = `<p class="note">Point forecast unavailable (${f.reason.message}).</p>`;
   const extra = `<div class="pp-sec"><h5>Lightning nearby</h5><div class="note">${L.connected || L.count ? (ln.n ? `<b style="color:var(--accent2)">${ln.n} strikes</b> within 100 km in the last 30 min, nearest ${ln.nearest.toFixed(0)} km` : 'No strikes within 100 km in the last 30 min') : 'Live lightning feed not connected'}</div></div>
   ${al.length ? `<div class="pp-sec"><h5>Active alerts</h5>${al.slice(0, 6).map(a => `<div class="alert" style="border-color:${ALERT_CATS[a.cat][1]}"><b>${a.event}</b><br><span class="note">${a.headline || ''}</span></div>`).join('')}</div>` : ''}`;
-  openPopup(`<div class="pp-h"><div><h3>${place}</h3><small>${coord}</small></div><button class="x" data-close>✕</button></div>${body}${extra}`);
+  openPopup(`<div class="pp-h"><div><h3>${place}</h3><small>${coord}</small></div><button class="x" data-close>✕</button></div>${body}${extra}${threatNearHTML(lat, lon)}`);
 }
 function spark(h) {
   const T = h.temperature_2m || [], P = h.precipitation_probability || [], n = T.length; if (!n) return '';
@@ -1589,6 +2287,14 @@ const LAYERS = [
     ['alerts', 'Severe weather alerts', 'US warnings & watches', null, 'alerts'],
     ['aurora', 'Aurora oval', '30-min aurora forecast', null, 'aurora'],
     ['sst', 'Sea surface temperature', 'Daily ocean temperature', 'sst', 'sst'],
+  ] },
+  { title: 'Threats & events', items: [
+    ['gdacs', 'Disaster alerts', 'GDACS floods, quakes, cyclones, fires', null, 'gdacs'],
+    ['conflict', 'Conflict & attacks', 'Reported in the last 3 days', null, 'wiki'],
+    ['news', 'World news events', 'Politics, diplomacy, crime, health', null, 'wiki'],
+    ['outbreaks', 'Disease outbreaks', 'WHO reports, last 45 days', null, 'who'],
+    ['travel', 'Travel advice', 'UK government risk rating by country', 'travel', 'fcdo'],
+    ['launches', 'Rocket launches', 'Next 7 days worldwide', null, 'launches'],
   ] },
   { title: 'Hazards', items: [
     ['quakes', 'Earthquakes', 'USGS, M2.5+', null, 'quakes'],
@@ -1646,7 +2352,15 @@ function renderPanel() {
       <h4>Earthquakes</h4>
       ${slider('f-qmin', 'Min mag.', 2.5, 7, 0.1, F.quakeMin, v => 'M' + (+v).toFixed(1))}
       <div class="ctl"><label>Period</label><div class="seg"><button data-qper="day" class="${F.quakePeriod === 'day' ? 'on' : ''}">24 hours</button><button data-qper="week" class="${F.quakePeriod === 'week' ? 'on' : ''}">7 days</button></div></div>
+      <h4>Disaster alerts</h4>
+      <div class="seg">${[['Green', 'All levels'], ['Orange', 'Orange and red'], ['Red', 'Red only']].map(([k, l]) => `<button data-gdmin="${k}" class="${F.gdacsMin === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <h4>World events</h4>
+      <div class="ctl"><label>Show</label><div class="seg">${[[1, 'Today'], [2, '2 days'], [3, '3 days']].map(([k, l]) => `<button data-edays="${k}" class="${F.eventDays === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+      <div class="chips" id="newsChips" style="margin-top:8px">${Object.entries(NEWS).filter(([k]) => k !== 'conflict').map(([k, [l, c]]) => `<span class="chip ${F.newsCats[k] ? '' : 'off'}" data-ncat="${k}"><i style="background:${c}"></i>${l} <small>${wikiEvents.filter(e => e.cat === k && e.day < F.eventDays).length}</small></span>`).join('')}</div>
+      <p class="note">These categories set what the World news events layer shows. Conflict and attacks have their own layer.</p>
       <div style="margin-top:16px"><button class="mini" id="resetAll">Reset all settings</button></div>`;
+  } else if (currentTab === 'threats') {
+    body.innerHTML = renderThreats();
   } else if (currentTab === 'events') {
     const nowS = (Date.now() - T0) / 1000; let lmin = 0; const cut = Date.now() - 60e3; L.recent = L.recent.filter(t => t > cut); lmin = L.recent.length;
     const st2 = storms.filter(s => (s.kts || 0) >= S.filters.stormMin).sort((a, b) => (b.kts || 0) - (a.kts || 0));
@@ -1659,6 +2373,7 @@ function renderPanel() {
       <h4>Tropical cyclones</h4>${st2.length ? `<div class="list">${st2.map((s, i) => `<button data-storm="${storms.indexOf(s)}"><span>${s.title}</span><small style="color:${catOf(s.kts)[2]}">${catOf(s.kts)[1]}${s.kts ? ' · ' + Math.round(s.kts) + ' kt' : ''}</small></button>`).join('')}</div>` : `<div class="note">${status.storms?.state === 'ok' ? 'No active tropical systems.' : status.storms?.msg || 'Loading…'}</div>`}
       <h4>US alerts</h4>${al.length ? `<div class="chips">${al.map(([l, c, n]) => `<span class="chip"><i style="background:${c}"></i>${l} ${n}</span>`).join('')}</div>` : `<div class="note">${status.alerts?.msg || 'Loading…'}</div>`}
       <h4>Significant earthquakes</h4>${big.length ? `<div class="list">${big.map(q => `<button data-fly="${q.lat},${q.lon}"><span>M${q.mag.toFixed(1)} ${q.place || ''}</span><small>${ago(q.t)}</small></button>`).join('')}</div>` : '<div class="note">None M5+ in the selected period (turn on the Earthquakes layer to load).</div>'}
+      <h4>Upcoming rocket launches</h4>${launches.length ? `<div class="list">${launches.slice(0, 6).map((l, i) => `<button data-launch="${i}"><span>${esc(l.name)}</span><small>${countdown(l.net)}</small></button>`).join('')}</div>` : `<div class="note">${S.layers.launches ? esc(status.launches?.msg || 'Loading…') : 'Turn on the Rocket launches layer to load them.'}</div>`}
       <h4>Jump to</h4><div class="seg">${[['N. America', 40, -100], ['S. America', -15, -60], ['Europe', 50, 12], ['Africa', 5, 20], ['Asia', 30, 100], ['Oceania', -25, 140], ['Arctic', 80, 0], ['Antarctica', -80, 0]].map(([n, a, o]) => `<button data-fly="${a},${o},2.6">${n}</button>`).join('')}</div>`;
   } else {
     body.innerHTML = `<h4>Data sources</h4>${Object.entries(SOURCES).map(([k, [n, d]]) => `<div class="src">${sdot(k)}<div><b>${n}</b></div><small>${status[k]?.msg ? status[k].msg + ' · ' : ''}${d}${status[k]?.t ? ' · checked ' + fmtTime(status[k].t) : ''}</small></div>`).join('')}
@@ -1702,8 +2417,10 @@ panelBody.addEventListener('input', e => {
   if (t.id === 'f-qmin') { F.quakeMin = v; out.textContent = 'M' + v.toFixed(1); }
   saveSettings();
 });
+// on phones the panel covers the middle of the globe, so get it out of the way after a jump
+function sheetAway() { if (innerWidth < 760) { $('#panel').classList.add('hidden'); $('#btnPanel').classList.remove('on'); } }
 panelBody.addEventListener('click', e => {
-  const t = e.target.closest('button,[data-acat]'); if (!t) return;
+  const t = e.target.closest('button,[data-acat],[data-ncat]'); if (!t) return;
   if (t.dataset.field) { S.field = t.dataset.field; saveSettings(); buildField(); renderPanel(); updateLegend(); }
   if (t.dataset.units) { S.units = t.dataset.units; saveSettings(); renderPanel(); updateLegend(); }
   if (t.id === 'radarAnim') toggleRadarAnim();
@@ -1711,6 +2428,11 @@ panelBody.addEventListener('click', e => {
   if (t.dataset.qper) { S.filters.quakePeriod = t.dataset.qper; saveSettings(); renderPanel(); safe(loadQuakes, 'quakes'); }
   if (t.dataset.fly) { const [a, o, d] = t.dataset.fly.split(',').map(Number); flyTo(a, o, d || 1.9); }
   if (t.dataset.storm) { const s = storms[+t.dataset.storm]; flyTo(s.lat, s.lon, 2.0); showStorm(s); }
+  if (t.dataset.gdmin) { S.filters.gdacsMin = t.dataset.gdmin; saveSettings(); drawGdacs(); renderPanel(); }
+  if (t.dataset.edays) { S.filters.eventDays = +t.dataset.edays; saveSettings(); drawWiki(); renderPanel(); }
+  if (t.dataset.ncat) { const k = t.dataset.ncat; S.filters.newsCats[k] = !S.filters.newsCats[k]; saveSettings(); drawWiki(); renderPanel(); updateLegend(); }
+  if (t.dataset.ev) { const ev = threatTop[+t.dataset.ev]; if (ev) { if (ev.lat != null) flyTo(ev.lat, ev.lon, 2.2); openEvent(ev); sheetAway(); } }
+  if (t.dataset.launch) { const l = launches[+t.dataset.launch]; if (l) { if (l.lat != null) flyTo(l.lat, l.lon, 2.2); showFeature(l); sheetAway(); } }
   if (t.id === 'resetAll') { try { localStorage.removeItem('wg-settings'); } catch {} location.reload(); }
 });
 
@@ -1720,7 +2442,9 @@ panelBody.addEventListener('click', e => {
 const lazy = { radar: () => loadRadar(), imerg: () => loadIMERG(), sst: () => loadSST(), aurora: () => loadAurora(), storms: () => loadStorms(), alerts: () => loadAlerts(), quakes: () => loadQuakes(), fires: () => loadEonet(), volcanoes: () => loadEonet(), borders: () => loadBorders(), clouds: () => loadClouds() };
 const loaded = new Set();
 const srcKey = { fires: 'eonet', volcanoes: 'eonet' };
-async function safe(fn, key) { try { await fn(); } catch (e) { setStatus(key, 'error', e.message); console.warn(key, e); } }
+Object.assign(lazy, { gdacs: () => feed('gdacs', loadGdacs), conflict: () => feed('wiki', loadWiki), news: () => feed('wiki', loadWiki), outbreaks: () => feed('who', loadWho), travel: () => feed('fcdo', loadTravel), launches: () => feed('launches', loadLaunches) });
+Object.assign(srcKey, { conflict: 'wiki', news: 'wiki', outbreaks: 'who', travel: 'fcdo' });
+async function safe(fn, key) { try { await fn(); } catch (e) { setStatus(key, 'error', e.message); console.warn(key, e); scheduleThreat(); } }
 function ensure(key) {
   const k = srcKey[key] || key;
   if (!lazy[key] || loaded.has(k)) return;
@@ -1745,6 +2469,8 @@ function applyVisibility() {
   if (stormLines) stormLines.visible = Ly.storms;
   aurora.visible = Ly.aurora;
   pts.quakes.visible = Ly.quakes; pts.fires.visible = Ly.fires; pts.volcanoes.visible = Ly.volcanoes;
+  for (const k of ['gdacs', 'conflict', 'news', 'outbreaks', 'launches']) pts[k].visible = !!Ly[k];
+  shells.travel.visible = Ly.travel && travelReady;
   if (borders) borders.visible = Ly.borders; graticule.visible = Ly.graticule;
   atmo.visible = Ly.atmosphere; stars.visible = Ly.stars; sunSprite.visible = Ly.stars;
   earthMat.uniforms.nightLights.value = Ly.nightLights ? 1 : 0; earthMat.uniforms.showTerm.value = Ly.terminator ? 1 : 0;
@@ -1752,7 +2478,7 @@ function applyVisibility() {
 }
 function applyOpacity() {
   cloudMat.uniforms.opacity.value = S.opacity.clouds; earthMat.uniforms.cloudShadow.value = S.layers.clouds ? S.opacity.clouds : 0;
-  for (const k of ['radar', 'imerg', 'sst', 'field']) shells[k].material.uniforms.opacity.value = S.opacity[k];
+  for (const k of ['radar', 'imerg', 'sst', 'field', 'travel']) shells[k].material.uniforms.opacity.value = S.opacity[k];
   saveSettings();
 }
 
@@ -1778,7 +2504,15 @@ function updateLegend() {
   if (S.layers.storms && storms.length) out.push(`<div class="lg glass"><b>Cyclone category</b><div class="keys">${CAT.map(c => `<span><i style="background:${c[2]}"></i>${c[1]}</span>`).join('')}</div></div>`);
   if (S.layers.alerts && alerts.length) out.push(`<div class="lg glass"><b>US alerts</b><div class="keys">${Object.entries(ALERT_CATS).filter(([k]) => S.filters.alertTypes[k]).map(([, [l, c]]) => `<span><i style="background:${c}"></i>${l}</span>`).join('')}</div></div>`);
   if (S.layers.quakes) out.push(`<div class="lg glass"><b>Earthquake depth</b><div class="keys"><span><i style="background:#ffd23f"></i>&lt;70 km</span><span><i style="background:#ff8a3d"></i>70–300</span><span><i style="background:#e0445a"></i>&gt;300 km</span></div></div>`);
-  $('#legend').innerHTML = out.slice(0, 5).join('');
+  const ek = [];
+  if (S.layers.gdacs && gdacsData.length) for (const l of ['Red', 'Orange', 'Green']) ek.push(['tri', GD_COL[l], l + ' alert']);
+  if (S.layers.conflict && wikiEvents.length) ek.push(['dia', NEWS.conflict[1], 'Conflict']);
+  if (S.layers.news && wikiEvents.length) for (const [k, v] of Object.entries(NEWS)) if (k !== 'conflict' && S.filters.newsCats[k]) ek.push(['', v[1], v[2]]);
+  if (S.layers.outbreaks && whoPts.length) ek.push(['ring', '#46f0c0', 'Outbreak']);
+  if (S.layers.launches && launches.length) ek.push(['sq', '#c9b6ff', 'Launch']);
+  if (ek.length) out.push(`<div class="lg glass"><b>Threats & events</b><div class="keys">${ek.map(([c, col, l]) => `<span><i class="${c}" style="--c:${col}${c === 'tri' ? '' : ';background:' + col}"></i>${l}</span>`).join('')}</div></div>`);
+  if (S.layers.travel && travelReady) out.push(`<div class="lg glass"><b>UK travel advice</b><div class="keys">${['all', 'essential', 'allParts', 'essentialParts'].map(k => `<span><i class="${ADV[k].hatch ? 'hatch' : ''}" style="--c:${ADV[k].c};background:${ADV[k].c}"></i>${ADV[k].s}</span>`).join('')}</div></div>`);
+  $('#legend').innerHTML = out.slice(0, 8).join('');
 }
 
 /* =====================================================================
@@ -1787,6 +2521,7 @@ function updateLegend() {
 $('#btnPanel').onclick = () => { const p = $('#panel'); p.classList.toggle('hidden'); $('#btnPanel').classList.toggle('on', !p.classList.contains('hidden')); };
 $('#btnRotate').onclick = () => { S.autorotate = !S.autorotate; saveSettings(); applyVisibility(); };
 $('#btnRefresh').onclick = () => { toast('Refreshing live data…'); refreshAll(true); };
+$('#threatBtn').onclick = () => { if ($('#panel').classList.contains('hidden')) $('#btnPanel').click(); currentTab = 'threats'; document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === 'threats')); renderPanel(); };
 const tslider = $('#tslider');
 tslider.oninput = () => { sunOffsetH = +tslider.value; };
 $('#btnNow').onclick = () => { sunOffsetH = 0; tslider.value = 0; playing = false; $('#btnPlay').textContent = '▶'; };
@@ -1795,6 +2530,7 @@ addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   if (e.key === 'r' || e.key === 'R') $('#btnRotate').click();
   if (e.key === 'l' || e.key === 'L') $('#btnPanel').click();
+  if (e.key === 't' || e.key === 'T') $('#threatBtn').click();
   if (e.key === ' ') { e.preventDefault(); $('#btnPlay').click(); }
   if (e.key === 'Escape') { popup.hidden = true; removeLabels('pin'); }
 });
@@ -1814,6 +2550,7 @@ async function refreshAll(force = false) {
     if (!S.layers[k]) { if (force) loaded.delete(srcKey[k] || k); continue; }
     if (force || !loaded.has(srcKey[k] || k)) { loaded.add(srcKey[k] || k); safe(lazy[k], srcKey[k] || k); }
   }
+  refreshThreats(force);
   if (force) { radar.frames.forEach(f => f.tex.dispose()); radar.frames = []; if (radar.anim) stopRadarAnim(); }
 }
 setInterval(() => refreshAll(true), 10 * 60e3);
@@ -1836,7 +2573,7 @@ function frame(now) {
     $('#tlabel').innerHTML = sunOffsetH === 0 ? '<b>Live</b> · sun now' : `<b>${date.toISOString().slice(5, 16).replace('T', ' ')} UTC</b> · ${sunOffsetH > 0 ? '+' : ''}${sunOffsetH.toFixed(1)} h`;
     if (L.recent.length > 20000) L.recent = L.recent.filter(t => t > Date.now() - 60e3);
   }
-  if (currentTab === 'events' && now - lastEvents > 5000) { lastEvents = now; renderPanel(); }
+  if ((currentTab === 'events' && now - lastEvents > 5000) || (currentTab === 'threats' && now - lastEvents > 60000)) { lastEvents = now; renderPanel(); }
   const d = camera.position.length();
   controls.rotateSpeed = clamp((d - 1) * 0.45, 0.02, 1); controls.zoomSpeed = clamp((d - 1) * 0.6, 0.15, 1);
   camera.near = clamp((d - 1) * 0.3, 0.0008, 0.1); camera.updateProjectionMatrix();
@@ -1865,7 +2602,8 @@ function frame(now) {
   if (S.layers.lightning) connectLightning();
   gridPromise.then(() => { updateLegend(); renderPanel(); }).catch(() => {});
 })();
-window.__wg = { S, status, L, addStrike, get grid() { return grid; } };
+window.__wg = { S, status, L, addStrike, get grid() { return grid; }, get threat() { return threat; }, get top() { return threatTop; },
+  get data() { return { gdacsData, wikiEvents, whoData, whoPts, travel, launches, sigQuakes, spaceWx }; }, pts, flyTo };
 </script>
 </body>
 </html>
